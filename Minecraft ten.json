@@ -1,0 +1,25 @@
+{
+    "spec": 1,
+    "name": "Minecraft",
+    "previewText": "some whitename asked me to do this",
+    "main": {
+        "ABCGintoNord-ExtraBold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-Bold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-BoldItalic": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-ExtraBold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-ExtraBoldItalic": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-Medium": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-MediumItalic": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-Normal": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-NormalItalic": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-Semibold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "ggsans-SemiboldItalic": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "NotoSans-Bold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "NotoSans-ExtraBold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "NotoSans-Medium": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "NotoSans-Normal": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "NotoSans-NormalItalic": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "NotoSans-Semibold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf",
+        "SourceCodePro-Semibold": "https://github.com/RedfireFc/Content-lol/raw/main/MinecraftTen-VGORe.ttf"
+    }
+}
