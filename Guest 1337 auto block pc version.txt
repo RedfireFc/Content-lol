@@ -1,1 +1,259 @@
-([[This file was protected with MoonSec V3]]):gsub('.+', (function(a) _BXwoVJzKCfwo = a; end)); return(function(_,...)local t;local k;local h;local d;local l;local r;local e=24915;local n=0;local b={};while n<299 do n=n+1;while n<0x24a and e%0x495e<0x24af do n=n+1 e=(e-157)%26926 local g=n+e if(e%0x1eba)>=0xf5d then e=(e*0x1a)%0xb1 while n<0x275 and e%0x2dfe<0x16ff do n=n+1 e=(e*51)%14653 local g=n+e if(e%0x1894)<0xc4a then e=(e-0x20d)%0x2585 local e=94402 if not b[e]then b[e]=0x1 l="\4\8\116\111\110\117\109\98\101\114\73\75\98\110\67\69\81\120\0\6\115\116\114\105\110\103\4\99\104\97\114\121\77\65\90\109\87\111\97\0\6\115\116\114\105\110\103\3\115\117\98\66\104\103\98\99\87\103\109\0\6\115\116\114\105\110\103\4\98\121\116\101\71\104\95\74\87\97\121\112\0\5\116\97\98\108\101\6\99\111\110\99\97\116\71\90\116\89\121\117\77\122\0\5\116\97\98\108\101\6\105\110\115\101\114\116\73\115\99\109\113\105\80\84\5";end elseif e%2~=0 then e=(e-0x2c)%0x190a local e=73989 if not b[e]then b[e]=0x1 r=tonumber;end else e=(e+0x38e)%0x2a31 n=n+1 local e=69210 if not b[e]then b[e]=0x1 k=function(k)local e=0x01 local function b(n)e=e+n return k:sub(e-n,e-0x01)end while true do local n=b(0x01)if(n=="\5")then break end local e=t.byte(b(0x01))local e=b(e)if n=="\2"then e=h.IKbnCEQx(e)elseif n=="\3"then e=e~="\0"elseif n=="\6"then d[e]=function(e,n)return _(8,nil,_,n,e)end elseif n=="\4"then e=d[e]elseif n=="\0"then e=d[e][b(t.byte(b(0x01)))];end local n=b(0x08)h[n]=e end end end end end elseif e%2~=0 then e=(e+0x124)%0xaed8 while n<0x333 and e%0x1374<0x9ba do n=n+1 e=(e+202)%40220 local k=n+e if(e%0x1a34)<0xd1a then e=(e*0x241)%0x83ba local e=2976 if not b[e]then b[e]=0x1 end elseif e%2~=0 then e=(e-0x39e)%0xc07f local e=70703 if not b[e]then b[e]=0x1 d=(not d)and _ENV or d;end else e=(e+0x34d)%0x1ada n=n+1 local e=90511 if not b[e]then b[e]=0x1 end end end else e=(e*0x212)%0x430d n=n+1 while n<0x25a and e%0x3ece<0x1f67 do n=n+1 e=(e*622)%28415 local k=n+e if(e%0x1458)>0xa2c then e=(e*0xd4)%0x21ec local e=99293 if not b[e]then b[e]=0x1 h={};end elseif e%2~=0 then e=(e-0x3ba)%0xb632 local e=57897 if not b[e]then b[e]=0x1 t=string;end else e=(e+0x390)%0xa626 n=n+1 local e=14593 if not b[e]then b[e]=0x1 d=getfenv and getfenv();end end end end end e=(e*763)%39250 end k(l);local e={};for n=0x0,0xff do local b=h.yMAZmWoa(n);e[n]=b;e[b]=n;end local function g(n)return e[n];end local t=(function(l,t)local _,b=0x01,0x10 local n={{},{},{}}local d=-0x01 local e=0x01 local k=l while true do n[0x03][h.BhgbcWgm(t,e,(function()e=_+e return e-0x01 end)())]=(function()d=d+0x01 return d end)()if d==(0x0f)then d=""b=0x000 break end end local d=#t while e<d+0x01 do n[0x02][b]=h.BhgbcWgm(t,e,(function()e=_+e return e-0x01 end)())b=b+0x01 if b%0x02==0x00 then b=0x00 h.IscmqiPT(n[0x01],(g((((n[0x03][n[0x02][0x00]]or 0x00)*0x10)+(n[0x03][n[0x02][0x01]]or 0x00)+k)%0x100)));k=l+k;end end return h.GZtYyuMz(n[0x01])end);k(t(162,"ygH7}bv52B_ RJuZv7"));k(t(183,"H9;F<vI4A+qu-eUk<++A<U+Aek9kIeqk+vFU+Ae+;vI-uqk;;94Fu;kvI;<q+<<AA<-u9kIAu+ei;q+;e+;)FUu<AUeuAkeq9qIAu4KF<;Aqu+;+<<+F-ke<;Fe+;FIqqqkAFq;9e;2kIuqFk99uv--u;QF4Aqe49u9qI49+vIu;UkevAv-I9*I-qekr;v4qe9cevIu_-qe;;FeF1UIIqAU+<944eFh+vFqIUA;<AIu;UkI<4eU9<;9AI<k-v<+ukvF+AvAkU-F9qqeNPq4<q-kqk9FqkI;+4q-Uk+FIA9k>FFA4u;UvUeFvuIFq44q4kAF+4<ev_k9;vk9<vAqvUkFI4I-<SI;-q,kF_eA<q;kIv<FY4UFII-uIM+<uFvUe;k4qu<kkv?+{Uq!;<euAUvF<AF4q-v4eukwq<<AkU1F;<Au;Mkv;Ikee9<%qv<zAvF+FU9FbvU-AU+;IAFuI=<<-v9+-v;Aeee9kII-Ge-vIAAevkk<v+-kUee;qe-9+4vu;+A<;+9ee;I4;Auk+<+4qek;I<qqk+I"));local e=(-26901+(function()local d,n=0,1;(function(e,n)e(n(e,e),n(e,e))end)(function(e,b)if d>354 then return e end d=d+1 n=(n-139)%33325 if(n%1832)<916 then return b(e(e,b),e(b,b))else return e end return e end,function(b,e)if d>256 then return e end d=d+1 n=(n-230)%9796 if(n%350)>=175 then n=(n-335)%14136 return b else return b(e(b,e),b(e,b))end return e(e(e,b),e(e,b))end)return n;end)())local ke=(getfenv)or(function()return _ENV end);local f=h.tAbvpDiW or h.bsBDfJPV;local k=3;local y=1;local d=2;local l=4;local function be(a,...)local z=t(e,"o& _k6gzW.7C9bAD6Pb79zCk7_.bzCgW66z_g&6 k& D&.0kADAP9AC77&.nWJgC z&gDDA9b. b&k{bD z9z66kk& A6 _W W&.=uD bD9bC97&.gW z=69& DAACbW96C .Dg9CWgz6_k; b&7QzDkA&9AC97W.6W gD699.W&g_&&DbA7bz9kC&.ADDCWgzg-_D 9&._D 7&&R_D&bz9gCW7gWDW&gA6gk6DAD6bg9_C!D&D.A99zC.W_..z.gz6Akk_-CCCg._Wugb7bCg7.._z&g3_C_g_m  A6Dbbz9DC.7P 9 _HkD&bA&b&b&WDzD_CC9z..7_W&WkgWAWbk9&7A.CWWD69_WD_A_W&g8_DX&D_. .%WDgDnCA9&CD.zgDz6z&kC_D9&7b.7Wzzkg&9AW&gW&zdbADb99.DD&4D&Ak9D..C.76. z7ggAgb CD79..Wgz_W9Wb_9_z&kT&AA_c_C&7&kbWA7b.9CCzW_W z9gbkb_k _79.WW6z 6Dk9_.WD6_, D&b79zCkADADAW9b6zk9 D&9{._bkWkk&YYD+.D7b79&Cr_7 b& DDA9 b C C&kAMA_A&C.k  A&C=WD6A 9DA9A..zW_zd6bk7_z k_6_AA9bW96C .DW9z.7k._k _k&7}zDk_&_7&9 &D7DkA 6bk._g _&5DbA7_CWkC .AWCzWg66 _Dz76.?WDCAy9bC7Dy? DkA C9Cg.WWz&& kA.bg9_/!/DADA7bzz&W7.hzAz.& _ _k  49)z7mA&9.gz7W.cz6g 6k_7A XkA67.A9999_7gW9WQz?676 kkC77C. zDg9.9C6.DWDzD bA.A 9&7A.C9&7A._W z&6Dk._g  & : A.bg9kW*zk6Wk6_ z_z&z&67&D &iDDDD_zggAkA_C Wzkkkkz6__Wr9Ab879W7bCbCC7I T&WDWA6b &&&&UzA7bWb 7l7AW9Wkz&6__D9.C67 WDz9g.6gzCz>&D&ODzAkb&<C89f&D_9z7WkA_b g&_20k}k_k&&.7_.AzCgW66Wk.rzDzk6b66_D_ &WDC9zAs97C7776W&k%.A9b.9gD9QADbADbC..7D. W{g9DzD#9DC97.9DCC7k. W;zZ66k._g  UCDAA_bzWAW6gg6_k/WkzCzngW z_b bACDbACbC9PkC6_ _&KDb Ck9_W KCA9bAkbkC677k9_D g_k66k& .9zAkDgb9CAC(66k76Ak  DDD96C7.bW7zzCWCgCg.D67z7gg6__C z7W7&W3gb67zDgz6.k3_k&DtbDkA b&9=7A.9Wz_D_g&zZkD&&Dkr 9&kbkACbCC9C&z7.6zgDCAzbk9&7A.CWW7z7 6/_9 .&gJ_DfbbC7Dg7gCWzAgC6W...7WWzD&.k9_9 9& C7DAb6bkgA7C.7Wkzg6k_D_b&CNzC<Dkb_9C796&gCz7gz6_ 6 k%DC.b97gg gD_7 z&kkWg_kd_C .9 9%7D.9Wbg_79_b6Ag.kbk& 7&M&:76.WzD.A.AW7z.g.6D_DAzD9&gD2zbz(66k  Dg9zWg.k9kk g&.O6W6z&6AkC_W 6. ku 9bCb6C_7xWb7C.WW9z_gz6__9 9&zF6D A 9DCg766Ak7_z k&&DAgC_.W6Ck7WW9z.gg7_79WA._g9gg Wk_ k77.CW gD69g.W..zW6g&6bb.9DC&.AWC7..bW7zzg&6 _g 9&ga&AD7..kW&gA6Ck7_C  5DD9_._z_6&6<CDAz.g.6&_A Cg&z 6_kg_&CCC6._WpgbWCz.g66&kg_&&DO.DWAk9DCb7W.WW _D b&zGkD&k9_N D7g. zDg96.kgC_z&9bD9AAbk9&7AbADzA_b4Ck.D.b&W& D,bb97AWbg9zCg.AWWz6g_6_kk b&zVkD.A6.CWzzkg&kA_CgWz7k D&D 9.Cg7_b bA9b9 7C7_WbWnggk. g_&Nb}zD.A_9&CD.D.6zzz7ADbC9WC67 WDz9.z&gk6_k&b27Dz_W_g_g&D.7.wz 6Dk9WbWCWCzkkkk9 W k&&D_bDg76Ak  D&9696.66_6  &WbAD.b76DkC_W 6& DDg9k7ygC677Wbz7gz7W7g7gWDkCgkkA_A Ab9.WWbzv6bk7W...zD6&6!k7_C&Cc D&zCzD6_k? bgzzgg_kD & OMCDkb6A_9AC 7kW7W_k66__C W&g,999A9b.9kk&_7&.wgD____9 D&.DzAg9&C9Cg7WgkzAgWkbbWbkCN.bW79kb_9gC&.=67z7gg6__C zbzbgA9bgCbC _g 9+ADCAW &_&& DbD69g9DC&CgWDW.(6D&bA9CCW76. ._796Ck7__ cNb_D66k. A7D.CWWz6g kD_9gb6g36Dkbb97CzA7cYA9bD676k_ &DR9 7&g?WDkA b C.7C.&W z&6CkW_. _bAbWCg7_.87A.9Wbzzgg6__A 7&9}CDkbb9CCz7Wg 6k_7 z&kgzgQk7_6SzA.b&zbg.6gk__u&b*7kC kb&CD7b7zW6z 6DWb7A.7W k g kA_C _pDb&A7bk9kCk_& 7!.DgA_hWADbC9WCz7W. zDg969k7_k QHD9zC_7}Wbz7gz.k.CgA&b&zD6A 9DAbb99DCC7_. zDgz66k&_&&A&&DWAk7&.Wz.gg6_W..CW7z9gW k_g&9&gD9Azb_6AkA_g _&Vk_69_W_&&g7-.7zWg66 z=6AkA_7 _&_T^ACb79CC.7k.&z9g7 k&.D9A.bg=9&AFbDDAC7gCg76W9Wgq6D AG99C.7g._WqgbWAWz_g g(ADCAW 7Pg&WX.CCzWz 6)_b 7kW_k 7&*DAAWbz9WCg7NWbzAgg6.k&DCAzbk9&7A.CgWAk7 99_b .&gj_D&bb97Cz76.&zAgCg7kD_ &DS9k_Agb_92CDC&Wzzkg&gD_C W&6 WDgb99.Cg7..lzAg7Wzkk_6WgTCDWA6bWCD7b..W7bCgskb_7 A&k1 AAbC&&C67 WDzbg.6gk_k W&f7DzAkb_CA7C.W76.C6Dk9_. g&_&kAbA997Ck7_WA.kgW66k  D_z<.DgA_b Cb79.z.gzk6Ak9_W z& DDA9D.A C_7&WbzCgzgWk&kq  rWDWA &WC97..gW_W&6bkC_z z&&-dACA7 .C 7&W9zCgg6_k:kbgkBzDgA&bMCCC9.6.kz_69kb_g_k&qDbA7bzA<C&78WCz9g66k_Dk9&C,gDgAO9bC7Dk.k7&zb6Ck9_6 klDd6A.b9bbCI7&W7WDgk6 _A C&W-.67bD99C.CA._W&gb67.x_k &wAD9AWb69 7D7&W.z7g_6:_b_7&z_kg7bA9DCWA6. b6g9W.69__ k5bkbAz 79&bA.9WWz.g WC_9zD&g__D6bb9ACzb9.&bkgCWW6 _  _}9 &Ag .9:bb7AWzzWg&7c_CzA&6_ Dbb99bCg9D.;b_g7WzCb_&  OC66A6 WCDb9CkWgzzgUW&_7zb&k_&Z&bC99C6D7WDb g.Wgk9_n &c7D7Ak zCAbC.CW6zg6DgC_.z9&__Rv.b79CCk7.WAb&gWW66k D )K.6WA_ gCbb7 AWkz66A76_WzC&  DW_b.97C_7&WbbOgz6gzb A XBWDgA 9DC9CCDWW_zg6bzW_z k&&DADbbW99C .DW9z.gg6.b. b  !zDzA&9DCC77.6W /k69k._g g&SDbA7bz6.C&.AWCzbg66 _D_ C EgD9Aqb_C77W.kW_gA6Cbb_6  QDDDA.bg9_CN_ W7zzgk6g_A C&W&zW9bDbgC.9 ._W!gbz769_k C#Au6AW& 9 9&C1W.W&g_.g_b 7&zxkDzbAb6CW7z. W&g9W.k.__ 7PbvbAzq&9&9ACyWWW3g 6 _96 &g&6igbbbzCzb7.&zAgC6W7D_  739egAgb69%Cb*&WzzAg&WW_C__&6_ D+b9b_Cg7A.Ub9g7g.6D_& .3C&kA6b CD99.DWgzAgx6W_7gk&k&_D&bCbkC6DAWDz9g.6g6z_! WO7D.Akb_CACb7.W6zA6D7b_. g&_ M6.b7b_Ck7bWACWgWgzkz D .e.DCA_b,CbC97kWkzD6A6 _W 6& &&D b.b6C_76Wbz7gzggkz A C?WS&A 9DC97..bW_z96b67_z g&&(AqgbWbPC 9kW9W6ggg67C b gUz66A&9ACC9W7_W zC6966_ggK&,YDhkbzb&C&7 WCzWg6gkk  9 zFg5bAa9bC7C.77W&zb6Ck9_6  YDsAD bgb_C=bCW7zzgk6&k_ C k:6x bD9AC.Cg uW%zW67z._k bxATbDDb69A7DC7W.zgg_zO6g 7 _}kDbbA&DCWCz.CzDz.6.z.__ *1be9v_bk9D7A9AWWz6g g&66 . 6+_ _bb97Cz7k7VzAzz6W6k_  &u91.z.b_9C7b9+WzWpg&zAb  W fN D9b99ACgC_Dzzbz66zzA_& WMC WDhb 977979Wg.zgH6D6  z BU&j7bC9WC69 7kz9z66gkD_H67-7y.D9b&9C7CCWW6z 6Dk9_7 g&D%TADb79.CkC_.gzCz6667_ D&91.&gkDb!97777kWk7A6A6bk6 6 UDD&Cb.9gC_C 7kz7zg6kkg A&C+WyzA79D997..CW_zP6b69kk k  DAc_bW96C .D.kz.z_6_6& b&9SzhkAk9A9z7WC7W z969z.9b _&9Db 9bzD_C&9ACDzWz&6 W_ 9k7qg#6DC9b9z7zC W&gA6CgWkk  &9D9Dgbg&zCp7D.gzzz 6&7& C&WI6xkD&999W7gDgWugb676.ku &&ADCkCb69 7D.9WDzgz/65kb 7&.Hkd&z&9C9k76b7zDz.6.6W__ 8&7D7_gbk9&7ACCWDz6gDkDk. .gzy_&GAz979k7k.AzACg6W66__&D&WD._zb_9b7b977_zkgbkA6e W_WN DDA79.9 7_97zbz66z6g_z&A&WDW^&b CD79C.&Wz_gbkbkz z6&I&d5A69W9_7 7Dz9g.6gk__6&b&zDzAgb&9*7C77.Xz gbk9.7 g&_M5JbD 9z9 7&.9zC76666kkk&9&WDg& bwCb777...z&gAkC_b 6& DDDAAA9g9k7F. z7gz6k6_WW&C&7D6k 9DC97..gWgzfgCk7k. k&_DADCAk96CD.DC&z.zk6_6 _9&7&6Dkk 9ACC7WC6WDgDg7k.kk _kbDbD9D&9k9}.A.1zWg66 6&_7&.&gD_A69bC77z7gbkgAg9kW_7  IDD9DCAk9_9 .bCbzzgk6&_A_6&W&_D D&99CC7g7_WAgbgzkzgg &&9DC&WAD9 C9.99Czg. 6Egbkk&z&&D&  9Cb6767kWgg9gzkg6& G0bD7Hzgg9&C9.C.gz6CgkDkA.A&g& D/AD97Cz7k7_..gCgWk6kk&D39D.DWA795CA.7..zkg&kA_C_.&6&cADAb9.CW7_7dW6g7gkkkz.&A&.DWDzbgCDC7..b6z_g3kb67_C&k+DAAA.9W%g7 7DHAg.gkk__A&b&kDzDk&WCACW.Wbgz gbk9g._z&_IbAbAD9z9k7&.AWggWg k g.&9&kDgD6AWCbCW.z7vz&6AkC6W W& =bA9Az9gDe7c.D.&gzg_k&6.&C4WD6A A&C9Cz.gW6zE6Dk7k.WD&&2bAC_.96C .D79W9ggg k3_9&7kkDkD_A.CCCW.6WzgD69k.kW_6&LmAA7&A9kC&.A.bW.g6gk_D_&&.TgD_D bWC7C7.kb&gA6CkW_6 buDeCA.A.9_C .b.7>7gk6D_A6p&W&kD D&_zC.C6._A&gb67kz6k bJA{7AWAk9 A9.9.Czzg_g{_b A&z3kD&D89ACWCg. Ckg96.kgk6_b-bI9Azb.9&7A.C.7zDg g _9 D&gt_D1bbbWCzC_.&.&gC67k6k 79x9XzAgV69rC9.7..Wbg&6b_Ckg&60 ADD9bbCgC .1W9g77Ckkk_ 98C-WA6bzCD79...WW6gw6A_7 9&kJ&AAAbb C6CkWDW&g.6gk__u bf7UgAkA_CA7b.W.6DD6D67_.k9&_>DAbA9bkCkC)WA..gW66k kD&bG.T6A_bDCbDA.z.gzg6A6C_WWW& DDA9ACb_C_C&Wbbbgz6kk&kn b3WGzA _ C97..gW_W_6b6._z_g&&wGACAW6WC 7bW99&ggg k{_DW9ezw_A&&bCC7W.67 Wz696W_g_ &?kAA7Dz9.C&7bWCWzg6.b_D_9 Crg-&A?&AC7Cg.kC&W66C6g_6_zID& A.ZgbWC*7CW7C9gk7z_A6C&7V6q1bD&mC.b!._.}3O6766_k6CsAGgAWbC6C7D7CW.zCg_6&_b 9&z4kWgbA9CCW79. zDg96.bC__ K?b<WAzbk9&7AA&WWW6g 6A_9 .&g8_:6bbb7Cz76.&zDgCzW6g_  D59TzAg&D9S9b7 WzWkg&6A_Cgz&6YWWWb9bCCg7z.RzAg76.kk_&C_KCDWA6b.CD79..Wg{Wg?kb_7_g&k^&AAbCP_C6C WDWAg.6zk_k _g17hzAkAbCA7C.W76z96D69_._g&__bAbA9b*CkC WAbzgW66k  D zp.wgA_b Cb79.z.gW&6A69_WWg& DDA9D.9CC_C&WbWCgz.&k&kSCg>WazA bkC97..g.6zC6b6b_zgC&&DAACA7AGC C_W9zAgg6_kv_D&C#zE.A&AgCC7W.6W zA6967_g_W&=DDA7Az9WC&7AWC.bg6g__D_A CJgakAP AC77z.k7&b76C6._6__dD_.A.AW99CP7DW7zCgk6&_A_b&bP6x6bDQ&C.7g._. z_676C_k gyADCAWAzb&7DC&W.9Dg_6S_b 7 .tk% bAAfCW7z. WDzW6.6g__6 -byCAzAg 67A79WW._g kD_9k.7WE_q&bbbCCzDW.&.i9&6W6z_ _7f9D.AgA6bz7b7bWzWDg&kA_C_7_ S i_b9AkCg7_.-zbzD6z66_&_ +CD7A6A 96797.Wg..gZ6A_76z_5Y&DAbCb6C67zWDW9zk6g6__R6zS7Q AkA_  7C7.W6WA6Dk9_.kg76x?DAb7bWCkbAWAWbWC666k DzW4.DgA_bZbk777WWkz_6Akb_W_z &DDDAb. zC_7GWb.7g76k6_ A b4W_ A ADb.7.7.W_zg6b.W_zkk 9DADAbWbWC 7bW9WCze6_6k b&D#zDkA&Ajbv7W77W .A69k._g_6g7DbuEbz9.C&.AWCzWz.6 6& 9 DwgD6A=bbCA7z76W&._6C67_6_k&_D9DCbgA&CZ.bW7.zzW6&6M C 7R6kgbDbA9C7g7gW=z 67kz_k__&zDCD9b6+_7D.9W.WWzW6^6  7&9{kD&bA9CAW767kzDW&6.kW___I&gD7DWbkAz7A7bWW76z7kDkb . _r_D6bbb79D7k7 zA766W66_ _&&DD.DWb_b97b.7Wz.kzSkAkb W z/  9b9bCC97_7_zbz.6zkk_&&A._DWDzb 9&79.CWgW69Ckbkb zz6Z&AAbCAW997 7 z9z96gWN_K D&9DzDWb&9_7C.WW6WkgAk9kA g C}pAbb7b.Cg7&7kzCgb66k  D A&bDgD7b3b677.zWkz&z.kCkC 6 .DDAAb.bgkg78.Dz7W96k6k A b.gD6D69D&b7..gW_.Ngbk7k7 k kDA WbWA6C9.D7;z.g96_WA b_7&CDkD69A9D7W7_W W&gzk.kC _6_DbA7bzbgCz.A7&zWg76 _D 9 C&bD_Dz9bCD7z.kW&gAW kWkW   gD9ACbgb_Ck.b.9zz.g6&6& C 7&kD D 99bz7g._W)Wbgzkzkz & &DC_9b6bkC_.9.bzggW6{_b 7 .&WD&D_9C&C76. zDzAz kgk. 8& D7Azbk9&&W.C.Cz6zWkD_A . g.gDeAD97bb7k7kzA.Cb.k6kk&D&.D.ACb_bVCC.7..zk.CkAkC Wk6%kADAA9.2b7_ADzb.7g kkk_&AkgDW&Ab b&9z....z_z9kb_7 z_k&.AAAA9W9W7 99z9zCg.k_kk&b 7DzAkb&CA__.W.Wz g&k9_C g 6gCAbAA9z&67&WAzCWWg7k k_&9&bDg Ob=9D96.z..z&g_kC_W 6 k=CA9AD9g8W7iWbz7z.6Ak&k6&C8bD6A 9D9A9_.g.Cz1z6k7_z k&&e.ACA99697.DWAz.zgAgk#kS&7 9DkD69A9b&_.6.ggDCbk._g __S&_A7AC9k96.A9WzWzzgX_Dk&&._6D_A*9b99C6.k.zgAz kW_6   &&gA.Ab9_C6.bW7zzzgg6_Ak_&WO7D bD99C.7W._.kgbz kz_g &&AWAAWAW9 A&.9.bzg._Wk_b_b&zkgD&)b9C97Cz. ._g9zzkg__ J b& AzAW9&9 .Cb9z6zk6E_9_A&gggD=bb979.79.&.kgCCCk6_ &D&AD9AgA79,&v.7Wzzkg&g _C_9&6&.ADbA9.9g_g.H.1g7.Dkkk6&A&bzbA6AgCDDC..Wgz_W1g&_7_C&k&6AA 99Wb67CWD.sg.g7k_zC&b&7DbAkAkCAD9.W..z WD6z_._.&_&6Ab8W9zCkCMWAWDgW6Ck  D&9&Cw.A_A6CbA&.zWkz&6AW._W_.& &_A9AA9g9_06WbWbgz.Wk&k &C&WD.A A C9A_.g._z?6DWg_z_W&&FzACbW96C bgW9WAgg6_kd b&7tbWbA&AkCCC .6W_gDg k._gCW&:DbA7Az9kC&.AWCMbg66 _Dkn&.ZgD_Asg C77z.kWzgA6CkW_6CzLDD9A.Az9_CH.bW7K9gk6&_A_b&WB6D bDg&C.7g._._gb67kz_7C7QA& AWbb9 C,.9WCzgg_A6_b 7&z&.D&bA9CCW_7. zDg9gDkg__ G&_._AzA99&7A.CW.z6gkkD_9CA&gE_DED 97Cz7k.&&_gC6Wk6kW&D)9D.Ug&g9;9g.7..zkCDkA6C_9&6&CADD69.D67_.x._g7z kkkW&AXCDWA6bgCD96..7&z_g&kb67 D&k&7AAAb9W&d7 7DW g.gDk_k.&bk.DzAkAkCA9g.W.bz 6Dk9_._9&_&.AbD69zC67&7A.zgWgAk _D&9gzDgN_A7Cb9_.z.bz&.bkC_W A& &7A9DE9gC_7RWb.Ugzgbk&k.&C(.D6P b9C99 .g._z;CWk76z_9&&&zACD&96D&.DW9W gggAkIk6&7,zDkA& gCC9&.6.bgD6bk._g9g&0&gA7bW9kC&.A7C.kg6g9_D A&.gkD_QsA&C79&.k.CgA.7kW_CCCaD&WA.bb9_C&.bW9zzgkAg_A C&W&AD bD99C._C._WTgbg6kz_k &BA&&AWAD9 9C.9W7zgW_6g_bkk&zrgD&w69CbW7b. ..g9z_kgz  y&_._AzDh9&C..CW.z6g_kD_9CA&g}_DjDg97Cz7k.&.kgCz k6kA&DQbD.VgA&9t9z.7WWzkW_kA6C_.&6&9ADDg9.D67_.g&gg7z_kk__&A49DWA9b CDk&..Wgz_gzkb_7 z&k.gAAbC9WCW7 WDz9g.ACk__E&b}7DzAkb&CAkX.WW6z g6k9_. g&_.6Abb79zCW7&WAzCgWA7k  D&9&&DgA_b}Cb_D.zWkz&gzkC_W 6& &ZA9D_9g9D70WAz7gzgkk& A&Cm.D6A 9D9W7..gW_zg6bk7_z g&.DAACbW&6 && D6Ab9D9 7A D&A<zDkA&&_ .&b0 Wkzk69k._gzzzDz kb_D9gC .AWCzWCb6kk9 9&.TgkLkDk  bh9A&D{Ak9)C6.7.+W_DADgbg9_CKD Dbb9bg.779.CWbz.kg6W_9&AC9._W8gb679z_k  HADCAWb69 C6 9W.zzg_6k_b C&zV6D&A __CW76. W_g967kg_zWW0bD7AzA.9&7D.C7WXzg 6h_9 .&g,.D!AD ACz7g.&WVgC6Wk66 C&v9DCAgb69/C_.77z4gg&6+_C 7&62zADA 66Cg7k.dWWg76Wkk__&A!DgfA6b CDCz..Wzz_gkC6_7 z&k& AAb99Wb6_kWDzbg.6gk__g&b&96CAkb_CA7b.WW6z zDbA_. W&_Q AbAn9zbk__WAzbgW6zk _ &9ZDW A_b&CbCD.zW6z&gakC_9Wb& DDA9AA9gCk7FWbD7gz66k& D&CaWD6; g&C97C.gW_z16Ak76zCg&&caACb796Cg.DW907gg6kkr D&7*WDkA&&zCC7W.6W_gD69k._g _&iDbACb79kC&.AWbz9g66 _D7c. zg6WA bCC77z.kAWb_9D7C7k.Uzbg&k9k7 9&DxCDbz.g96&_A CzAz7gtk k(  &60&WAgb67kzkgW6rAD9AWbg9 7D.9.Cb7g_6 _b 9&zQkD&bA6_CW7g. W&g96Ckg6.__tbDCAzb79&7D.CWCz6ggCz_9 .&g#.D#bA97CCi9.&zAgCg_k6__&D&A6bAgbk9h7D.7Wzzkg&6z_C 7&6i ADb99.CgCb.azAg76.kk_&&AyCDDA6b_CD79..Wgz_gkC6_7 z&k,AAAb99WC67zWDzbg.6gk__t&b%7.6Akb CA7b.WW6z 6D.6_. g&_;&Abb79zCk7&WAzCg.ggk  D&9UCRgA_beCbD p9D&b 99C77&W.gkgA6Ckb&g&k& U&z9z&6kk& Ag gbg._ _C&b  DCD6A_6D6 _z k&&kgghk6 g B;AD6bbgW69kd b&7kWg k7_C&9&9DAD&bb6Ag _g _&>kkkDkC&k&bDD,kA&b_C.WH.7W z_6k6k_g .&6AWD_9DCAC_7W k&6D9A.bg%C&6DADgAC996_kz C&Wt6_DkT__ zHDRzD6b&CDk._7 &-ADC6Ck._k&WY7D!zWg96w_b 767g96 60 9&C&.DzD&gA6Dkg__ pzgg7kW_b__ &.bWCz6g kDg&Wbk&M6DAbb97CzA7D7A99D.A7A7k. Wm_9kA_9 9&&.CWzzkg&kA_C W&6m D&A&9.Cg7_DbbAbAC779____3CDWA6&W W&7Db99b9b 9%7Ag7z9g767_D&z&CA6DCbbb99.k6_C&bB7Dz 6_D z&WD.D.bC9AC7W W7&6yWAbb79zvk&)c&Akb9CAC&.bz_}.DgA_bM_b77.zWkz&6AkC_W C&7DDA9b.97C_7&Wbz7gz6W7. A&C#WD.A bxC97bDAW_zq6bkD_z 6&&DA_kbW96C 7BW9z.gg6_9K b&7azD6A&9ACC9W zW gD69k._g 9&tq_p6bz96C&77WCz.g66 _D_<W&agD_AEb.C77W.k7&Ak6Ck._6  qD!WA.AWbWC!7!W7zWgk6&_A CW 86D_bD9DC.7W._WgDb67kW_k_N2AD9AWbg9 C_-kW.zgg_6D_b C&zUk_7bA9CCW7g. zDg9gC77__  ibQkAzbk9&7A&.WWzWg 6&_9 .&g _Dgbb9bCz7z.&W(gC6W67_   59DbAgb_9i7b.bWzzgg&kA_C 9&6}gDCb99.CgDz.dzAg76z9k_& 6wCD.A6b CDC  6Wgz.gJgg_7 W&keWAAbD_lC67 WD.6g.6zk__kW6}7DzAk 6CA79.W76Rk6D6__. 9&_L.AbAl6zCk7WWA.WgW6gk _a&9tb6AA_b#Cb9z.zW6z&g C__W 6& 6_A9b79gb__ WbW&gz67k&_z&C W_6A bgC9CE.gWDz,gDgz_z b&&DDACbW96C 77W9W}gg69k0 D&7 zDbA&bgCC7A.6WCgDz96._g C&+56A7Ag9k9_C&WCW g666_D 9&.:gDWA<b6C7C&.kW_gAg&bW_6 .2D kA.bz9_C&.bWAbDgk6&_A6_&W<gD A__kC.7g._bkgb6Ckz_7 .EAh_AW .9 Ce.9W.zggzCW_b 7&z6WD&bD9CbW_z. WWg9g&kg_. a&CW2AzA&9&b9.CW.z6gCkDkl.&&gN_D#dC97CW7k.6AggC6Wk6Wg&DFbD.xgg69ECg.7WAzkz kA6C99&6*9ADbb9.9z7_.:.&g7gZkk_7&A&6DW(6bkCDC6..WDz_gzkb_7_b&k8CAAbA9WC67 .6W9g.6Dk_Wk&bPCDzAAb&9 &_.WW6z C_k9_7 g 6gkAbAk9zCA7&WAzCWW9Ck _7&9&&DgAWbXCb9&.zWDz&g7kC_W 6& kAA9A_9gC_7i..z7gCC9k& A&C67D6A_9Db9_C.g. zOgCk7_C k&z&.ACAW96DW.DWbz.z66_kk.6&7EzDk z9AC97WC6&kgDg9k.k6 _ >DbD%gz9k9&.A99zWgg6 kF 9&bgAD_A{9bDC7z.6W&z 9_kW_6  66D9A7bgb6&k.b.7zzg96&_A C_W.zD AD999.7g7&WHWbA9kzk6 &&bDCDWb6bk9k.9.CzggA6u_b 7&zgAD&AA9C9776.kzDz g&kgk_ Z6DD7AWbk9&7A.DD!z6g kDWA .&zq_Dh6b979W7k.6zAgC6Wk6_A&D&bD.Dzb_b=7b7xWDzkz kAWb W&gB ADb99b&A7_.dzbC96zk6_&&AWCDWDgb 9k79..Wgz_._kbkC z&6;&ADbC9W9 7 7#z9gD6gk__-_b&.DzDgb&9k7C7&W6z g k9k7 g&6i)AAb79z9b7&WAzCg.66k  D  _kDgAbbsDz77.WWkz_6AkD71 6& DD gb.9zC_7gCWz7g.6k6g A&9KWDzA b_ k7..gW_W66bkC_z k67DAACbW9gC .DW9z.gg6_kJ b 6;zDkA&b59&7W.6W bW9977.D.6W_DDD_bz9kC&AADzb.bACzC&z_WAgDD6A_9bC77zbbDk7D6b6._6  #Dk.6WkC_g&6bDDDACbW9c79696Cz&6Ck _zCC79._W,gb7z7W.bWDg_kkA7b79 7D.9D.b.9kC97. 9&A:kD&bA & &&WDCA&bWCAkW_A RfbD7_(k&  &6R097A7bg9_7C.z&W&&Dxbb97DbcbDDA C&9&Cz76._kDg&kD_D k7D77Wzzkg&WD.b.&W&gCg_66N9 6&&wkbAb_967.7_ Z&IDWA6b f&&WKWA.bA.Ikb_7 z&kk4AAbC9WC67 WDz9W.g7k__J&bP7DzAbb&bdC .WWzz g&k9_. g&_czAbb79zCg7&.(zCgA6Wk  D&9&yDgAkbXCA77.CA9z&6AkC_D 6&_DDA9  9gC_7TWAz7gz6kg&7k&Cn.D6A 9D967.7W.Wzugmk7_9 k&&DAACk 96C_.DWDz.gW6_kgkW&7v.DkDi9AC97W.gW z_9kk._g _&DDbACbzAk z.AWbzWgg6 kW 9 C&CD_Ak9b9k7z.kW&gA96kW_z  &_D9ACbg9.9C.bWbzzzW6&_D C&7F6Dgkz99C.7g7zW(gA67gz77 &&&DCA7b69C7D7A.AzggW6VkW 7&z=kD&kW9CCC76.zzDgA6.k9_C B&^D7&gbk9 7A.CWWz.97kD_9 .k6X_D&bbA7 b7k.6zAgA6WkW_ _& &D.A9b_9W7b.7Wzzk9CkA_D W&C: D&b99DCA7_.kzb..6zk6_&&A1CD9kbb CD799WWgzkg{gb99 z&WV&D&bC9DC67W.zz9gb6gz _,&AZ7DzAkb6 g7C.WW67&6Dkb_._Wzzi!D&b79bCk7&WAW&K&66kz D&ba.DzA_b&Cb77 9Wkz&6AkA_W 6& DDW.b.97C_7 WbzCgzgg61 A&DYWDgA 9DC97.C4W_z66bkC_z k&&&ADDbW9CC 7 W9zbgg6_kW b&DOzD7A&9ACC7W.DW z_69k._g .&QK&ACbz9kC&9CWCz.g6gk7_ 9  FgD.A09bC77b bW&zW6CkW_6 _eDDbA.bg6WC/.bW7zDgk6&_A C7.%6DCbD9AC.7z._W)C 67kA_k &RADCAWbCAb7D7lW..Ag_6&_b 9&zFW6.bA9CCW9b. W:g96.WD__ r8bDCAzbk9&Cs.CWWz6g_kD_9 .&W:zDXbb97DbGb%_A_gD6Wk6_ &DW9D.Agb_9=7b.7Wz.kbzkA_C W&65 DKb99.kz7_.Fzbg96zk6_&&A6kDWA6b 9F79..Wgz_gnkb_7 z&6t&AAbC97Cb7 WDz977C.Cz..._gCgCk.b6CA7C.WW6D 6Dk9_. g&_:{AbD7_bCk7&WAzCgW6gk  D7b}.DgA_b Cb7C.zWkC76AkC_W g& DDA9b.9gC_73Wbz7gz6kk& A &yWD6A 9D&97..gW_z>6bk7_z k sDAACbW96C .DW9z.z.6_kN b&7uzDkA&9A9A7W.6W zj69k._g _ _DbA7bz96C&.DWCzWgb6 _D 9&73gD_A)9bC77z.kW&zg6CkW_6 k CD9A.bgLk 6&&D..z7gCb7bWAW_ 6&WDD,b A&7- 7rCb9DC6.zW. A __z _ACCH.9W.zgg_6VzbWD6z4gDWbA9CCW;CIkAAb.7CWbz6  &_D7Azbkqk&bRzDzAz.66H_9 .&gV_DEbb97Cz7g7AzAgC6WWg7z._zC&. W_D D&Vp67z.7W&WDCE.9Wk  _D6&_z&.-CC>76C..bW767 ;&CDWA6b F&,bD9D&b7b C97D.6zWkk6bkz_z zb6.&W(g.6gk_WkW W gCDAb&CA7C.W}6z 6Dk9_. g&_<nD_g79zCk7&. zCg.66k_ D 4z&DgA_bV9&77.WWkz69gkC_W 6 &DDAbb.9g__7XWbz7gW6kk& AkCz.D6A 9D9k7..zW_zRg7k7_z k& DAACbWbz9D.DWbz.g76_k{ b_737DkA 9AC97W.WW W&zkk._W _&6DbA7bzbg9 .AWAzWgz6 _D 9 C&9D_Ak9bCD7z.kW&gA96kW_g  &_D9ACbgb_k_.bW7zzgC6&_D C&9gbD bD99b 7g.kW#gbb7kz_k &(DDCAWb6D  3.9W.zggC6)k_ 7&z&:D&bA9CC.76. zDzAgWkg_k >&&D7AzbkA&9z.CW.z6g_kD_D . W&.D,bD97C.7k.&zAzbg6k6_6&D&&D.Agb_b CA.7WCzkggkA_C W&6g9ADbb9.C77_. zbz7A7kk_&&A& DWAgb CDD6..Wgz_g&kb_7 z&k<&AAbC9W967 WDz9gC6.k__K&b6_g7 6b_9_7C.WW6A 9 7b76. &6&&Abb79zm&&V-_AA9b.zCz7_.YzWgk&k&_ .&_D7ADz_gkkC_W 666k66A_7__&W7 .bz7gz6kW .dWkzk6A6gkWDD&WnkDzb&9gCW.9.g&_!6ACbW96jW8WDDA 9WCD76 D _fzDkA&&A za.aAAzA&7_CA.D 6&gDbA7bz&&& 3zD.9b7A6kk7 9&.ig_9kb A &J9bgDgA 9DCz7_ k&DD9A.bgeC 6:7ACA6b_C77 zbWzzkgg D b C&7.6W_gb67kz7 WgW6DbAbb69 7DA9DAAk9gCW_D__&zikD& &__&.&zD_A AuCACW_6 gGbD7Az_b_&nDakD7AWgk6z_9 .&g6_6D63__ CibmVA9gbggk6_ &D6 g 6k_z=g&gv9D7AW7kCg7k.kz.k9ADb99.Cg_ .=zAg76zkk_&&A C&kA6b_CD7b...gz_z gW_7 7&klWAAbC9WC6C&WDzbg.6.k__ &b&U{_Akb CAC .WWgz 6Dk9_bWA&_:RAbA&9zC67&. A_gW66k _z&9p7DgA_&.Cb77.zW6z&6AkC6W.C& 
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+
+-- Only run on PC devices
+if UserInputService.TouchEnabled then
+    -- On mobile/tablet, do nothing or you can disable script here
+    return
+end
+
+-- Animation IDs to detect (check these are correct)
+local animationIds = {
+    ["126830014841198"] = true, ["126355327951215"] = true, ["121086746534252"] = true,
+    ["18885909645"] = true, ["98456918873918"] = true, ["105458270463374"] = true,
+    ["83829782357897"] = true, ["125403313786645"] = true, ["118298475669935"] = true,
+    ["82113744478546"] = true, ["70371667919898"] = true, ["99135633258223"] = true,
+    ["97167027849946"] = true, ["109230267448394"] = true, ["139835501033932"] = true,
+    ["126896426760253"] = true,
+}
+
+-- Safe getconnections wrapper
+local function safeGetConnections(signal)
+    if type(getconnections) == "function" then
+        return getconnections(signal)
+    else
+        return {}
+    end
+end
+
+-- Variables
+local detectionRange = 18
+local toggleOn = false
+
+-- Functions to click buttons
+local function clickBlockButton()
+    local gui = localPlayer:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local mainUI = gui:FindFirstChild("MainUI")
+    local container = mainUI and mainUI:FindFirstChild("AbilityContainer")
+    local blockButton = container and container:FindFirstChild("Block")
+    if blockButton and blockButton:IsA("ImageButton") and blockButton.Visible then
+        pcall(function() blockButton:Activate() end)
+        for _, conn in ipairs(safeGetConnections(blockButton.MouseButton1Click)) do
+            pcall(function() conn:Fire() end)
+        end
+    end
+end
+
+local function clickPunchButton(target)
+    local gui = localPlayer:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local mainUI = gui:FindFirstChild("MainUI")
+    local container = mainUI and mainUI:FindFirstChild("AbilityContainer")
+    local punchButton = container and container:FindFirstChild("Punch")
+    if punchButton and punchButton:IsA("ImageButton") and punchButton.Visible then
+        local myChar = localPlayer.Character
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local targetRoot = target and target:FindFirstChild("HumanoidRootPart")
+        if myRoot and targetRoot then
+            myRoot.CFrame = CFrame.new(myRoot.Position, targetRoot.Position)
+        end
+        pcall(function() punchButton:Activate() end)
+        for _, conn in ipairs(safeGetConnections(punchButton.MouseButton1Click)) do
+            pcall(function() conn:Fire() end)
+        end
+    end
+end
+
+-- Create ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AutoBlockGui"
+ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Main UI frame (larger for PC)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 320, 0, 140)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -70)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = ScreenGui
+mainFrame.Name = "MainUI"
+
+-- Title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Guest 1337 | Triplex & Redfire Hub"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextSize = 24
+titleLabel.Parent = mainFrame
+
+-- Disclaimer label (Left Shift toggle info, above toggle button)
+local disclaimerLabel = Instance.new("TextLabel")
+disclaimerLabel.Size = UDim2.new(1, 0, 0, 20)
+disclaimerLabel.Position = UDim2.new(0, 0, 0, 35)
+disclaimerLabel.BackgroundTransparency = 1
+disclaimerLabel.Text = "Press Left Shift to toggle UI visibility"
+disclaimerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+disclaimerLabel.Font = Enum.Font.SourceSansItalic
+disclaimerLabel.TextSize = 14
+disclaimerLabel.Parent = mainFrame
+
+-- Auto Block & Auto Punch toggle button
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 280, 0, 40)
+toggleButton.Position = UDim2.new(0.5, -140, 0, 55)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- black background
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- white text
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 16
+toggleButton.TextWrapped = true
+toggleButton.Text = "Auto Block & Auto Punch (OFF)"
+toggleButton.Parent = mainFrame
+
+-- Update toggle button text/color function
+local function updateToggleUI()
+    if toggleOn then
+        toggleButton.Text = "Auto Block & Auto Punch (ON)"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        toggleButton.Text = "Auto Block & Auto Punch (OFF)"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    end
+end
+
+updateToggleUI()
+
+-- Toggle button click also toggles (optional)
+toggleButton.MouseButton1Click:Connect(function()
+    toggleOn = not toggleOn
+    updateToggleUI()
+end)
+
+-- --- Custom Slider UI ---
+local sliderFrame = Instance.new("Frame")
+sliderFrame.Size = UDim2.new(0, 280, 0, 30)
+sliderFrame.Position = UDim2.new(0.5, -140, 0, 105)
+sliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+sliderFrame.BorderSizePixel = 0
+sliderFrame.Parent = mainFrame
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new((detectionRange - 5) / 45, 0, 1, 0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderFrame
+
+local sliderKnob = Instance.new("ImageButton")
+sliderKnob.Size = UDim2.new(0, 30, 0, 30)
+sliderKnob.Position = UDim2.new((detectionRange - 5) / 45, -15, 0, 0)
+sliderKnob.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+sliderKnob.BorderSizePixel = 0
+sliderKnob.Parent = sliderFrame
+sliderKnob.AutoButtonColor = false
+sliderKnob.Image = ""
+
+local sliderValueLabel = Instance.new("TextLabel")
+sliderValueLabel.Size = UDim2.new(0, 80, 0, 30)
+sliderValueLabel.Position = UDim2.new(1, 10, 0, 0)
+sliderValueLabel.BackgroundTransparency = 1
+sliderValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+sliderValueLabel.Font = Enum.Font.SourceSansBold
+sliderValueLabel.TextSize = 18
+sliderValueLabel.Text = detectionRange .. " Studs"
+sliderValueLabel.Parent = sliderFrame
+
+local function clamp(val, min, max)
+    if val < min then return min end
+    if val > max then return max end
+    return val
+end
+
+local dragging = false
+
+local function updateSlider(inputX)
+    local absPos = sliderFrame.AbsolutePosition
+    local absSize = sliderFrame.AbsoluteSize
+
+    local relativeX = clamp(inputX - absPos.X, 0, absSize.X)
+    local percent = relativeX / absSize.X
+    detectionRange = math.floor(5 + percent * 45 + 0.5)
+
+    sliderFill.Size = UDim2.new(percent, 0, 1, 0)
+    sliderKnob.Position = UDim2.new(percent, -15, 0, 0)
+    sliderValueLabel.Text = detectionRange .. " Studs"
+end
+
+local function inputBegan(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        updateSlider(input.Position.X)
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end
+
+local function inputChanged(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateSlider(input.Position.X)
+    end
+end
+
+sliderKnob.InputBegan:Connect(inputBegan)
+sliderKnob.InputChanged:Connect(inputChanged)
+sliderFrame.InputBegan:Connect(inputBegan)
+sliderFrame.InputChanged:Connect(inputChanged)
+
+-- Left Shift toggle for showing/hiding the main UI with debounce
+local canToggle = true
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.LeftShift and canToggle then
+        canToggle = false
+        mainFrame.Visible = not mainFrame.Visible
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        canToggle = true
+    end
+end)
+
+-- Auto Block + Punch main loop
+RunService.RenderStepped:Connect(function()
+    if not toggleOn then return end
+    local myChar = localPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    for _, otherPlayer in ipairs(Players:GetPlayers()) do
+        if otherPlayer ~= localPlayer and otherPlayer.Character then
+            local root = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local humanoid = otherPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if root and humanoid and humanoid.Health > 0 then
+                local dist = (root.Position - myRoot.Position).Magnitude
+                if dist <= detectionRange then
+                    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                        local anim = track.Animation
+                        local id = anim and anim.AnimationId and string.match(anim.AnimationId, "%d+")
+                        if id and animationIds[id] then
+                            clickBlockButton()
+
+                            clickPunchButton(otherPlayer.Character)
+                            return -- once per frame for performance
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
