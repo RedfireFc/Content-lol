@@ -1,13 +1,138 @@
-local uis = game:GetService("UserInputService")
-local ismobile = uis.TouchEnabled and not uis.KeyboardEnabled
-local ispc = uis.KeyboardEnabled and uis.MouseEnabled
+-- [ Services ]
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
 
--- Output result
-if ismobile then
-   loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Guest%201337%20auto%20block.txt"))()
-elseif ispc then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Guest%201337%20auto%20block%20pc%20version.txt"))()
-
-else
-    -- idk put this here if platform isnt recognized
+-- [ Safe GetConnections for Executor ]
+local function safeGetConnections(signal)
+    local gc = getconnections or getsignalconnections or nil
+    if gc then
+        return gc(signal)
+    else
+        return {}
+    end
 end
+
+-- [ Animation IDs ]
+local animationIds = {
+    ["126830014841198"] = true, ["126355327951215"] = true, ["121086746534252"] = true,
+    ["18885909645"] = true, ["98456918873918"] = true, ["105458270463374"] = true,
+    ["83829782357897"] = true, ["125403313786645"] = true, ["118298475669935"] = true,
+    ["82113744478546"] = true, ["70371667919898"] = true, ["99135633258223"] = true,
+    ["97167027849946"] = true, ["109230267448394"] = true, ["139835501033932"] = true,
+    ["126896426760253"] = true,
+}
+
+-- [ Load Orion ]
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jensonhirst/Orion/main/source"))()
+
+-- [ Variables ]
+local detectionRange = 18
+local toggleOn = false
+
+-- [ Click Block Button ]
+local function clickBlockButton()
+    local gui = localPlayer:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local mainUI = gui:FindFirstChild("MainUI")
+    local container = mainUI and mainUI:FindFirstChild("AbilityContainer")
+    local blockButton = container and container:FindFirstChild("Block")
+    if blockButton and blockButton:IsA("ImageButton") and blockButton.Visible then
+        print("Trying to block...")
+        pcall(function() blockButton:Activate() end)
+        for _, conn in ipairs(safeGetConnections(blockButton.MouseButton1Click)) do
+            pcall(function() conn:Fire() end)
+        end
+    end
+end
+
+-- [ Click Punch Button with Aimbot ]
+local function clickPunchButton(target)
+    local gui = localPlayer:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local mainUI = gui:FindFirstChild("MainUI")
+    local container = mainUI and mainUI:FindFirstChild("AbilityContainer")
+    local punchButton = container and container:FindFirstChild("Punch")
+    if punchButton and punchButton:IsA("ImageButton") and punchButton.Visible then
+        local myChar = localPlayer.Character
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local targetRoot = target and target:FindFirstChild("HumanoidRootPart")
+        if myRoot and targetRoot then
+            myRoot.CFrame = CFrame.new(myRoot.Position, targetRoot.Position)
+        end
+        print("Trying to punch", target and target.Name)
+        pcall(function() punchButton:Activate() end)
+        for _, conn in ipairs(safeGetConnections(punchButton.MouseButton1Click)) do
+            pcall(function() conn:Fire() end)
+        end
+    end
+end
+
+-- [ Orion Window ]
+local Window = OrionLib:MakeWindow({
+    Name = "Guest 1337 | Triplex Hub Fast",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "Guest1337Config"
+})
+
+local MainTab = Window:MakeTab({
+    Name = "Auto Block",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MainTab:AddToggle({
+    Name = "Enable Auto Block + Punch",
+    Default = false,
+    Save = true,
+    Flag = "autoblocktoggle",
+    Callback = function(Value)
+        toggleOn = Value
+    end    
+})
+
+MainTab:AddTextbox({
+    Name = "Detection Range",
+    Default = "18",
+    TextDisappear = false,
+    Save = true,
+    Flag = "autoblockrange",
+    Callback = function(Value)
+        local num = tonumber(Value)
+        if num then
+            detectionRange = math.clamp(num, 5, 50)
+        end
+    end
+})
+
+OrionLib:Init()
+
+-- [ Optimized Auto Block Loop ]
+RunService.RenderStepped:Connect(function()
+    if not toggleOn then return end
+    local myChar = localPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    for _, otherPlayer in ipairs(Players:GetPlayers()) do
+        if otherPlayer ~= localPlayer and otherPlayer.Character then
+            local root = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local humanoid = otherPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if root and humanoid and humanoid.Health > 0 then
+                local dist = (root.Position - myRoot.Position).Magnitude
+                if dist <= detectionRange then
+                    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                        local anim = track.Animation
+                        local id = anim and anim.AnimationId and string.match(anim.AnimationId, "%d+")
+                        if id and animationIds[id] then
+                            clickBlockButton()
+                            clickPunchButton(otherPlayer.Character)
+                            return
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
