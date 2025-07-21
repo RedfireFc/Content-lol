@@ -70,7 +70,7 @@ end
 
 -- [ Orion Window ]
 local Window = OrionLib:MakeWindow({
-    Name = "Guest 1337 | Triplex Hub Fast",
+    Name = "Guest 1337 | Triplex & Redfire Hub",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "Guest1337Config"
