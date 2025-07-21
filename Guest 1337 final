@@ -1,0 +1,13 @@
+local uis = game:GetService("UserInputService")
+local ismobile = uis.TouchEnabled and not uis.KeyboardEnabled
+local ispc = uis.KeyboardEnabled and uis.MouseEnabled
+
+-- Output result
+if ismobile then
+   --loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Guest%201337%20auto%20block.txt"))()
+elseif ispc then
+    --loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Guest%201337%20auto%20block%20pc%20version.txt"))()
+
+else
+    -- idk put this here if platform isnt recognized
+end
