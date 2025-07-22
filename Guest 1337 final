@@ -1,12 +1,115 @@
---[[
- .____                  ________ ___.    _____                           __                
- |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
- |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
- |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
- |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
-         \/          \/         \/    \/                \/     \/     \/                   
-          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+local a = game:GetService("Players").LocalPlayer
+local b = a:WaitForChild("PlayerGui")
 
-]]--
+local function obfStr(t)
+    local s = ""
+    for _, v in ipairs(t) do
+        s = s .. string.char(v)
+    end
+    return s
+end
 
-local v0=game:GetService("Players");local v1=game:GetService("RunService");local v2=game:GetService("ReplicatedStorage");local v3=v0.LocalPlayer;local v4=game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting;local v5=require(v4);local v6=246 -146 ;local v7=28;local v8=1 + 6 ;local v9=27;local v10=0 + 0 ;local v11=24;local function v12(v25) local v26=885 -(261 + 624) ;local v27;while true do if (v26==0) then v27=getconnections or getsignalconnections or nil ;if v27 then return v27(v25);else return {};end break;end end end local v13={["126830014841198"]=true,["126355327951215"]=true,["121086746534252"]=true,["18885909645"]=true,["98456918873918"]=true,["105458270463374"]=true,["83829782357897"]=true,["125403313786645"]=true,["118298475669935"]=true,["82113744478546"]=true,["70371667919898"]=true,["99135633258223"]=true,["97167027849946"]=true,["109230267448394"]=true,["139835501033932"]=true,["126896426760253"]=true,["126355327951215"]=true,["121086746534252"]=true,["93069721274110"]=true,["109667959938617"]=true,["126681776859538"]=true,["129976080405072"]=true};local v14=loadstring(game:HttpGet("https://raw.githubusercontent.com/jensonhirst/Orion/main/source"))();local v15=31 -13 ;local v16=true;local v17=false;local v18=false;local v19;local function v20() local v28=1080 -(1020 + 60) ;local v29;local v30;local v31;local v32;while true do if (v28==(1423 -(630 + 793))) then v29=v3:FindFirstChild("PlayerGui");if  not v29 then return;end v28=3 -2 ;end if (v28==(4 -3)) then v30=v29:FindFirstChild("MainUI");v31=v30 and v30:FindFirstChild("AbilityContainer") ;v28=1 + 1 ;end if (v28==(6 -4)) then v32=v31 and v31:FindFirstChild("Block") ;if (v32 and v32:IsA("ImageButton") and v32.Visible) then local v74=0;while true do if (v74==1) then for v85,v86 in ipairs(v12(v32.MouseButton1Click)) do pcall(function() v86:Fire();end);end break;end if (v74==0) then print("Trying to block...");pcall(function() v32:Activate();end);v74=1748 -(760 + 987) ;end end end break;end end end local function v21(v33) local v34=0;local v35;local v36;local v37;local v38;while true do if (v34==1) then v36=v35:FindFirstChild("MainUI");v37=v36 and v36:FindFirstChild("AbilityContainer") ;v34=1915 -(1789 + 124) ;end if (v34==2) then v38=v37 and v37:FindFirstChild("Punch") ;if (v38 and v38:IsA("ImageButton") and v38.Visible) then local v75=0;local v76;local v77;local v78;while true do if (v75==(768 -(745 + 21))) then print("Trying to punch",v33 and v33.Name );pcall(function() v38:Activate();end);v75=2 + 1 ;end if (v75==(2 -1)) then v78=v33 and v33:FindFirstChild("HumanoidRootPart") ;if (v77 and v78) then local v92=0 -0 ;local v93;local v94;while true do if (v92==(1 + 0)) then if ((v94-v10)>=v11) then local v102=0 + 0 ;while true do if (v102==(1056 -(87 + 968))) then v10=v94;break;end if (v102==(0 -0)) then print("aimbot works");v77.CFrame=CFrame.new(v77.Position,v93);v102=1 + 0 ;end end else local v103=0 -0 ;local v104;while true do if (v103==0) then v104=math.ceil(v11-(v94-v10) );print("aimbot on cooldown. can be used again in"   .. v104   .. " more seconds." );break;end end end break;end if (v92==0) then v93=v78.Position + (v78.CFrame.LookVector * (1415 -(447 + 966))) ;v94=os.clock();v92=2 -1 ;end end end v75=1819 -(1703 + 114) ;end if ((704 -(376 + 325))==v75) then for v87,v88 in ipairs(v12(v38.MouseButton1Click)) do pcall(function() v88:Fire();end);end break;end if (v75==0) then v76=v3.Character;v77=v76 and v76:FindFirstChild("HumanoidRootPart") ;v75=1;end end end break;end if (v34==0) then v35=v3:FindFirstChild("PlayerGui");if  not v35 then return;end v34=1;end end end local v22=v14:MakeWindow({Name="Lead Hub",HidePremium=false,SaveConfig=true,ConfigFolder="Guest1337Config"});local v23=v22:MakeTab({Name="Auto Block",Icon="rbxassetid://4483345998",PremiumOnly=false});local v24=v22:MakeTab({Name="Stamina",Icon="rbxassetid://4483345998",PremiumOnly=false});v23:AddToggle({Name="Auto Block",Default=false,Save=true,Flag="autoblocktoggle",Callback=function(v39) v16=v39;end});v23:AddToggle({Name="Auto Punch (after block)",Default=false,Save=true,Flag="autopunchtoggle",Callback=function(v40) v17=v40;end});v23:AddTextbox({Name="Detection Range",Default="18",TextDisappear=false,Save=true,Flag="autoblockrange",Callback=function(v41) local v42=0 -0 ;local v43;while true do if (v42==(0 -0)) then v43=tonumber(v41);if v43 then v15=math.clamp(v43,5,50);end break;end end end});v24:AddToggle({Name="Infinite Stamina",Default=false,Save=true,Flag="infstaminatoggle",Callback=function(v44) v18=v44;end});v24:AddTextbox({Name="Max Stamina",Default="100",TextDisappear=false,Save=true,Flag="maxstamina",Callback=function(v45) local v46=0 + 0 ;local v47;while true do if ((0 -0)==v46) then v47=tonumber(v45);if v47 then v6=math.clamp(v47,5,2000);end break;end end end});v24:AddTextbox({Name="Stamina Gain",Default="28",TextDisappear=false,Save=true,Flag="staminagain",Callback=function(v48) local v49=14 -(9 + 5) ;local v50;while true do if (v49==0) then v50=tonumber(v48);if v50 then v7=math.clamp(v50,5,2376 -(85 + 291) );end break;end end end});v24:AddTextbox({Name="Stamina Loss",Default="7",TextDisappear=false,Save=true,Flag="staminaloss",Callback=function(v51) local v52=tonumber(v51);if v52 then v8=math.clamp(v52,1270 -(243 + 1022) ,2000);end end});v24:AddTextbox({Name="Sprint Speed",Default="27",TextDisappear=false,Save=true,Flag="sprintingspeed",Callback=function(v53) local v54=tonumber(v53);if v54 then v9=math.clamp(v54,19 -14 ,1650 + 350 );end end});task.spawn(function() local v55=1180 -(1123 + 57) ;local v56;local v57;while true do if (v55==(1 + 0)) then v57.Active=true;v57.Draggable=true;v55=256 -(163 + 91) ;end if (v55==(1932 -(1869 + 61))) then v57.Selectable=true;break;end if (v55==0) then v56=v3:WaitForChild("PlayerGui"):WaitForChild("Orion");v57=v56:WaitForChild("Main");v55=1 + 0 ;end end end);v14:Init();task.spawn(function() local v58=0;while true do if (v58==1) then while true do local v71=0 -0 ;while true do if (v71==(0 -0)) then task.wait(0.1 + 0 );if v18 then pcall(function() local v95=0 -0 ;while true do if (v95==(0 + 0)) then v19.StaminaLossDisabled=true;v19.Stamina=v19.MaxStamina;v95=1475 -(1329 + 145) ;end if (v95==(972 -(140 + 831))) then if ((typeof(v19.StaminaChanged)=="Instance") and v19.StaminaChanged.Fire) then v19.StaminaChanged:Fire();end break;end end end);end break;end end end break;end if (v58==(1850 -(1409 + 441))) then pcall(function() v19=require(v2:WaitForChild("Systems"):WaitForChild("Character"):WaitForChild("Game"):WaitForChild("Sprinting"));end);if  not v19 then local v79=718 -(15 + 703) ;while true do if (v79==(0 + 0)) then warn("StaminaModule not found.");return;end end end v58=439 -(262 + 176) ;end end end);v1.RenderStepped:Connect(function() local v59=0;while true do if (v59==(1723 -(345 + 1376))) then if (v18 and v19) then pcall(function() local v80=688 -(198 + 490) ;while true do if (v80==0) then v19.StaminaLossDisabled=true;v19.Stamina=v19.MaxStamina;break;end end end);end break;end if (v59==(0 -0)) then v5.MaxStamina=v6;v5.StaminaGain=v7;v59=1;end if (1==v59) then v5.StaminaLoss=v8;v5.SprintSpeed=v9;v59=4 -2 ;end end end);v1.RenderStepped:Connect(function() local v60=0;local v61;local v62;while true do if (v60==(1208 -(696 + 510))) then for v72,v73 in ipairs(v0:GetPlayers()) do if ((v73~=v3) and v73.Character) then local v81=0;local v82;local v83;while true do if (v81==1) then if (v82 and v83 and (v83.Health>0)) then local v96=0;local v97;while true do if (v96==(0 -0)) then v97=(v82.Position-v62.Position).Magnitude;if (v97<=50) then for v105,v106 in ipairs(v83:GetPlayingAnimationTracks()) do local v107=1262 -(1091 + 171) ;local v108;local v109;while true do if (v107==(1 + 0)) then if (v97<=v15) then if (v109 and v13[v109]) then v20(v73.Character);if v17 then v21(v73.Character);end return;end end break;end if (v107==0) then v108=v106.Animation;v109=v108 and v108.AnimationId and string.match(v108.AnimationId,"%d+") ;v107=3 -2 ;end end end end break;end end end break;end if (v81==(0 -0)) then v82=v73.Character:FindFirstChild("HumanoidRootPart");v83=v73.Character:FindFirstChildOfClass("Humanoid");v81=375 -(123 + 251) ;end end end end break;end if (v60==(4 -3)) then v62=v61 and v61:FindFirstChild("HumanoidRootPart") ;if  not v62 then return;end v60=2;end if (v60==(698 -(208 + 490))) then if  not v16 then return;end v61=v3.Character;v60=1;end end end);
+local _key = obfStr({107,101,121}) -- "key"
+local verified = false
+
+local g = Instance.new("ScreenGui")
+g.Name = "Gui_"..math.random(100000,999999)
+g.ResetOnSpawn = false
+g.Enabled = true
+g.Parent = b
+
+local f = Instance.new("Frame")
+f.Size = UDim2.new(0, 300, 0, 160)
+f.Position = UDim2.new(0.5, -150, 0.5, -80)
+f.BackgroundColor3 = Color3.fromRGB(30,30,30)
+f.BorderSizePixel = 0
+f.AnchorPoint = Vector2.new(0.5, 0.5)
+f.Parent = g
+
+local t = Instance.new("TextLabel")
+t.Text = "🔐 Lead Hub Key System"
+t.Size = UDim2.new(1, 0, 0, 30)
+t.BackgroundTransparency = 1
+t.Font = Enum.Font.SourceSansBold
+t.TextSize = 22
+t.TextColor3 = Color3.fromRGB(255,255,255)
+t.Parent = f
+
+local c = Instance.new("TextButton")
+c.Text = "📋 Copy Key Link"
+c.Size = UDim2.new(1, -20, 0, 25)
+c.Position = UDim2.new(0, 10, 0, 5)
+c.BackgroundColor3 = Color3.fromRGB(100,100,100)
+c.TextColor3 = Color3.fromRGB(255,255,255)
+c.Font = Enum.Font.SourceSansBold
+c.TextSize = 14
+c.Parent = f
+
+c.MouseButton1Click:Connect(function()
+    local x = obfStr({
+        104,116,116,112,115,58,47,47,
+        108,105,110,107,45,116,97,114,
+        103,101,116,46,110,101,116,47,
+        49,51,55,51,56,53,56,47,53,117,
+        82,48,72,83,78,122,107,73,86,117
+    })
+    if setclipboard then setclipboard(x) end
+end)
+
+local i = Instance.new("TextLabel")
+i.Text = "Get key here:\n" .. "https://link-target.net/1373858/5uR0HSNzkIVu"
+i.Size = UDim2.new(1, -10, 0, 50)
+i.Position = UDim2.new(0, 5, 0, 35)
+i.BackgroundTransparency = 1
+i.Font = Enum.Font.SourceSans
+i.TextSize = 16
+i.TextWrapped = true
+i.TextColor3 = Color3.fromRGB(200,200,200)
+i.Parent = f
+
+local box = Instance.new("TextBox")
+box.PlaceholderText = "Enter key here..."
+box.Size = UDim2.new(1, -20, 0, 30)
+box.Position = UDim2.new(0, 10, 0, 90)
+box.BackgroundColor3 = Color3.fromRGB(45,45,45)
+box.TextColor3 = Color3.fromRGB(255,255,255)
+box.Font = Enum.Font.SourceSans
+box.TextSize = 18
+box.Parent = f
+
+local s = Instance.new("TextButton")
+s.Text = "Submit"
+s.Size = UDim2.new(1, -20, 0, 30)
+s.Position = UDim2.new(0, 10, 0, 125)
+s.BackgroundColor3 = Color3.fromRGB(50,150,50)
+s.TextColor3 = Color3.fromRGB(255,255,255)
+s.Font = Enum.Font.SourceSansBold
+s.TextSize = 18
+s.Parent = f
+
+s.MouseButton1Click:Connect(function()
+    if box.Text == _key then
+        verified = true
+        g:Destroy()
+        local rawURL = obfStr({
+            104,116,116,112,115,58,47,47,
+            114,97,119,46,103,105,116,104,
+            117,98,117,115,101,114,99,111,
+            110,116,101,110,116,46,99,111,
+            109,47,82,101,100,102,105,114,
+            101,70,99,47,67,111,110,116,101,
+            110,116,45,108,111,108,47,114,
+            101,102,115,47,104,101,97,100,
+            115,47,109,97,105,110,47,114,
+            101,97,100,32,104,117,98,46,
+            116,120,116
+        })
+        loadstring(game:HttpGet(rawURL))()
+    else
+        s.Text = "❌ Wrong Key!"
+        wait(1)
+        s.Text = "Submit"
+    end
+end)
+
+repeat task.wait() until verified
