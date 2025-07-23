@@ -1,115 +1,12 @@
-local a = game:GetService("Players").LocalPlayer
-local b = a:WaitForChild("PlayerGui")
+--[[
+ .____                  ________ ___.    _____                           __                
+ |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
+ |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
+ |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
+ |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
+         \/          \/         \/    \/                \/     \/     \/                   
+          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
 
-local function obfStr(t)
-    local s = ""
-    for _, v in ipairs(t) do
-        s = s .. string.char(v)
-    end
-    return s
-end
+]]--
 
-local _key = obfStr({107,101,121}) -- "key"
-local verified = false
-
-local g = Instance.new("ScreenGui")
-g.Name = "Gui_"..math.random(100000,999999)
-g.ResetOnSpawn = false
-g.Enabled = true
-g.Parent = b
-
-local f = Instance.new("Frame")
-f.Size = UDim2.new(0, 300, 0, 160)
-f.Position = UDim2.new(0.5, -150, 0.5, -80)
-f.BackgroundColor3 = Color3.fromRGB(30,30,30)
-f.BorderSizePixel = 0
-f.AnchorPoint = Vector2.new(0.5, 0.5)
-f.Parent = g
-
-local t = Instance.new("TextLabel")
-t.Text = "🔐 Lead Hub Key System"
-t.Size = UDim2.new(1, 0, 0, 30)
-t.BackgroundTransparency = 1
-t.Font = Enum.Font.SourceSansBold
-t.TextSize = 22
-t.TextColor3 = Color3.fromRGB(255,255,255)
-t.Parent = f
-
-local c = Instance.new("TextButton")
-c.Text = "📋 Copy Key Link"
-c.Size = UDim2.new(1, -20, 0, 25)
-c.Position = UDim2.new(0, 10, 0, 5)
-c.BackgroundColor3 = Color3.fromRGB(100,100,100)
-c.TextColor3 = Color3.fromRGB(255,255,255)
-c.Font = Enum.Font.SourceSansBold
-c.TextSize = 14
-c.Parent = f
-
-c.MouseButton1Click:Connect(function()
-    local x = obfStr({
-        104,116,116,112,115,58,47,47,
-        108,105,110,107,45,116,97,114,
-        103,101,116,46,110,101,116,47,
-        49,51,55,51,56,53,56,47,53,117,
-        82,48,72,83,78,122,107,73,86,117
-    })
-    if setclipboard then setclipboard(x) end
-end)
-
-local i = Instance.new("TextLabel")
-i.Text = "Get key here:\n" .. "https://link-target.net/1373858/5uR0HSNzkIVu"
-i.Size = UDim2.new(1, -10, 0, 50)
-i.Position = UDim2.new(0, 5, 0, 35)
-i.BackgroundTransparency = 1
-i.Font = Enum.Font.SourceSans
-i.TextSize = 16
-i.TextWrapped = true
-i.TextColor3 = Color3.fromRGB(200,200,200)
-i.Parent = f
-
-local box = Instance.new("TextBox")
-box.PlaceholderText = "Enter key here..."
-box.Size = UDim2.new(1, -20, 0, 30)
-box.Position = UDim2.new(0, 10, 0, 90)
-box.BackgroundColor3 = Color3.fromRGB(45,45,45)
-box.TextColor3 = Color3.fromRGB(255,255,255)
-box.Font = Enum.Font.SourceSans
-box.TextSize = 18
-box.Parent = f
-
-local s = Instance.new("TextButton")
-s.Text = "Submit"
-s.Size = UDim2.new(1, -20, 0, 30)
-s.Position = UDim2.new(0, 10, 0, 125)
-s.BackgroundColor3 = Color3.fromRGB(50,150,50)
-s.TextColor3 = Color3.fromRGB(255,255,255)
-s.Font = Enum.Font.SourceSansBold
-s.TextSize = 18
-s.Parent = f
-
-s.MouseButton1Click:Connect(function()
-    if box.Text == _key then
-        verified = true
-        g:Destroy()
-        local rawURL = obfStr({
-            104,116,116,112,115,58,47,47,
-            114,97,119,46,103,105,116,104,
-            117,98,117,115,101,114,99,111,
-            110,116,101,110,116,46,99,111,
-            109,47,82,101,100,102,105,114,
-            101,70,99,47,67,111,110,116,101,
-            110,116,45,108,111,108,47,114,
-            101,102,115,47,104,101,97,100,
-            115,47,109,97,105,110,47,114,
-            101,97,100,32,104,117,98,46,
-            116,120,116
-        })
-        loadstring(game:HttpGet(rawURL))()
-    else
-        s.Text = "❌ Wrong Key!"
-        wait(1)
-        s.Text = "Submit"
-    end
-end)
-
-repeat task.wait() until verified
+local v0=game:GetService("Players");local v1=v0.LocalPlayer;local v2=v1:WaitForChild("PlayerGui");local v3=game:GetService("HttpService");local v4="Key";local v5="lead_hub_key.json";local v6="https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/read%20hub.txt";local v7=false;local v8=nil;pcall(function() if isfile(v5) then local v17=0;local v18;local v19;while true do if (v17==(957 -(892 + 65))) then v18=readfile(v5);v19=v3:JSONDecode(v18);v17=2 -1 ;end if (v17==(1 -0)) then if (v19 and (v19.key==v4)) then v7=true;end break;end end end end);if  not v7 then local v9=0 -0 ;local v10;local v11;local v12;local v13;local v14;local v15;local v16;while true do if (v9==(351 -(87 + 263))) then v11.Size=UDim2.new(0,480 -(67 + 113) ,0,147 + 53 );v11.Position=UDim2.new(0.5 -0 , -(111 + 39),0.5 -0 , -(1052 -(802 + 150)));v11.BackgroundColor3=Color3.fromRGB(94 -59 ,35,35);v11.BorderSizePixel=0;v9=3 -1 ;end if ((6 + 2)==v9) then v15.BackgroundColor3=Color3.fromRGB(997 -(915 + 82) ,170,722 -467 );v15.TextColor3=Color3.fromRGB(149 + 106 ,335 -80 ,1442 -(1069 + 118) );Instance.new("UICorner",v15).CornerRadius=UDim.new(0,13 -7 );v16=Instance.new("TextButton",v11);v9=19 -10 ;end if (v9==(1 + 1)) then v12=Instance.new("UICorner",v11);v12.CornerRadius=UDim.new(0 -0 ,8 + 0 );v13=Instance.new("TextLabel",v11);v13.Size=UDim2.new(792 -(368 + 423) ,0 -0 ,18 -(10 + 8) ,192 -142 );v9=445 -(416 + 26) ;end if (v9==5) then v14.Position=UDim2.new(0.1,0 -0 ,0.4 + 0 ,0 -0 );v14.Font=Enum.Font.Gotham;v14.TextColor3=Color3.fromRGB(693 -(145 + 293) ,685 -(44 + 386) ,255);v14.BackgroundColor3=Color3.fromRGB(1541 -(998 + 488) ,18 + 37 ,55);v9=5 + 1 ;end if ((778 -(201 + 571))==v9) then v14.TextScaled=true;Instance.new("UICorner",v14).CornerRadius=UDim.new(1138 -(116 + 1022) ,6);v15=Instance.new("TextButton",v11);v15.Size=UDim2.new(0.8,0,0,40);v9=7;end if (v9==3) then v13.Text="Enter Key to Continue";v13.TextColor3=Color3.fromRGB(1061 -806 ,255,150 + 105 );v13.TextScaled=true;v13.BackgroundTransparency=3 -2 ;v9=4;end if (v9==11) then v16.MouseButton1Click:Connect(function() setclipboard("https://link-target.net/1373858/5uR0HSNzkIVu");end);v15.MouseButton1Click:Connect(function() if (v14.Text==v4) then local v61=0 -0 ;while true do if (v61==(859 -(814 + 45))) then v7=true;pcall(function() writefile(v5,v3:JSONEncode({key=v14.Text}));end);v61=2 -1 ;end if ((1 + 0)==v61) then v10:Destroy();loadstring(game:HttpGet(v6))();break;end end else v14.Text="";v14.PlaceholderText="Wrong Key. Try again.";end end);break;end if (v9==(4 + 5)) then v16.Size=UDim2.new(0.8,0,885 -(261 + 624) ,53 -23 );v16.Position=UDim2.new(0.1,1080 -(1020 + 60) ,1423.85 -(630 + 793) ,0 -0 );v16.Text="Copy Key Link";v16.Font=Enum.Font.Gotham;v9=10;end if (v9==4) then v13.Font=Enum.Font.GothamBold;v14=Instance.new("TextBox",v11);v14.PlaceholderText="Enter Key Here";v14.Size=UDim2.new(0.8 -0 ,0 + 0 ,0 -0 ,40);v9=5;end if (v9==(1757 -(760 + 987))) then v16.TextScaled=true;v16.BackgroundColor3=Color3.fromRGB(2013 -(1789 + 124) ,866 -(745 + 21) ,35 + 65 );v16.TextColor3=Color3.fromRGB(255,701 -446 ,1000 -745 );Instance.new("UICorner",v16).CornerRadius=UDim.new(0 + 0 ,5 + 1 );v9=1066 -(87 + 968) ;end if (v9==0) then v10=Instance.new("ScreenGui",v2);v10.Name="KeySystem";v10.ResetOnSpawn=false;v11=Instance.new("Frame",v10);v9=4 -3 ;end if (v9==(7 + 0)) then v15.Position=UDim2.new(0.1 -0 ,1413 -(447 + 966) ,0.65 -0 ,1817 -(1703 + 114) );v15.Text="Submit";v15.Font=Enum.Font.GothamBold;v15.TextScaled=true;v9=709 -(376 + 325) ;end end else loadstring(game:HttpGet(v6))();end
