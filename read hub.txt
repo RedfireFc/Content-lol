@@ -4,6 +4,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 local lp = Players.LocalPlayer
 
 -- Rayfield
@@ -35,8 +36,6 @@ local autoBlockOn = true
 local autoPunchOn = true
 local infiniteStamina = true
 local detectionRange = 10 -- 10 studs default
-local punchHealthThreshold = 400
-local punchCooldown = false
 
 -- Infinite Stamina
 local function enableInfiniteStamina()
@@ -68,7 +67,7 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
     pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
 end})
 
--- Audio Block
+-- Auto Block
 local soundHooks = {}
 
 local function getSoundPosition(sound)
@@ -116,71 +115,55 @@ local function hookSound(sound)
     if sound.IsPlaying then pcall(attemptBlock, sound) end
 end
 
--- Hook all existing sounds
 for _, desc in ipairs(game:GetDescendants()) do
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
     end
 end
 
--- Hook future sounds
 game.DescendantAdded:Connect(function(desc)
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
     end
 end)
 
--- Punch
-local function safeActivateButton(button)
-    if button and button:IsA("ImageButton") and button.Visible then
-        pcall(function() button:Activate() end)
-        if type(getconnections) == "function" then
-            for _, conn in ipairs(getconnections(button.MouseButton1Click)) do
-                pcall(function() conn:Fire() end)
+-- Auto Punch (Old System with charges.Text == "1")
+local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+local punchArgs = {"UseActorAbility","Punch"}
+local charges = lp:WaitForChild("PlayerGui"):WaitForChild("MainUI"):WaitForChild("AbilityContainer"):WaitForChild("Punch"):WaitForChild("Charges")
+local kFolder = Workspace:WaitForChild("Players"):WaitForChild("Killers")
+
+local function firePunch()
+    pcall(function() netRem:FireServer(unpack(punchArgs)) end)
+end
+
+local function closestKiller()
+    local c = lp.Character
+    local r = c and c:FindFirstChild("HumanoidRootPart")
+    if not r then return nil end
+    local target, distShortest = nil, math.huge
+    for _, k in ipairs(kFolder:GetChildren()) do
+        local kr = k:FindFirstChild("HumanoidRootPart")
+        if kr then
+            local dist = (kr.Position - r.Position).Magnitude
+            if dist <= detectionRange and dist < distShortest then
+                target = kr
+                distShortest = dist
             end
         end
     end
+    return target
 end
 
-local function clickPunchButton(target)
-    if punchCooldown or not autoPunchOn then return end
-    local gui = lp:FindFirstChild("PlayerGui")
-    if not gui then return end
-    local mainUI = gui:FindFirstChild("MainUI")
-    local container = mainUI and mainUI:FindFirstChild("AbilityContainer")
-    local punchButton = container and container:FindFirstChild("Punch")
-    if punchButton and punchButton:IsA("ImageButton") and punchButton.Visible then
-        local myChar = lp.Character
-        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        local targetRoot = target and target:FindFirstChild("HumanoidRootPart")
-        if myRoot and targetRoot then
-            myRoot.CFrame = CFrame.new(myRoot.Position, targetRoot.Position)
-        end
-        safeActivateButton(punchButton)
-        punchCooldown = true
-        task.delay(3, function()
-            punchCooldown = false
-        end)
-    end
-end
-
--- Auto Punch Loop
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn then return end
-    local myChar = lp.Character
-    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
-
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= lp and plr.Character then
-            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-            if hum and hrp and hum.Health >= punchHealthThreshold then
-                local dist = (hrp.Position - myRoot.Position).Magnitude
-                if dist <= detectionRange then
-                    clickPunchButton(plr.Character)
-                end
-            end
+    if tostring(charges.Text) ~= "1" then return end
+    local target = closestKiller()
+    if target then
+        local r = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+        if r then
+            r.CFrame = CFrame.new(r.Position, target.Position)
+            firePunch()
         end
     end
 end)
