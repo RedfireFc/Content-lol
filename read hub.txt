@@ -1,12 +1,186 @@
---[[
- .____                  ________ ___.    _____                           __                
- |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
- |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
- |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
- |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
-         \/          \/         \/    \/                \/     \/     \/                   
-          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+-- Lead Hub
 
-]]--
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local lp = Players.LocalPlayer
 
-local v0=game:GetService("Players");local v1=game:GetService("RunService");local v2=game:GetService("ReplicatedStorage");local v3=v0.LocalPlayer;local v4=loadstring(game:HttpGet("https://sirius.menu/rayfield"))();local v5=v4:CreateWindow({Name="Lead Hub",LoadingTitle="Lead Hub",LoadingSubtitle="by Triplex",ConfigurationSaving={Enabled=true,FolderName="LeadHub",FileName="Settings"},Discord={Enabled=false},KeySystem=false});local v6=v5:CreateTab("Combat",4607851908 -124489450 );local v7=v5:CreateTab("Misc",4483362595 -(8 + 129) );local v8={["102228729296384"]=true,["140242176732868"]=true,["112809109188560"]=true,["136323728355613"]=true,["115026634746636"]=true,["84116622032112"]=true,["108907358619313"]=true,["127793641088496"]=true,["86174610237192"]=true,["95079963655241"]=true,["101199185291628"]=true,["119942598489800"]=true,["84307400688050"]=true};local v9=true;local v10=true;local v11=true;local v12=1 + 9 ;local v13=907 -507 ;local function v14() local v24=0 -0 ;local v25;local v26;while true do if (v24==(0 + 0)) then v25,v26=pcall(function() return require(v2.Systems.Character.Game.Sprinting);end);if ( not v25 or  not v26) then return;end v24=1 -0 ;end if (v24==(1 + 0)) then v26.StaminaLossDisabled=true;task.spawn(function() while v11 do task.wait(791.1 -(368 + 423) );v26.Stamina=v26.MaxStamina;if v26.StaminaChanged then pcall(function() v26.StaminaChanged:Fire();end);end end end);break;end end end v14();v6:CreateToggle({Name="Auto Block",CurrentValue=true,Callback=function(v27) v9=v27;end});v6:CreateToggle({Name="Auto Punch",CurrentValue=true,Callback=function(v28) v10=v28;end});v6:CreateToggle({Name="Infinite Stamina",CurrentValue=true,Callback=function(v29) local v30=0 -0 ;while true do if (v30==(18 -(10 + 8))) then v11=v29;v14();break;end end end});v6:CreateInput({Name="Detection Range",PlaceholderText="10",RemoveTextAfterFocusLost=false,Callback=function(v31) v12=tonumber(v31) or v12 ;end});v7:CreateButton({Name="Copy Discord Invite",Callback=function() pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ");end);end});local v15={};local function v16(v32) local v33=0 -0 ;while true do if (v33==1) then if (v32.Parent and v32.Parent:IsA("Attachment") and v32.Parent.Parent and v32.Parent.Parent:IsA("BasePart")) then return v32.Parent.Parent.Position;end return nil;end if (v33==(442 -(416 + 26))) then if  not v32 then return nil;end if (v32.Parent and v32.Parent:IsA("BasePart")) then return v32.Parent.Position;end v33=3 -2 ;end end end local function v17() v2:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility","Block");end local function v18(v34) if  not v9 then return;end if ( not v34 or  not v34:IsA("Sound") or  not v34.IsPlaying) then return;end local v35=tostring(v34.SoundId):match("%d+");if ( not v35 or  not v8[v35]) then return;end local v36=v3.Character and v3.Character:FindFirstChild("HumanoidRootPart") ;if  not v36 then return;end local v37=v16(v34);if (v37 and ((v36.Position-v37).Magnitude<=v12)) then v17();end end local function v19(v38) if ( not v38 or v15[v38]) then return;end local v39=v38.Played:Connect(function() pcall(v18,v38);end);local v40=v38:GetPropertyChangedSignal("IsPlaying"):Connect(function() if v38.IsPlaying then pcall(v18,v38);end end);local v41;v41=v38.Destroying:Connect(function() if v39 then v39:Disconnect();end if v40 then v40:Disconnect();end if v41 then v41:Disconnect();end v15[v38]=nil;end);v15[v38]={v39,v40,v41};if v38.IsPlaying then pcall(v18,v38);end end for v43,v44 in ipairs(game:GetDescendants()) do if v44:IsA("Sound") then pcall(v19,v44);end end game.DescendantAdded:Connect(function(v45) if v45:IsA("Sound") then pcall(v19,v45);end end);local v20={[126830014841636 -(145 + 293) ]=true,[126355327951215]=true,[121086746534682 -(44 + 386) ]=true,[18885911131 -(998 + 488) ]=true,[98456918873918]=true,[105458720690788 -450227414 ]=true,[83829782358404 -(289 + 218) ]=true,[125403313787989 -(1213 + 131) ]=true,[118300306784850 -1831114915 ]=true,[82113744480297 -(1440 + 311) ]=true,[70371667921578 -(550 + 1130) ]=true,[99135633258223]=true,[97167027849946 -0 ]=true,[109230927926111 -660477717 ]=true,[139835501035684 -(578 + 1174) ]=true,[126896426760901 -(166 + 482) ]=true};local v21=false;local function v22(v46) if (v46 and v46:IsA("ImageButton") and v46.Visible) then pcall(function() v46:Activate();end);if (type(getconnections)=="function") then for v64,v65 in ipairs(getconnections(v46.MouseButton1Click)) do pcall(function() v65:Fire();end);end end end end local function v23(v47) local v48=0 + 0 ;while true do if (v48==1) then task.spawn(function() local v58=0;local v59;local v60;local v61;while true do if (v58==3) then v21=false;break;end if (v58==(1424 -(630 + 793))) then v61=v47:FindFirstChild("HumanoidRootPart");if (v60 and v61) then v60.CFrame=CFrame.new(v60.Position,v61.Position);local v70=v3:FindFirstChild("PlayerGui");local v71=v70 and v70:FindFirstChild("MainUI") ;local v72=v71 and v71:FindFirstChild("AbilityContainer") ;local v73=v72 and v72:FindFirstChild("Punch") ;if (v73 and v73:IsA("ImageButton") and v73.Visible) then v22(v73);end end v58=6 -4 ;end if ((0 -0)==v58) then v59=v3.Character;v60=v59 and v59:FindFirstChild("HumanoidRootPart") ;v58=1;end if (2==v58) then task.wait(3);task.wait(9 + 12 );v58=9 -6 ;end end end);break;end if (v48==(1747 -(760 + 987))) then if (v21 or  not v47) then return;end v21=true;v48=1914 -(1789 + 124) ;end end end v1.RenderStepped:Connect(function() if  not v10 then return;end local v49=v3.Character;local v50=v49 and v49:FindFirstChild("HumanoidRootPart") ;if  not v50 then return;end for v52,v53 in ipairs(v0:GetPlayers()) do if ((v53~=v3) and v53.Character) then local v55=766 -(745 + 21) ;local v56;local v57;while true do if ((1 + 0)==v55) then if (v56 and v57 and (v56.Health>=v13)) then local v67=0 -0 ;local v68;while true do if (v67==(0 -0)) then v68=(v57.Position-v50.Position).Magnitude;if (v68<=v12) then for v75,v76 in ipairs(v56:GetPlayingAnimationTracks()) do local v77=v76.Animation;local v78=v77 and v77.AnimationId and tonumber(string.match(v77.AnimationId,"%d+")) ;if (v78 and v20[v78]) then local v79=0 + 0 ;while true do if (0==v79) then v23(v53.Character);return;end end end end end break;end end end break;end if ((0 + 0)==v55) then v56=v53.Character:FindFirstChildOfClass("Humanoid");v57=v53.Character:FindFirstChild("HumanoidRootPart");v55=1056 -(87 + 968) ;end end end end end);
+-- Rayfield
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Window = Rayfield:CreateWindow({
+    Name = "Lead Hub",
+    LoadingTitle = "Lead Hub",
+    LoadingSubtitle = "by Triplex",
+    ConfigurationSaving = {Enabled = true, FolderName = "LeadHub", FileName = "Settings"},
+    Discord = {Enabled = false},
+    KeySystem = false
+})
+
+-- Tabs
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+-- Audio Block IDs
+local autoBlockTriggerSounds = {
+    ["102228729296384"] = true, ["140242176732868"] = true, ["112809109188560"] = true,
+    ["136323728355613"] = true, ["115026634746636"] = true, ["84116622032112"] = true,
+    ["108907358619313"] = true, ["127793641088496"] = true, ["86174610237192"] = true,
+    ["95079963655241"] = true, ["101199185291628"] = true, ["119942598489800"] = true,
+    ["84307400688050"] = true
+}
+
+-- State
+local autoBlockOn = true
+local autoPunchOn = true
+local infiniteStamina = true
+local detectionRange = 10 -- 10 studs default
+local punchHealthThreshold = 400
+local punchCooldown = false
+
+-- Infinite Stamina
+local function enableInfiniteStamina()
+    local success, StaminaModule = pcall(function()
+        return require(ReplicatedStorage.Systems.Character.Game.Sprinting)
+    end)
+    if not success or not StaminaModule then return end
+    StaminaModule.StaminaLossDisabled = true
+    task.spawn(function()
+        while infiniteStamina do
+            task.wait(0.1)
+            StaminaModule.Stamina = StaminaModule.MaxStamina
+            if StaminaModule.StaminaChanged then
+                pcall(function() StaminaModule.StaminaChanged:Fire() end)
+            end
+        end
+    end)
+end
+enableInfiniteStamina()
+
+-- UI Toggles
+CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) autoBlockOn = val end})
+CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(val) autoPunchOn = val end})
+CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
+CombatTab:CreateInput({Name="Detection Range", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
+
+-- Misc: Copy Discord Invite
+MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
+    pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
+end})
+
+-- Audio Block
+local soundHooks = {}
+
+local function getSoundPosition(sound)
+    if not sound then return nil end
+    if sound.Parent and sound.Parent:IsA("BasePart") then
+        return sound.Parent.Position
+    end
+    if sound.Parent and sound.Parent:IsA("Attachment") and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
+        return sound.Parent.Parent.Position
+    end
+    return nil
+end
+
+local function fireBlock()
+    ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility","Block")
+end
+
+local function attemptBlock(sound)
+    if not autoBlockOn then return end
+    if not sound or not sound:IsA("Sound") or not sound.IsPlaying then return end
+    local id = tostring(sound.SoundId):match("%d+")
+    if not id or not autoBlockTriggerSounds[id] then return end
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    local pos = getSoundPosition(sound)
+    if pos and (myRoot.Position - pos).Magnitude <= detectionRange then
+        fireBlock()
+    end
+end
+
+local function hookSound(sound)
+    if not sound or soundHooks[sound] then return end
+    local conn1 = sound.Played:Connect(function() pcall(attemptBlock, sound) end)
+    local conn2 = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
+        if sound.IsPlaying then pcall(attemptBlock, sound) end
+    end)
+    local conn3
+    conn3 = sound.Destroying:Connect(function()
+        if conn1 then conn1:Disconnect() end
+        if conn2 then conn2:Disconnect() end
+        if conn3 then conn3:Disconnect() end
+        soundHooks[sound] = nil
+    end)
+    soundHooks[sound] = {conn1, conn2, conn3}
+    if sound.IsPlaying then pcall(attemptBlock, sound) end
+end
+
+-- Hook all existing sounds
+for _, desc in ipairs(game:GetDescendants()) do
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end
+
+-- Hook future sounds
+game.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end)
+
+-- Punch
+local function safeActivateButton(button)
+    if button and button:IsA("ImageButton") and button.Visible then
+        pcall(function() button:Activate() end)
+        if type(getconnections) == "function" then
+            for _, conn in ipairs(getconnections(button.MouseButton1Click)) do
+                pcall(function() conn:Fire() end)
+            end
+        end
+    end
+end
+
+local function clickPunchButton(target)
+    if punchCooldown or not autoPunchOn then return end
+    local gui = lp:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local mainUI = gui:FindFirstChild("MainUI")
+    local container = mainUI and mainUI:FindFirstChild("AbilityContainer")
+    local punchButton = container and container:FindFirstChild("Punch")
+    if punchButton and punchButton:IsA("ImageButton") and punchButton.Visible then
+        local myChar = lp.Character
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local targetRoot = target and target:FindFirstChild("HumanoidRootPart")
+        if myRoot and targetRoot then
+            myRoot.CFrame = CFrame.new(myRoot.Position, targetRoot.Position)
+        end
+        safeActivateButton(punchButton)
+        punchCooldown = true
+        task.delay(3, function()
+            punchCooldown = false
+        end)
+    end
+end
+
+-- Auto Punch Loop
+RunService.RenderStepped:Connect(function()
+    if not autoPunchOn then return end
+    local myChar = lp.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= lp and plr.Character then
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+            if hum and hrp and hum.Health >= punchHealthThreshold then
+                local dist = (hrp.Position - myRoot.Position).Magnitude
+                if dist <= detectionRange then
+                    clickPunchButton(plr.Character)
+                end
+            end
+        end
+    end
+end)
