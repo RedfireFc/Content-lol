@@ -72,56 +72,63 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
 end})
 
 -- Auto Block
-local soundHooks = {}
+
 local function getSoundPosition(sound)
-    if not sound then return nil end
-    if sound.Parent and sound.Parent:IsA("BasePart") then
-        return sound.Parent.Position
-    end
-    if sound.Parent and sound.Parent:IsA("Attachment") and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
-        return sound.Parent.Parent.Position
+    local p = sound.Parent
+    if not p then return nil end
+    if p:IsA("BasePart") then
+        return p.Position
+    elseif p:IsA("Attachment") and p.Parent:IsA("BasePart") then
+        return p.Parent.Position
     end
     return nil
 end
 local function fireBlock()
-    ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility","Block")
+ ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility","Block")
+end
+local function isTriggerSound(sound)
+    if not sound.SoundId then return false end
+    local id = string.match(sound.SoundId, "%d+")
+    return id and autoBlockTriggerSounds[id]
 end
 local function attemptBlock(sound)
     if not autoBlockOn then return end
-    if not sound or not sound:IsA("Sound") or not sound.IsPlaying then return end
-    local id = tostring(sound.SoundId):match("%d+")
-    if not id or not autoBlockTriggerSounds[id] then return end
-    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
+    if not sound.IsPlaying then return end
+    if not isTriggerSound(sound) then return end
+
+    local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
     local pos = getSoundPosition(sound)
-    if pos and (myRoot.Position - pos).Magnitude <= detectionRange then
+    if pos and (hrp.Position - pos).Magnitude <= detectionRange then
         fireBlock()
     end
 end
+-- Hook System
+local soundHooks = {}
 local function hookSound(sound)
-    if not sound or soundHooks[sound] then return end
-    local conn1 = sound.Played:Connect(function() pcall(attemptBlock, sound) end)
-    local conn2 = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
-        if sound.IsPlaying then pcall(attemptBlock, sound) end
+    if soundHooks[sound] then return end
+    soundHooks[sound] = true
+    sound.Played:Connect(function()
+        attemptBlock(sound)
     end)
-    local conn3
-    conn3 = sound.Destroying:Connect(function()
-        if conn1 then conn1:Disconnect() end
-        if conn2 then conn2:Disconnect() end
-        if conn3 then conn3:Disconnect() end
-        soundHooks[sound] = nil
+    sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
+        if sound.IsPlaying then
+            attemptBlock(sound)
+        end
     end)
-    soundHooks[sound] = {conn1, conn2, conn3}
-    if sound.IsPlaying then pcall(attemptBlock, sound) end
-end
-for _, desc in ipairs(game:GetDescendants()) do
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
+    if sound.IsPlaying then
+        attemptBlock(sound)
     end
 end
-game.DescendantAdded:Connect(function(desc)
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
+for _, obj in ipairs(game:GetDescendants()) do
+    if obj:IsA("Sound") then
+        hookSound(obj)
+    end
+end
+game.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Sound") then
+        hookSound(obj)
     end
 end)
 
@@ -162,16 +169,27 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
-    if chargesObj and tostring(chargesObj.Text) == "1" then
-        local target = closestKiller()
+    if chargesObj and chargesObj.Text == "1" then
+        local targetRoot = closestKiller() -- this already returns HumanoidRootPart
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        if target and root then
+        if targetRoot and root then
             aiming = true
             firePunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 2 and root and target do
-                    root.CFrame = CFrame.new(root.Position, target.Position)
+                while tick() - startTime < 1 and root and targetRoot and targetRoot.Parent do
+                    local humanoid = targetRoot.Parent:FindFirstChildOfClass("Humanoid")
+                    local predictionDistance = (humanoid and humanoid.WalkSpeed > 27) and 3 or 1
+                    local predictedPosition = targetRoot.Position
+
+                    local vel = targetRoot.Velocity
+                    if vel.Magnitude > 0.1 then
+                        predictedPosition = predictedPosition + (vel.Unit * predictionDistance)
+                    end
+
+                    -- smoothly face the predicted position
+                    root.CFrame = CFrame.lookAt(root.Position, predictedPosition)
+
                     task.wait()
                 end
                 aiming = false
@@ -179,6 +197,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
 
 --================= GENERATORS =================
 local function GeneratorOnce()
@@ -267,8 +286,8 @@ local function applyESP(obj, color)
     highlight.Name = "ESP_Highlight"
     highlight.FillColor = color
     highlight.OutlineColor = Color3.new(0,0,0)
-    highlight.FillTransparency = 0.5
-    highlight.OutlineTransparency = 0
+    highlight.FillTransparency = 0.6
+    highlight.OutlineTransparency = 0.6
     highlight.Adornee = obj
     highlight.Parent = obj
 
@@ -314,7 +333,16 @@ RunService.Heartbeat:Connect(function()
         if mapFolder then
             for _, obj in ipairs(mapFolder:GetChildren()) do
                 if espGenerators and obj.Name == "Generator" then
-                    applyESP(obj, Color3.fromRGB(255,255,0))
+                    local progressVal = obj:FindFirstChild("Progress")
+                    if progressVal then
+                        local highlight = obj:FindFirstChild("ESP_Highlight")
+                        if progressVal.Value >= 100 then
+                            -- remove highlight if gen finished
+                            if highlight then highlight:Destroy() end
+                        else
+                            applyESP(obj, Color3.fromRGB(255,255,0)) -- yellow if unfinished
+                        end
+                    end
                 elseif espItems and (obj.Name == "Medkit" or obj.Name == "BloxyCola") then
                     applyESP(obj, Color3.fromRGB(0,0,139))
                 end
@@ -322,6 +350,5 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
 --================= CONFIG =================
-Rayfield:LoadConfiguration()
+Rayfield:LoadConfiguration()-- Lead Hub
