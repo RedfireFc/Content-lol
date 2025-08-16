@@ -20,6 +20,8 @@ local Window = Rayfield:CreateWindow({
 
 -- Tabs
 local CombatTab = Window:CreateTab("Combat", 4483362458)
+local GeneratorTab = Window:CreateTab("Generators", 4483362458)
+local ESPTab = Window:CreateTab("ESP", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
 -- Audio Block IDs
@@ -37,6 +39,7 @@ local autoPunchOn = true
 local infiniteStamina = true
 local detectionRange = 10
 local apRange = 10 -- punch range in studs
+local generatorCooldown = 2.5
 
 -- Infinite Stamina
 local function enableInfiniteStamina()
@@ -176,3 +179,149 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+--================= GENERATORS =================
+local function GeneratorOnce()
+    local IngameMapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame")
+    local SubMapFolder = IngameMapFolder and IngameMapFolder:FindFirstChild("Map")
+    if SubMapFolder then
+        for _, g in ipairs(SubMapFolder:GetChildren()) do
+            if g.Name == "Generator" and g.Progress.Value < 100 then
+                g.Remotes.RE:FireServer()
+            end
+        end
+    end
+end
+
+-- Auto Generator Toggle
+GeneratorTab:CreateToggle({
+    Name = "Auto Generator",
+    CurrentValue = false,
+    Callback = function(enabled)
+        if GeneratorTab._loop then GeneratorTab._loop:Disconnect() GeneratorTab._loop = nil end
+        if enabled then
+            GeneratorTab._timer = 0
+            GeneratorTab._loop = RunService.Heartbeat:Connect(function(dt)
+                GeneratorTab._timer = GeneratorTab._timer + dt
+                if GeneratorTab._timer >= generatorCooldown then
+                    GeneratorTab._timer = 0
+                    GeneratorOnce()
+                end
+            end)
+        end
+    end
+})
+
+-- Auto Generator Slider
+GeneratorTab:CreateSlider({
+    Name = "Auto Generator Delay",
+    Range = {2.5, 5},
+    Increment = 0.1,
+    Suffix = "s",
+    CurrentValue = generatorCooldown,
+    Callback = function(val)
+        generatorCooldown = val
+    end
+})
+
+--================= ESP =================
+local espKillers = false
+local espSurvivors = false
+local espItems = false
+local espGenerators = false
+
+ESPTab:CreateToggle({
+    Name = "Killers ESP",
+    CurrentValue = false,
+    Callback = function(val) espKillers = val end
+})
+
+ESPTab:CreateToggle({
+    Name = "Survivors ESP",
+    CurrentValue = false,
+    Callback = function(val) espSurvivors = val end
+})
+
+ESPTab:CreateToggle({
+    Name = "Items ESP",
+    CurrentValue = false,
+    Callback = function(val) espItems = val end
+})
+
+ESPTab:CreateToggle({
+    Name = "Generators ESP",
+    CurrentValue = false,
+    Callback = function(val) espGenerators = val end
+})
+
+local function getRootPart(model)
+    if model:FindFirstChild("HumanoidRootPart") then return model.HumanoidRootPart
+    elseif model:FindFirstChild("Torso") then return model.Torso
+    elseif model:FindFirstChild("UpperTorso") then return model.UpperTorso
+    else return model:FindFirstChildWhichIsA("BasePart") end
+end
+
+local function applyESP(obj, color)
+    if not obj or obj:FindFirstChild("ESP_Highlight") then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.FillColor = color
+    highlight.OutlineColor = Color3.new(0,0,0)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Adornee = obj
+    highlight.Parent = obj
+
+    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ESP_Billboard"
+        billboard.Size = UDim2.new(0,100,0,30)
+        billboard.StudsOffset = Vector3.new(0,3,0)
+        billboard.AlwaysOnTop = true
+        billboard.Adornee = obj
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1,0,1,0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = Color3.fromRGB(0,0,139)
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextSize = 14
+        textLabel.Text = obj.Name
+        textLabel.Parent = billboard
+
+        billboard.Parent = obj
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    -- Killers
+    if espKillers then
+        local killers = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+        if killers then
+            for _, k in ipairs(killers:GetChildren()) do applyESP(k, Color3.fromRGB(255,0,0)) end
+        end
+    end
+    -- Survivors
+    if espSurvivors then
+        local survivors = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
+        if survivors then
+            for _, s in ipairs(survivors:GetChildren()) do applyESP(s, Color3.fromRGB(0,255,0)) end
+        end
+    end
+    -- Items & Generators
+    if espItems or espGenerators then
+        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+        if mapFolder then
+            for _, obj in ipairs(mapFolder:GetChildren()) do
+                if espGenerators and obj.Name == "Generator" then
+                    applyESP(obj, Color3.fromRGB(255,255,0))
+                elseif espItems and (obj.Name == "Medkit" or obj.Name == "BloxyCola") then
+                    applyESP(obj, Color3.fromRGB(0,0,139))
+                end
+            end
+        end
+    end
+end)
+
+--================= CONFIG =================
+Rayfield:LoadConfiguration()
