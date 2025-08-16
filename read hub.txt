@@ -36,7 +36,7 @@ local autoBlockOn = true
 local autoPunchOn = true
 local infiniteStamina = true
 local detectionRange = 10
-local apRange = 8 -- punch range in studs
+local apRange = 10 -- punch range in studs
 
 -- Infinite Stamina
 local function enableInfiniteStamina()
@@ -61,7 +61,7 @@ enableInfiniteStamina()
 CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) autoBlockOn = val end})
 CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(val) autoPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
-CombatTab:CreateInput({Name="Detection Range", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
+CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
 
 -- Misc
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
@@ -148,8 +148,10 @@ local function closestKiller()
     return nearest
 end
 
+-- Aimbot
+local aiming = false
 RunService.RenderStepped:Connect(function()
-    if not autoPunchOn then return end
+    if not autoPunchOn or aiming then return end
 
     local gui = lp:FindFirstChild("PlayerGui")
     local chargesObj = gui and gui:FindFirstChild("MainUI")
@@ -161,8 +163,16 @@ RunService.RenderStepped:Connect(function()
         local target = closestKiller()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         if target and root then
-            root.CFrame = CFrame.new(root.Position, target.Position)
+            aiming = true
             firePunch()
+            local startTime = tick()
+            task.spawn(function()
+                while tick() - startTime < 2 and root and target do
+                    root.CFrame = CFrame.new(root.Position, target.Position)
+                    task.wait()
+                end
+                aiming = false
+            end)
         end
     end
 end)
