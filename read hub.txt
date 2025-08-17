@@ -273,13 +273,6 @@ ESPTab:CreateToggle({
     Callback = function(val) espGenerators = val end
 })
 
-local function getRootPart(model)
-    if model:FindFirstChild("HumanoidRootPart") then return model.HumanoidRootPart
-    elseif model:FindFirstChild("Torso") then return model.Torso
-    elseif model:FindFirstChild("UpperTorso") then return model.UpperTorso
-    else return model:FindFirstChildWhichIsA("BasePart") end
-end
-
 local function applyESP(obj, color)
     if not obj or obj:FindFirstChild("ESP_Highlight") then return end
     local highlight = Instance.new("Highlight")
@@ -312,43 +305,66 @@ local function applyESP(obj, color)
     end
 end
 
+-- Track ESP objects
+local killerHighlights = {}
+local survivorHighlights = {}
+local itemHighlights = {}
+
 RunService.Heartbeat:Connect(function()
     -- Killers
+    for k,v in pairs(killerHighlights) do
+        if not espKillers then v:Destroy() killerHighlights[k] = nil end
+    end
     if espKillers then
         local killers = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
         if killers then
-            for _, k in ipairs(killers:GetChildren()) do applyESP(k, Color3.fromRGB(255,0,0)) end
+            for _, k in ipairs(killers:GetChildren()) do
+                if not k:FindFirstChild("ESP_Highlight") then
+                    applyESP(k, Color3.fromRGB(255,0,0))
+                    killerHighlights[k] = k:FindFirstChild("ESP_Highlight")
+                end
+            end
         end
     end
     -- Survivors
+    for k,v in pairs(survivorHighlights) do
+        if not espSurvivors then v:Destroy() survivorHighlights[k] = nil end
+    end
     if espSurvivors then
         local survivors = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
         if survivors then
-            for _, s in ipairs(survivors:GetChildren()) do applyESP(s, Color3.fromRGB(0,255,0)) end
-        end
-    end
-    -- Items & Generators
-    if espItems or espGenerators then
-        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
-        if mapFolder then
-            for _, obj in ipairs(mapFolder:GetChildren()) do
-                if espGenerators and obj.Name == "Generator" then
-                    local progressVal = obj:FindFirstChild("Progress")
-                    if progressVal then
-                        local highlight = obj:FindFirstChild("ESP_Highlight")
-                        if progressVal.Value >= 100 then
-                            -- remove highlight if gen finished
-                            if highlight then highlight:Destroy() end
-                        else
-                            applyESP(obj, Color3.fromRGB(255,255,0)) -- yellow if unfinished
-                        end
-                    end
-                elseif espItems and (obj.Name == "Medkit" or obj.Name == "BloxyCola") then
-                    applyESP(obj, Color3.fromRGB(0,0,139))
+            for _, s in ipairs(survivors:GetChildren()) do
+                if not s:FindFirstChild("ESP_Highlight") then
+                    applyESP(s, Color3.fromRGB(0,255,0))
+                    survivorHighlights[s] = s:FindFirstChild("ESP_Highlight")
                 end
             end
         end
     end
 end)
+
+-- Items ESP update loop
+task.spawn(function()
+    while true do
+        for k,v in pairs(itemHighlights) do
+            if not espItems then v:Destroy() itemHighlights[k] = nil end
+        end
+        if espItems then
+            local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+            if mapFolder then
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+                        if not obj:FindFirstChild("ESP_Highlight") then
+                            applyESP(obj, Color3.fromRGB(0,0,139))
+                            itemHighlights[obj] = obj:FindFirstChild("ESP_Highlight")
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
 --================= CONFIG =================
 Rayfield:LoadConfiguration()-- Lead Hub
