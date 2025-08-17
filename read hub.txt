@@ -37,7 +37,7 @@ local autoBlockTriggerSounds = {
 local autoBlockOn = true
 local autoPunchOn = true
 local infiniteStamina = true
-local detectionRange = 10
+local detectionRange = 13
 local apRange = 10 -- punch range in studs
 local generatorCooldown = 2.5
 
@@ -64,7 +64,7 @@ enableInfiniteStamina()
 CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) autoBlockOn = val end})
 CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(val) autoPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
-CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
+CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="13", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
 
 -- Misc
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
