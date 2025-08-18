@@ -266,45 +266,24 @@ GeneratorTab:CreateSlider({
         generatorCooldown = val
     end
 })
-
 --================= ESP =================
 local espKillers = false
 local espSurvivors = false
 local espItems = false
 local espGenerators = false
+local lp = game:GetService("Players").LocalPlayer
 
+-- Toggles
 ESPTab:CreateToggle({
     Name = "Killers ESP",
     CurrentValue = false,
-    Callback = function(val)
-        espKillers = val
-        if not val then
-            local killers = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Killers")
-            if killers then
-                for _, k in ipairs(killers:GetChildren()) do
-                    local h = k:FindFirstChild("ESP_Highlight")
-                    if h then h:Destroy() end
-                end
-            end
-        end
-    end
+    Callback = function(val) espKillers = val end
 })
 
 ESPTab:CreateToggle({
     Name = "Survivors ESP",
     CurrentValue = false,
-    Callback = function(val)
-        espSurvivors = val
-        if not val then
-            local survivors = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Survivors")
-            if survivors then
-                for _, s in ipairs(survivors:GetChildren()) do
-                    local h = s:FindFirstChild("ESP_Highlight")
-                    if h then h:Destroy() end
-                end
-            end
-        end
-    end
+    Callback = function(val) espSurvivors = val end
 })
 
 ESPTab:CreateToggle({
@@ -347,16 +326,21 @@ ESPTab:CreateToggle({
     end
 })
 
-local function applyESPToModel(model, color)
-    if not model or model:FindFirstChild("ESP_Highlight") then return end
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "ESP_Highlight"
+-- Utility Functions (from good ESP)
+local function getOrCreateHighlight(obj, color)
+    local highlight = obj:FindFirstChild("ESP_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = "ESP_Highlight"
+        highlight.OutlineColor = Color3.new(0,0,0)
+        highlight.FillTransparency = 0.6
+        highlight.OutlineTransparency = 0.6
+        highlight.Adornee = obj
+        highlight.Parent = obj
+    end
+    highlight.Enabled = true
     highlight.FillColor = color
-    highlight.OutlineColor = Color3.new(0,0,0)
-    highlight.FillTransparency = 0.6
-    highlight.OutlineTransparency = 0.6
-    highlight.Adornee = model
-    highlight.Parent = model
+    return highlight
 end
 
 local function applyItemESP(obj)
@@ -391,21 +375,64 @@ local function applyItemESP(obj)
     end
 end
 
--- Characters ESP (killers/survivors)
+-- ESP Loop
 RunService.Heartbeat:Connect(function()
-    if espKillers then
-        local killers = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Killers")
-        if killers then
-            for _, k in ipairs(killers:GetChildren()) do
-                applyESPToModel(k, Color3.fromRGB(255,0,0))
+    local playersFolder = workspace:FindFirstChild("Players")
+    if not playersFolder then return end
+
+    -- Killers
+    local killers = playersFolder:FindFirstChild("Killers")
+    if killers then
+        for _, k in ipairs(killers:GetChildren()) do
+            if espKillers and k ~= lp.Character then
+                getOrCreateHighlight(k, Color3.fromRGB(255,0,0))
+            else
+                local h = k:FindFirstChild("ESP_Highlight")
+                if h then h.Enabled = false end
             end
         end
     end
-    if espSurvivors then
-        local survivors = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Survivors")
-        if survivors then
-            for _, s in ipairs(survivors:GetChildren()) do
-                applyESPToModel(s, Color3.fromRGB(0,255,0))
+
+    -- Survivors
+    local survivors = playersFolder:FindFirstChild("Survivors")
+    if survivors then
+        for _, s in ipairs(survivors:GetChildren()) do
+            if espSurvivors and s ~= lp.Character then
+                getOrCreateHighlight(s, Color3.fromRGB(0,255,0))
+            else
+                local h = s:FindFirstChild("ESP_Highlight")
+                if h then h.Enabled = false end
+            end
+        end
+    end
+
+    -- Items ESP
+    if espItems then
+        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+        if mapFolder then
+            for _, obj in ipairs(mapFolder:GetChildren()) do
+                if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+                    applyItemESP(obj)
+                end
+            end
+        end
+    end
+
+    -- Generators ESP
+    if espGenerators then
+        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+        if mapFolder then
+            for _, obj in ipairs(mapFolder:GetChildren()) do
+                if obj.Name == "Generator" and not obj:FindFirstChild("ESP_Highlight") then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "ESP_Highlight"
+                    highlight.FillColor = Color3.fromRGB(255,255,0)
+                    highlight.OutlineColor = Color3.new(0,0,0)
+                    highlight.FillTransparency = 0.6
+                    highlight.OutlineTransparency = 0.6
+                    highlight.Adornee = obj
+                    highlight.Parent = obj
+                end
             end
         end
     end
