@@ -503,11 +503,13 @@ end)
 local daggerRemote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local killersFolder = Workspace:WaitForChild("Players"):WaitForChild("Killers")
 local killerNames = {"Jason","c00lkidd","JohnDoe","1x1x1x1","Noli"}
-local backstabEnabled = false
+local stabBothEnabled = false
+local stabBehindEnabled = false
 local defaultRange = 5
 local aimbotActive = false
 
-BackstabTab:CreateToggle({Name="Enable Auto Stab", CurrentValue=false, Flag="StabToggle", Callback=function(Value) backstabEnabled=Value end})
+BackstabTab:CreateToggle({Name="Auto Stab (Both)", CurrentValue=false, Flag="StabBothToggle", Callback=function(Value) stabBothEnabled=Value end})
+BackstabTab:CreateToggle({Name="Auto Stab (Behind)", CurrentValue=false, Flag="StabBehindToggle", Callback=function(Value) stabBehindEnabled=Value end})
 BackstabTab:CreateSlider({Name="Stab Range", Range={1,10}, Increment=0.5, Suffix=" studs", CurrentValue=defaultRange, Flag="RangeSlider", Callback=function(Value) defaultRange=Value end})
 
 local function predictPos(hrp)
@@ -519,8 +521,15 @@ local function predictPos(hrp)
     return hrp.Position + dir * (pingSec * vel.Magnitude)
 end
 
-local function stab(kHRP)
-    if aimbotActive or not backstabEnabled then return end
+local function isBehind(targetHRP, playerHRP)
+    local targetLook = targetHRP.CFrame.LookVector
+    local dirToPlayer = (playerHRP.Position - targetHRP.Position).Unit
+    local dot = targetLook:Dot(dirToPlayer)
+    return dot > 0.5 -- means behind
+end
+
+local function stab(kHRP, mode)
+    if aimbotActive or (not stabBothEnabled and not stabBehindEnabled) then return end
     aimbotActive = true
     local char = lp.Character
     if not (char and char:FindFirstChild("HumanoidRootPart")) then
@@ -532,27 +541,31 @@ local function stab(kHRP)
     local startTime = tick()  
     local connection  
     connection = RunService.Stepped:Connect(function()  
-        if tick() - startTime > 1 or not hrp.Parent or not backstabEnabled then  
+        if tick() - startTime > 1 or not hrp.Parent or (not stabBothEnabled and not stabBehindEnabled) then  
             connection:Disconnect()  
             aimbotActive = false  
             return  
         end  
 
         if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then  
-            local predicted = predictPos(kHRP)  
-            hrp.CFrame = CFrame.new(hrp.Position, predicted)  
+            if mode == "Both" or (mode == "Behind" and isBehind(kHRP, hrp)) then
+                local predicted = predictPos(kHRP)  
+                hrp.CFrame = CFrame.new(hrp.Position, predicted)  
+            end
         end  
     end)  
 
     if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then  
-        daggerRemote:FireServer("UseActorAbility","Dagger")  
+        if mode == "Both" or (mode == "Behind" and isBehind(kHRP, hrp)) then
+            daggerRemote:FireServer("UseActorAbility","Dagger")  
+        end
     end
 end
 
 RunService.RenderStepped:Connect(function()
-    if not backstabEnabled then return end
+    if not (stabBothEnabled or stabBehindEnabled) then return end
     local char = lp.Character
-   if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
+    if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
     local hrp = char.HumanoidRootPart
 
     for _, name in ipairs(killerNames) do  
@@ -560,7 +573,11 @@ RunService.RenderStepped:Connect(function()
         if killer and killer:FindFirstChild("HumanoidRootPart") then  
             local kHRP = killer.HumanoidRootPart  
             if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then  
-                stab(kHRP)  
+                if stabBothEnabled then
+                    stab(kHRP, "Both")
+                elseif stabBehindEnabled then
+                    stab(kHRP, "Behind")
+                end
                 break  
             end  
         end  
