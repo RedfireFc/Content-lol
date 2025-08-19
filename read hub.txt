@@ -400,7 +400,7 @@ RunService.Heartbeat:Connect(function()
     if survivors then
         for _, s in ipairs(survivors:GetChildren()) do
             if espSurvivors and s ~= lp.Character then
-                getOrCreateHighlight(s, Color3.fromRGB(0,0,139))
+                getOrCreateHighlight(s, Color3.fromRGB(0,0,255))
             else
                 local h = s:FindFirstChild("ESP_Highlight")
                 if h then h.Enabled = false end
