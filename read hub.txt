@@ -22,6 +22,7 @@ local Window = Rayfield:CreateWindow({
 local CombatTab = Window:CreateTab("Combat", 4483362458)
 local GeneratorTab = Window:CreateTab("Generators", 4483362458)
 local ESPTab = Window:CreateTab("ESP", 4483362458)
+local BackstabTab = Window:CreateTab("Backstab", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
 -- Audio Block IDs
@@ -72,7 +73,6 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
 end})
 
 -- Auto Block
-
 local function fireBlock()
     pcall(function()
         ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
@@ -106,7 +106,7 @@ local function attemptBlock(sound)
 
     local pos = getSoundPosition(sound)
     if pos and (root.Position - pos).Magnitude <= detectionRange then
-        if sound.TimePosition < 0.222 then -- won't do shit anymore against early blocks or hitbox ending while it plays
+        if sound.TimePosition < 0.222 then
             fireBlock()
         end
     end
@@ -140,7 +140,7 @@ game.DescendantAdded:Connect(function(obj)
     end
 end)
 
--- heartbeat poll for safety (catches anything missed)
+-- heartbeat poll for safety
 RunService.RenderStepped:Connect(function()
     if not autoBlockOn then return end
     local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
@@ -157,7 +157,8 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
--- Auto Punch (ability refresh safe)
+
+-- Auto Punch
 local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local function firePunch()
     pcall(function() netRem:FireServer("UseActorAbility","Punch") end)
@@ -195,14 +196,14 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
     if chargesObj and chargesObj.Text == "1" then
-        local targetRoot = closestKiller() -- this already returns HumanoidRootPart
+        local targetRoot = closestKiller()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         if targetRoot and root then
             aiming = true
             firePunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 1 and root and targetRoot and targetRoot.Parent do
+                while tick() - startTime < 1 and root and targetRoot and targetRoot.Parent and autoPunchOn do
                     local humanoid = targetRoot.Parent:FindFirstChildOfClass("Humanoid")
                     local predictionDistance = (humanoid and humanoid.WalkSpeed > 27) and 5 or 1
                     local predictedPosition = targetRoot.Position
@@ -212,7 +213,6 @@ RunService.RenderStepped:Connect(function()
                         predictedPosition = predictedPosition + (vel.Unit * predictionDistance)
                     end
 
-                    -- smoothly face the predicted position
                     root.CFrame = CFrame.lookAt(root.Position, predictedPosition)
 
                     task.wait()
@@ -245,6 +245,7 @@ GeneratorTab:CreateToggle({
         if enabled then
             GeneratorTab._timer = 0
             GeneratorTab._loop = RunService.Heartbeat:Connect(function(dt)
+                if not GeneratorTab._loop then return end
                 GeneratorTab._timer = GeneratorTab._timer + dt
                 if GeneratorTab._timer >= generatorCooldown then
                     GeneratorTab._timer = 0
@@ -266,6 +267,7 @@ GeneratorTab:CreateSlider({
         generatorCooldown = val
     end
 })
+
 --================= ESP =================
 local espKillers = false
 local espSurvivors = false
@@ -398,7 +400,7 @@ RunService.Heartbeat:Connect(function()
     if survivors then
         for _, s in ipairs(survivors:GetChildren()) do
             if espSurvivors and s ~= lp.Character then
-                getOrCreateHighlight(s, Color3.fromRGB(0,255,0))
+                getOrCreateHighlight(s, Color3.fromRGB(0,0,139))
             else
                 local h = s:FindFirstChild("ESP_Highlight")
                 if h then h.Enabled = false end
@@ -497,6 +499,73 @@ task.spawn(function()
     end
 end)
 
+--================= BACKSTAB =================
+local daggerRemote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+local killersFolder = Workspace:WaitForChild("Players"):WaitForChild("Killers")
+local killerNames = {"Jason","c00lkidd","JohnDoe","1x1x1x1","Noli"}
+local backstabEnabled = false
+local defaultRange = 5
+local aimbotActive = false
+
+BackstabTab:CreateToggle({Name="Enable Auto Stab", CurrentValue=false, Flag="StabToggle", Callback=function(Value) backstabEnabled=Value end})
+BackstabTab:CreateSlider({Name="Stab Range", Range={1,10}, Increment=0.5, Suffix=" studs", CurrentValue=defaultRange, Flag="RangeSlider", Callback=function(Value) defaultRange=Value end})
+
+local function predictPos(hrp)
+    local stats = game:GetService("Stats")
+    local ping = tonumber(stats.Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+")) or 50
+    local pingSec = ping/1000
+    local vel = hrp.Velocity
+    local dir = vel.Magnitude > 0.1 and vel.Unit or Vector3.new()
+    return hrp.Position + dir * (pingSec * vel.Magnitude)
+end
+
+local function stab(kHRP)
+    if aimbotActive or not backstabEnabled then return end
+    aimbotActive = true
+    local char = lp.Character
+    if not (char and char:FindFirstChild("HumanoidRootPart")) then
+        aimbotActive = false
+        return
+    end
+    local hrp = char.HumanoidRootPart
+
+    local startTime = tick()  
+    local connection  
+    connection = RunService.Stepped:Connect(function()  
+        if tick() - startTime > 1 or not hrp.Parent or not backstabEnabled then  
+            connection:Disconnect()  
+            aimbotActive = false  
+            return  
+        end  
+
+        if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then  
+            local predicted = predictPos(kHRP)  
+            hrp.CFrame = CFrame.new(hrp.Position, predicted)  
+        end  
+    end)  
+
+    if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then  
+        daggerRemote:FireServer("UseActorAbility","Dagger")  
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if not backstabEnabled then return end
+    local char = lp.Character
+   if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
+    local hrp = char.HumanoidRootPart
+
+    for _, name in ipairs(killerNames) do  
+        local killer = killersFolder:FindFirstChild(name)  
+        if killer and killer:FindFirstChild("HumanoidRootPart") then  
+            local kHRP = killer.HumanoidRootPart  
+            if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then  
+                stab(kHRP)  
+                break  
+            end  
+        end  
+    end
+end)
 
 --================= CONFIG =================
-Rayfield:LoadConfiguration()-- Lead Hub
+Rayfield:LoadConfiguration()
