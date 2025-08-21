@@ -22,19 +22,9 @@ local Window = Rayfield:CreateWindow({
 local CombatTab = Window:CreateTab("Combat", 4483362458)
 local GeneratorTab = Window:CreateTab("Generators", 4483362458)
 local ESPTab = Window:CreateTab("ESP", 4483362458)
-local BackstabTab = Window:CreateTab("Backstab", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
--- Audio Block IDs
-local autoBlockTriggerSounds = {
-    ["102228729296384"] = true, ["140242176732868"] = true, ["112809109188560"] = true,
-    ["136323728355613"] = true, ["115026634746636"] = true, ["84116622032112"] = true,
-    ["108907358619313"] = true, ["127793641088496"] = true, ["86174610237192"] = true,
-    ["95079963655241"] = true, ["101199185291628"] = true, ["119942598489800"] = true,
-    ["84307400688050"] = true
-}
-
--- State
+--================= STATE =================
 local autoBlockOn = true
 local autoPunchOn = true
 local infiniteStamina = true
@@ -42,7 +32,7 @@ local detectionRange = 10
 local apRange = 10 -- punch range in studs
 local generatorCooldown = 2.5
 
--- Infinite Stamina
+--================= INFINITE STAMINA =================
 local function enableInfiniteStamina()
     local success, StaminaModule = pcall(function()
         return require(ReplicatedStorage.Systems.Character.Game.Sprinting)
@@ -61,22 +51,29 @@ local function enableInfiniteStamina()
 end
 enableInfiniteStamina()
 
--- UI Toggles
+--================= UI =================
 CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) autoBlockOn = val end})
 CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(val) autoPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
 CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
 
--- Misc
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
     pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
 end})
 
--- Auto Block
+--================= AUDIO AUTO BLOCK =================
+local autoBlockTriggerSounds = {
+    ["102228729296384"] = true, ["140242176732868"] = true, ["112809109188560"] = true,
+    ["136323728355613"] = true, ["115026634746636"] = true, ["84116622032112"] = true,
+    ["108907358619313"] = true, ["127793641088496"] = true, ["86174610237192"] = true,
+    ["95079963655241"] = true, ["101199185291628"] = true, ["119942598489800"] = true,
+    ["84307400688050"] = true
+}
+
+local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local function fireBlock()
     pcall(function()
-        ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-            :FireServer("UseActorAbility", "Block")
+        netRem:FireServer("UseActorAbility", "Block")
     end)
 end
 
@@ -126,21 +123,18 @@ local function hookSound(sound)
     end)
 end
 
--- hook existing sounds
 for _, s in ipairs(game:GetDescendants()) do
     if s:IsA("Sound") then
         hookSound(s)
     end
 end
 
--- hook new sounds
 game.DescendantAdded:Connect(function(obj)
     if obj:IsA("Sound") then
         hookSound(obj)
     end
 end)
 
--- heartbeat poll for safety
 RunService.RenderStepped:Connect(function()
     if not autoBlockOn then return end
     local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
@@ -158,8 +152,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Auto Punch
-local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+--================= AUTO PUNCH =================
 local function firePunch()
     pcall(function() netRem:FireServer("UseActorAbility","Punch") end)
 end
@@ -169,8 +162,7 @@ local function closestKiller()
     local char = lp.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return nil end
-    local nearest, nearestDist
-    nearestDist = math.huge
+    local nearest, nearestDist = nil, math.huge
     for _, killer in ipairs(killersFolder:GetChildren()) do
         local kr = killer:FindFirstChild("HumanoidRootPart")
         if kr then
@@ -184,7 +176,6 @@ local function closestKiller()
     return nearest
 end
 
--- Aimbot
 local aiming = false
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
@@ -207,14 +198,11 @@ RunService.RenderStepped:Connect(function()
                     local humanoid = targetRoot.Parent:FindFirstChildOfClass("Humanoid")
                     local predictionDistance = (humanoid and humanoid.WalkSpeed > 27) and 5 or 1
                     local predictedPosition = targetRoot.Position
-
                     local vel = targetRoot.Velocity
                     if vel.Magnitude > 0.1 then
                         predictedPosition = predictedPosition + (vel.Unit * predictionDistance)
                     end
-
                     root.CFrame = CFrame.lookAt(root.Position, predictedPosition)
-
                     task.wait()
                 end
                 aiming = false
@@ -236,7 +224,6 @@ local function GeneratorOnce()
     end
 end
 
--- Auto Generator Toggle
 GeneratorTab:CreateToggle({
     Name = "Auto Generator",
     CurrentValue = false,
@@ -256,7 +243,6 @@ GeneratorTab:CreateToggle({
     end
 })
 
--- Auto Generator Slider
 GeneratorTab:CreateSlider({
     Name = "Auto Generator Delay",
     Range = {2.5, 5},
@@ -269,66 +255,13 @@ GeneratorTab:CreateSlider({
 })
 
 --================= ESP =================
-local espKillers = false
-local espSurvivors = false
-local espItems = false
-local espGenerators = false
-local lp = game:GetService("Players").LocalPlayer
+local espKillers, espSurvivors, espItems, espGenerators = false, false, false, false
 
--- Toggles
-ESPTab:CreateToggle({
-    Name = "Killers ESP",
-    CurrentValue = false,
-    Callback = function(val) espKillers = val end
-})
+ESPTab:CreateToggle({Name="Killers ESP", CurrentValue=false, Callback=function(val) espKillers = val end})
+ESPTab:CreateToggle({Name="Survivors ESP", CurrentValue=false, Callback=function(val) espSurvivors = val end})
+ESPTab:CreateToggle({Name="Items ESP", CurrentValue=false, Callback=function(val) espItems = val end})
+ESPTab:CreateToggle({Name="Generators ESP", CurrentValue=false, Callback=function(val) espGenerators = val end})
 
-ESPTab:CreateToggle({
-    Name = "Survivors ESP",
-    CurrentValue = false,
-    Callback = function(val) espSurvivors = val end
-})
-
-ESPTab:CreateToggle({
-    Name = "Items ESP",
-    CurrentValue = false,
-    Callback = function(val)
-        espItems = val
-        if not val then
-            local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
-            if mapFolder then
-                for _, obj in ipairs(mapFolder:GetChildren()) do
-                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
-                        local h = obj:FindFirstChild("ESP_Highlight")
-                        if h then h:Destroy() end
-                        local b = obj:FindFirstChild("ESP_Billboard")
-                        if b then b:Destroy() end
-                    end
-                end
-            end
-        end
-    end
-})
-
-ESPTab:CreateToggle({
-    Name = "Generators ESP",
-    CurrentValue = false,
-    Callback = function(val)
-        espGenerators = val
-        if not val then
-            local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
-            if mapFolder then
-                for _, obj in ipairs(mapFolder:GetChildren()) do
-                    if obj.Name == "Generator" then
-                        local h = obj:FindFirstChild("ESP_Highlight")
-                        if h then h:Destroy() end
-                    end
-                end
-            end
-        end
-    end
-})
-
--- Utility Functions (from good ESP)
 local function getOrCreateHighlight(obj, color)
     local highlight = obj:FindFirstChild("ESP_Highlight")
     if not highlight then
@@ -377,7 +310,6 @@ local function applyItemESP(obj)
     end
 end
 
--- ESP Loop
 RunService.Heartbeat:Connect(function()
     local playersFolder = workspace:FindFirstChild("Players")
     if not playersFolder then return end
@@ -400,7 +332,7 @@ RunService.Heartbeat:Connect(function()
     if survivors then
         for _, s in ipairs(survivors:GetChildren()) do
             if espSurvivors and s ~= lp.Character then
-                getOrCreateHighlight(s, Color3.fromRGB(0,0,255))
+                getOrCreateHighlight(s, Color3.fromRGB(0,255,0))
             else
                 local h = s:FindFirstChild("ESP_Highlight")
                 if h then h.Enabled = false end
@@ -408,229 +340,15 @@ RunService.Heartbeat:Connect(function()
         end
     end
 
-    -- Items ESP
-    if espItems then
-        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
-        if mapFolder then
-            for _, obj in ipairs(mapFolder:GetChildren()) do
-                if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
-                    applyItemESP(obj)
-                end
+    -- Items & Generators
+    local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+    if mapFolder then
+        for _, obj in ipairs(mapFolder:GetChildren()) do
+            if espItems and (obj.Name == "Medkit" or obj.Name == "BloxyCola") then
+                applyItemESP(obj)
             end
-        end
-    end
-
-    -- Generators ESP
-    if espGenerators then
-        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
-        if mapFolder then
-            for _, obj in ipairs(mapFolder:GetChildren()) do
-                if obj.Name == "Generator" and not obj:FindFirstChild("ESP_Highlight") then
-                    local highlight = Instance.new("Highlight")
-                    highlight.Name = "ESP_Highlight"
-                    highlight.FillColor = Color3.fromRGB(255,255,0)
-                    highlight.OutlineColor = Color3.new(0,0,0)
-                    highlight.FillTransparency = 0.6
-                    highlight.OutlineTransparency = 0.6
-                    highlight.Adornee = obj
-                    highlight.Parent = obj
-                end
-            end
-        end
-    end
-end)
-
--- Items & Generators rescanner
-task.spawn(function()
-    while true do
-        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
-        if mapFolder then
-            if espGenerators then
-                for _, obj in ipairs(mapFolder:GetChildren()) do
-                    if obj.Name == "Generator" then
-                        local progressVal = obj:FindFirstChild("Progress")
-                        local h = obj:FindFirstChild("ESP_Highlight")
-                        if progressVal then
-                            if progressVal.Value >= 100 then
-                                if h then h:Destroy() end
-                            else
-                                if not h then
-                                    local highlight = Instance.new("Highlight")
-                                    highlight.Name = "ESP_Highlight"
-                                    highlight.FillColor = Color3.fromRGB(255,255,0)
-                                    highlight.OutlineColor = Color3.new(0,0,0)
-                                    highlight.FillTransparency = 0.6
-                                    highlight.OutlineTransparency = 0.6
-                                    highlight.Adornee = obj
-                                    highlight.Parent = obj
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            if espItems then
-                for _, obj in ipairs(mapFolder:GetChildren()) do
-                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
-                        applyItemESP(obj)
-                    end
-                end
-            end
-            if not espGenerators then
-                for _, obj in ipairs(mapFolder:GetChildren()) do
-                    if obj.Name == "Generator" then
-                        local h = obj:FindFirstChild("ESP_Highlight")
-                        if h then h:Destroy() end
-                    end
-                end
-            end
-            if not espItems then
-                for _, obj in ipairs(mapFolder:GetChildren()) do
-                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
-                        local h = obj:FindFirstChild("ESP_Highlight")
-                        if h then h:Destroy() end
-                        local b = obj:FindFirstChild("ESP_Billboard")
-                        if b then b:Destroy() end
-                    end
-                end
-            end
-        end
-        task.wait(0.5)
-    end
-end)
---================= BACKSTAB =================
-local daggerRemote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-local killersFolder = Workspace:WaitForChild("Players"):WaitForChild("Killers")
-local killerNames = {"Jason","c00lkidd","JohnDoe","1x1x1x1","Noli"}
-
-local stabBothEnabled = false
-local stabBehindEnabled = false
-local defaultRange = 5
-local aimbotActiveBoth = false
-local aimbotActiveBehind = false
-
--- UI
-BackstabTab:CreateToggle({
-    Name = "Auto Stab (Both)", 
-    CurrentValue = false, 
-    Flag = "StabBothToggle", 
-    Callback = function(Value) stabBothEnabled = Value end
-})
-
-BackstabTab:CreateToggle({
-    Name = "Auto Backstab (Behind)", 
-    CurrentValue = false, 
-    Flag = "StabBehindToggle", 
-    Callback = function(Value) stabBehindEnabled = Value end
-})
-
-BackstabTab:CreateSlider({
-    Name = "Stab Range", 
-    Range = {1, 10}, 
-    Increment = 0.5, 
-    Suffix = " studs", 
-    CurrentValue = defaultRange, 
-    Flag = "RangeSlider", 
-    Callback = function(Value) defaultRange = Value end
-})
-
--- Predict function
-local function predictPos(hrp)
-    local stats = game:GetService("Stats")
-    local ping = tonumber(stats.Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+")) or 50
-    local pingSec = ping / 1000
-    local vel = hrp.Velocity
-    local dir = vel.Magnitude > 0.1 and vel.Unit or Vector3.new()
-    return hrp.Position + dir * (pingSec * vel.Magnitude)
-end
-
--- Check if behind
-local function isBehind(targetHRP, playerHRP)
-    local targetLook = targetHRP.CFrame.LookVector
-    local dirToPlayer = (playerHRP.Position - targetHRP.Position).Unit
-    local dot = targetLook:Dot(dirToPlayer)
-    return dot > 0.5 -- ~60° cone behind the killer
-end
-
--- Stab anywhere
-local function stabBoth(kHRP)
-    if aimbotActiveBoth or not stabBothEnabled then return end
-    aimbotActiveBoth = true
-    local char = lp.Character
-    if not (char and char:FindFirstChild("HumanoidRootPart")) then
-        aimbotActiveBoth = false
-        return
-    end
-    local hrp = char.HumanoidRootPart
-
-    local startTime = tick()
-    local connection
-    connection = RunService.Stepped:Connect(function()
-        if tick() - startTime > 1 or not hrp.Parent or not stabBothEnabled then
-            connection:Disconnect()
-            aimbotActiveBoth = false
-            return
-        end
-
-        if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then
-            local predicted = predictPos(kHRP)
-            hrp.CFrame = CFrame.new(hrp.Position, predicted)
-        end
-    end)
-
-    if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then
-        daggerRemote:FireServer("UseActorAbility", "Dagger")
-    end
-end
-
--- Stab behind only
-local function stabBehind(kHRP)
-    if aimbotActiveBehind or not stabBehindEnabled then return end
-    aimbotActiveBehind = true
-    local char = lp.Character
-    if not (char and char:FindFirstChild("HumanoidRootPart")) then
-        aimbotActiveBehind = false
-        return
-    end
-    local hrp = char.HumanoidRootPart
-
-    local startTime = tick()
-    local connection
-    connection = RunService.Stepped:Connect(function()
-        if tick() - startTime > 1 or not hrp.Parent or not stabBehindEnabled then
-            connection:Disconnect()
-            aimbotActiveBehind = false
-            return
-        end
-
-        if (kHRP.Position - hrp.Position).Magnitude <= defaultRange and isBehind(kHRP, hrp) then
-            local predicted = predictPos(kHRP)
-            hrp.CFrame = CFrame.new(hrp.Position, predicted)
-        end
-    end)
-
-    if (kHRP.Position - hrp.Position).Magnitude <= defaultRange and isBehind(kHRP, hrp) then
-        daggerRemote:FireServer("UseActorAbility", "Dagger")
-    end
-end
-
--- Main loop
-RunService.RenderStepped:Connect(function()
-    local char = lp.Character
-    if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
-    local hrp = char.HumanoidRootPart
-
-    for _, name in ipairs(killerNames) do
-        local killer = killersFolder:FindFirstChild(name)
-        if killer and killer:FindFirstChild("HumanoidRootPart") then
-            local kHRP = killer.HumanoidRootPart
-            if (kHRP.Position - hrp.Position).Magnitude <= defaultRange then
-                if stabBothEnabled then
-                    stabBoth(kHRP)
-                elseif stabBehindEnabled then
-                    stabBehind(kHRP)
-                end
-                break
+            if espGenerators and obj.Name == "Generator" then
+                getOrCreateHighlight(obj, Color3.fromRGB(255,255,0))
             end
         end
     end
