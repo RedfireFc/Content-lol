@@ -24,7 +24,16 @@ local GeneratorTab = Window:CreateTab("Generators", 4483362458)
 local ESPTab = Window:CreateTab("ESP", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
---================= STATE =================
+-- Audio Block IDs
+local autoBlockTriggerSounds = {
+    ["102228729296384"] = true, ["140242176732868"] = true, ["112809109188560"] = true,
+    ["136323728355613"] = true, ["115026634746636"] = true, ["84116622032112"] = true,
+    ["108907358619313"] = true, ["127793641088496"] = true, ["86174610237192"] = true,
+    ["95079963655241"] = true, ["101199185291628"] = true, ["119942598489800"] = true,
+    ["84307400688050"] = true
+}
+
+-- State
 local autoBlockOn = true
 local autoPunchOn = true
 local infiniteStamina = true
@@ -32,7 +41,7 @@ local detectionRange = 10
 local apRange = 10 -- punch range in studs
 local generatorCooldown = 2.5
 
---================= INFINITE STAMINA =================
+-- Infinite Stamina
 local function enableInfiniteStamina()
     local success, StaminaModule = pcall(function()
         return require(ReplicatedStorage.Systems.Character.Game.Sprinting)
@@ -51,108 +60,140 @@ local function enableInfiniteStamina()
 end
 enableInfiniteStamina()
 
---================= UI =================
+-- UI Toggles
 CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) autoBlockOn = val end})
 CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(val) autoPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
 CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
 
+-- Misc
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
     pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
 end})
 
---================= AUDIO AUTO BLOCK =================
-local autoBlockTriggerSounds = {
-    ["102228729296384"] = true, ["140242176732868"] = true, ["112809109188560"] = true,
-    ["136323728355613"] = true, ["115026634746636"] = true, ["84116622032112"] = true,
-    ["108907358619313"] = true, ["127793641088496"] = true, ["86174610237192"] = true,
-    ["95079963655241"] = true, ["101199185291628"] = true, ["119942598489800"] = true,
-    ["84307400688050"] = true
-}
-
-local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-local function fireBlock()
-    pcall(function()
-        netRem:FireServer("UseActorAbility", "Block")
-    end)
-end
-
-local function getSoundPosition(sound)
-    local p = sound.Parent
-    if not p then return nil end
-    if p:IsA("BasePart") then return p.Position
-    elseif p:IsA("Attachment") and p.Parent:IsA("BasePart") then return p.Parent.Position
+-- Auto Block
+-- Cache humanoid root safely
+local function getRoot()
+    local char = lp.Character
+    if char then
+        return char:FindFirstChild("HumanoidRootPart")
     end
     return nil
 end
 
-local function isTriggerSound(sound)
-    if not sound.SoundId then return false end
-    local id = string.match(sound.SoundId, "%d+")
-    return id and autoBlockTriggerSounds[id]
+local soundHooks = {}
+
+-- Get sound position
+local function getSoundPosition(sound)
+    if not sound then return nil end
+    local parent = sound.Parent
+    if parent then
+        if parent:IsA("BasePart") then
+            return parent.Position
+        elseif parent:IsA("Attachment") and parent.Parent and parent.Parent:IsA("BasePart") then
+            return parent.Parent.Position
+        end
+    end
+    return nil
 end
 
-local hookedSounds = {}
+-- Block instantly
+local lastBlock = 0 -- store last time we blocked
+local blockCooldown = 3 -- seconds
+
+local function fireBlock()
+    local now = os.clock()
+    if now - lastBlock < blockCooldown then
+        return -- still on cooldown, skip
+    end
+    lastBlock = now
+
+    ReplicatedStorage:WaitForChild("Modules")
+        :WaitForChild("Network")
+        :WaitForChild("RemoteEvent")
+        :FireServer("UseActorAbility", "Block")
+end
+
+-- decide if we should block
 local function attemptBlock(sound)
     if not autoBlockOn then return end
-    if not sound or not sound.IsPlaying then return end
-    if not isTriggerSound(sound) then return end
+    if not sound or not sound:IsA("Sound") or not sound.IsPlaying then return end
 
-    local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    local id = tostring(sound.SoundId):match("%d+")
+    if not id or not autoBlockTriggerSounds[id] then return end
+
+    local root = getRoot()
     if not root then return end
 
     local pos = getSoundPosition(sound)
-    if pos and (root.Position - pos).Magnitude <= detectionRange then
-        if sound.TimePosition < 0.222 then
-            fireBlock()
+    if pos then
+        local dist = (root.Position - pos).Magnitude
+        if dist <= detectionRange then -- using Magnitude instead of Dot
+                if sound.TimePosition <= 0.75 then 
+                    fireBlock()
+                end
         end
     end
 end
 
+-- Hook new sounds
 local function hookSound(sound)
-    if hookedSounds[sound] then return end
-    hookedSounds[sound] = true
+    if not sound or soundHooks[sound] then return end
 
     attemptBlock(sound)
 
-    sound.Played:Connect(function() attemptBlock(sound) end)
-    sound:GetPropertyChangedSignal("TimePosition"):Connect(function()
-        if sound.TimePosition > 0 then
-            attemptBlock(sound)
-        end
+    local conn1 = sound.Played:Connect(function()
+        attemptBlock(sound)
     end)
+
+    local conn2 = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
+        if sound.IsPlaying then attemptBlock(sound) end
+    end)
+
+    -- store connections (but never disconnect them)
+    soundHooks[sound] = {conn1, conn2}
+
+    -- If it was already playing, catch it instantly
+    if sound.IsPlaying then attemptBlock(sound) end
 end
 
-for _, s in ipairs(game:GetDescendants()) do
-    if s:IsA("Sound") then
-        hookSound(s)
+-- Hook all existing sounds
+for _, desc in ipairs(game:GetDescendants()) do
+    if desc:IsA("Sound") then
+        hookSound(desc)
     end
 end
 
-game.DescendantAdded:Connect(function(obj)
-    if obj:IsA("Sound") then
-        hookSound(obj)
+-- Hook future sounds
+game.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        hookSound(desc)
     end
 end)
 
+--loop poll for safety (catches anything missed)
 RunService.RenderStepped:Connect(function()
     if not autoBlockOn then return end
-    local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    local root = getRoot()
     if not root then return end
 
-    for s, _ in pairs(hookedSounds) do
-        if s:IsA("Sound") and s.IsPlaying and isTriggerSound(s) then
-            local pos = getSoundPosition(s)
-            if pos and (root.Position - pos).Magnitude <= detectionRange then
-                if s.TimePosition < 0.222 then
-                    fireBlock()
+    for s, _ in pairs(soundHooks) do
+        if s:IsA("Sound") and s:IsDescendantOf(workspace) then
+            local id = tostring(s.SoundId):match("%d+")
+            if id and autoBlockTriggerSounds[id] and s.IsPlaying then
+                local pos = getSoundPosition(s)
+                if pos and (root.Position - pos).Magnitude <= detectionRange then
+                        if s.TimePosition <= 0.75 then
+                            fireBlock()
+                        end
                 end
             end
         end
     end
 end)
 
---================= AUTO PUNCH =================
+-- Auto Punch (ability refresh safe)
+local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local function firePunch()
     pcall(function() netRem:FireServer("UseActorAbility","Punch") end)
 end
@@ -162,7 +203,8 @@ local function closestKiller()
     local char = lp.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return nil end
-    local nearest, nearestDist = nil, math.huge
+    local nearest, nearestDist
+    nearestDist = math.huge
     for _, killer in ipairs(killersFolder:GetChildren()) do
         local kr = killer:FindFirstChild("HumanoidRootPart")
         if kr then
@@ -176,6 +218,36 @@ local function closestKiller()
     return nearest
 end
 
+-- // Prediction function with "not moving" check
+local function getPredictedPosition(hrp, hum)
+    if not hrp or not hum then return hrp.Position end
+
+    local moveDir = hum.MoveDirection
+    local velocity = hrp.Velocity
+    local predictionTime = 0.5 -- seconds ahead to predict
+
+    -- if both MoveDirection and Velocity are basically zero â†’ no prediction
+    if moveDir.Magnitude < 1 and velocity.Magnitude < 1 then
+        return hrp.Position
+    end
+
+    -- calculate offset
+    local offset
+    if moveDir.Magnitude > 0.1 then
+        offset = moveDir.Unit * hum.WalkSpeed * predictionTime
+    else
+        offset = velocity * predictionTime
+    end
+
+    -- clamp overshoot
+    if offset.Magnitude > 6 then
+        offset = offset.Unit * 6
+    end
+
+    return hrp.Position + offset
+end
+
+-- Aimbot
 local aiming = false
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
@@ -194,15 +266,13 @@ RunService.RenderStepped:Connect(function()
             firePunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 1 and root and targetRoot and targetRoot.Parent and autoPunchOn do
+                while tick() - startTime < 1 and root and targetRoot and targetRoot.Parent do
                     local humanoid = targetRoot.Parent:FindFirstChildOfClass("Humanoid")
-                    local predictionDistance = (humanoid and humanoid.WalkSpeed > 27) and 5 or 1
-                    local predictedPosition = targetRoot.Position
-                    local vel = targetRoot.Velocity
-                    if vel.Magnitude > 0.1 then
-                        predictedPosition = predictedPosition + (vel.Unit * predictionDistance)
-                    end
+                    local predictedPosition = getPredictedPosition(targetRoot, humanoid)
+
+                    -- smoothly face the predicted position
                     root.CFrame = CFrame.lookAt(root.Position, predictedPosition)
+
                     task.wait()
                 end
                 aiming = false
@@ -211,8 +281,10 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+
 --================= GENERATORS =================
 local function GeneratorOnce()
+    if cantBlock then return end
     local IngameMapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame")
     local SubMapFolder = IngameMapFolder and IngameMapFolder:FindFirstChild("Map")
     if SubMapFolder then
@@ -224,6 +296,7 @@ local function GeneratorOnce()
     end
 end
 
+-- Auto Generator Toggle
 GeneratorTab:CreateToggle({
     Name = "Auto Generator",
     CurrentValue = false,
@@ -232,7 +305,6 @@ GeneratorTab:CreateToggle({
         if enabled then
             GeneratorTab._timer = 0
             GeneratorTab._loop = RunService.Heartbeat:Connect(function(dt)
-                if not GeneratorTab._loop then return end
                 GeneratorTab._timer = GeneratorTab._timer + dt
                 if GeneratorTab._timer >= generatorCooldown then
                     GeneratorTab._timer = 0
@@ -243,6 +315,7 @@ GeneratorTab:CreateToggle({
     end
 })
 
+-- Auto Generator Slider
 GeneratorTab:CreateSlider({
     Name = "Auto Generator Delay",
     Range = {2.5, 5},
@@ -255,12 +328,70 @@ GeneratorTab:CreateSlider({
 })
 
 --================= ESP =================
-local espKillers, espSurvivors, espItems, espGenerators = false, false, false, false
+local espKillers = false
+local espSurvivors = false
+local espItems = false
+local espGenerators = false
+local lp = game:GetService("Players").LocalPlayer
 
-ESPTab:CreateToggle({Name="Killers ESP", CurrentValue=false, Callback=function(val) espKillers = val end})
-ESPTab:CreateToggle({Name="Survivors ESP", CurrentValue=false, Callback=function(val) espSurvivors = val end})
-ESPTab:CreateToggle({Name="Items ESP", CurrentValue=false, Callback=function(val) espItems = val end})
-ESPTab:CreateToggle({Name="Generators ESP", CurrentValue=false, Callback=function(val) espGenerators = val end})
+-- Toggles
+ESPTab:CreateToggle({
+    Name = "Killers ESP",
+    CurrentValue = false,
+    Callback = function(val)
+        espKillers = val
+    end
+})
+
+ESPTab:CreateToggle({
+    Name = "Survivors ESP",
+    CurrentValue = false,
+    Callback = function(val)
+        espSurvivors = val
+    end
+})
+
+ESPTab:CreateToggle({
+    Name = "Items ESP",
+    CurrentValue = false,
+    Callback = function(val)
+        espItems = val
+        if not val then
+            local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+            if mapFolder then
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+                        local h = obj:FindFirstChild("ESP_Highlight")
+                        if h then h:Destroy() end
+                        local b = obj:FindFirstChild("ESP_Billboard")
+                        if b then b:Destroy() end
+                    end
+                end
+            end
+        end
+    end
+})
+
+ESPTab:CreateToggle({
+    Name = "Generators ESP",
+    CurrentValue = false,
+    Callback = function(val)
+        espGenerators = val
+        if not val then
+            local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+            if mapFolder then
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Generator" then
+                        local h = obj:FindFirstChild("ESP_Highlight")
+                        if h then h:Destroy() end
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- Utility: Create or get highlight
 
 local function getOrCreateHighlight(obj, color)
     local highlight = obj:FindFirstChild("ESP_Highlight")
@@ -270,12 +401,60 @@ local function getOrCreateHighlight(obj, color)
         highlight.OutlineColor = Color3.new(0,0,0)
         highlight.FillTransparency = 0.6
         highlight.OutlineTransparency = 0.6
-        highlight.Adornee = obj
-        highlight.Parent = obj
+        highlight.Parent = obj -- âœ… parent only, no Adornee
     end
     highlight.Enabled = true
     highlight.FillColor = color
     return highlight
+end
+
+local function forceHighlight(model, color)
+    if not model then return end
+    
+    -- remove any old highlight
+    local old = model:FindFirstChild("ESP_Highlight")
+    if old then old:Destroy() end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "ESP_Highlight"
+    hl.FillColor = color or Color3.new(1,0,0)
+    hl.OutlineColor = Color3.new(0,0,0)
+    hl.FillTransparency = 0.5
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop -- âœ… force visible
+    hl.Parent = model -- âœ… parent to model instead of adornee
+end
+
+-- Remove ESP
+local function removeESP(model)
+    local hl = model and model:FindFirstChild("ESP_Highlight")
+    if hl then hl:Destroy() end
+end
+
+
+-- Generator ESP Handler
+local function trackGenerator(gen)
+    if not gen:FindFirstChild("Progress") then return end
+    local progressVal = gen.Progress
+
+    local highlight = getOrCreateHighlight(gen, Color3.fromRGB(255,255,0))
+
+    -- Update instantly + connect to changes
+    local function updateHighlight()
+        if not espGenerators then
+            highlight.Enabled = false
+            return
+        end
+        if progressVal.Value >= 90 then
+            highlight.Enabled = false -- just disable instead of destroying
+        else
+            highlight.Enabled = true
+            highlight.FillColor = Color3.fromRGB(255,255,0)
+        end
+    end
+
+    updateHighlight()
+    progressVal.Changed:Connect(updateHighlight)
 end
 
 local function applyItemESP(obj)
@@ -310,49 +489,142 @@ local function applyItemESP(obj)
     end
 end
 
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
     local playersFolder = workspace:FindFirstChild("Players")
     if not playersFolder then return end
 
     -- Killers
-    local killers = playersFolder:FindFirstChild("Killers")
-    if killers then
-        for _, k in ipairs(killers:GetChildren()) do
-            if espKillers and k ~= lp.Character then
-                getOrCreateHighlight(k, Color3.fromRGB(255,0,0))
-            else
-                local h = k:FindFirstChild("ESP_Highlight")
-                if h then h.Enabled = false end
+    if espKillers then
+        local killers = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Killers")
+        if killers then
+            for _, killer in ipairs(killers:GetChildren()) do
+                forceHighlight(killer, Color3.fromRGB(255, 0, 0))
+            end
+        end
+    else
+        local killers = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Killers")
+        if killers then
+            for _, killer in ipairs(killers:GetChildren()) do
+                removeESP(killer)
             end
         end
     end
 
-    -- Survivors
-    local survivors = playersFolder:FindFirstChild("Survivors")
-    if survivors then
-        for _, s in ipairs(survivors:GetChildren()) do
-            if espSurvivors and s ~= lp.Character then
-                getOrCreateHighlight(s, Color3.fromRGB(0,0,255))
-            else
-                local h = s:FindFirstChild("ESP_Highlight")
-                if h then h.Enabled = false end
+    if espSurvivors then
+        local survivors = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Survivors")
+        if survivors then
+            for _, survivor in ipairs(survivors:GetChildren()) do
+                if survivor ~= lp.Character then
+                    forceHighlight(survivor, Color3.fromRGB(0, 255, 0))
+                end
+            end
+        end
+    else
+        local survivors = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Survivors")
+        if survivors then
+            for _, survivor in ipairs(survivors:GetChildren()) do
+                removeESP(survivor)
+            end
+        end
+    end
+    -- Items ESP
+    if espItems then
+        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+        if mapFolder then
+            for _, obj in ipairs(mapFolder:GetChildren()) do
+                if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+                    applyItemESP(obj)
+                end
             end
         end
     end
 
-    -- Items & Generators
+    -- Generators ESP (create only if < 90; destroy if >= 90 so it stays gone)
+-- Generators ESP (hide if >= 90, show if < 90, destroy later)
+if espGenerators then
     local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
     if mapFolder then
         for _, obj in ipairs(mapFolder:GetChildren()) do
-            if espItems and (obj.Name == "Medkit" or obj.Name == "BloxyCola") then
-                applyItemESP(obj)
-            end
-            if espGenerators and obj.Name == "Generator" then
-                getOrCreateHighlight(obj, Color3.fromRGB(255,255,0))
+            if obj.Name == "Generator" then
+                local progressVal = obj:FindFirstChild("Progress")
+                if progressVal then
+                    local h = obj:FindFirstChild("ESP_Highlight")
+                    if not h then
+                        h = Instance.new("Highlight")
+                        h.Name = "ESP_Highlight"
+                        h.FillColor = Color3.fromRGB(255,255,0)
+                        h.OutlineColor = Color3.new(0,0,0)
+                        h.FillTransparency = 0.6
+                        h.OutlineTransparency = 0.6
+                        h.Adornee = obj
+                        h.Parent = obj
+                    end
+
+                    if progressVal.Value >= 90 then
+                        -- hide first
+                        h.Enabled = false  
+
+                        -- queue safe destroy
+                        task.delay(1, function()
+                            if h and h.Parent == obj and progressVal.Value >= 90 then
+                                h:Destroy()
+                            end
+                        end)
+                    else
+                        h.Enabled = true
+                        h.FillTransparency = 0.6
+                    end
+                end
             end
         end
+    end
+end
+
+end)
+
+-- Items & Generators rescanner
+task.spawn(function()
+    while true do
+        local mapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map")
+        if mapFolder then
+            -- Generators
+            if espGenerators then
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Generator" and not obj:FindFirstChild("ESP_Highlight") then
+                        trackGenerator(obj)
+                    end
+                end
+            else
+                -- disable all if toggle is off
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Generator" then
+                        local h = obj:FindFirstChild("ESP_Highlight")
+                        if h then h.Enabled = false end
+                    end
+                end
+            end
+
+            -- Items
+            if espItems then
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+                        applyItemESP(obj)
+                    end
+                end
+            else
+                for _, obj in ipairs(mapFolder:GetChildren()) do
+                    if obj.Name == "Medkit" or obj.Name == "BloxyCola" then
+                        local h = obj:FindFirstChild("ESP_Highlight")
+                        if h then h:Destroy() end
+                        local b = obj:FindFirstChild("ESP_Billboard")
+                        if b then b:Destroy() end
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
     end
 end)
 
 --================= CONFIG =================
-Rayfield:LoadConfiguration()
+Rayfield:LoadConfiguration()-- Lead Hub
