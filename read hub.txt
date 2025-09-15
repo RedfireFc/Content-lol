@@ -237,69 +237,80 @@ end)()
 
 
 -- ===== Robust Sound Auto Block =====
--- Fire the block Remote
-local function fireRemoteBlock()
-    local args = {"UseActorAbility", "Block"}
-    ReplicatedStorage:WaitForChild("Modules")
-        :WaitForChild("Network")
-        :WaitForChild("RemoteEvent")
-        :FireServer(unpack(args))
-end
-
--- Tables for tracking hooked sounds
 local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
 
--- Hook a single sound
-local function hookSound(sound)
-    if not sound or soundHooks[sound] then return end
+local function getNearestKillerRoot(maxDist)
+    local killersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+    if not killersFolder then return nil end
 
-    local function attempt(sound)
-        if soundBlockedUntil[sound] and tick() < soundBlockedUntil[sound] then return end
-        local id = extractNumericSoundId(sound)
-        if not id or not autoBlockTriggerSounds[id] then return end
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
 
-        local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        if not myRoot then return end
-
-        local pos = getSoundWorldPosition(sound)
-        if pos and (myRoot.Position - pos).Magnitude <= detectionRange then
-            fireRemoteBlock()
-            soundBlockedUntil[sound] = tick() + 0.1 -- throttle
+    local closest, closestDist = nil, maxDist or math.huge
+    for _, killer in ipairs(killersFolder:GetChildren()) do
+        local hrp = killer:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local dist = (hrp.Position - myRoot.Position).Magnitude
+            if dist < closestDist then
+                closest, closestDist = hrp, dist
+            end
         end
     end
-
-    local playedConn = sound.Played:Connect(function() pcall(attempt, sound) end)
-    local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
-        if sound.IsPlaying then pcall(attempt, sound) end
-    end)
-    local destroyConn
-    destroyConn = sound.Destroying:Connect(function()
-        if playedConn then playedConn:Disconnect() end
-        if propConn then propConn:Disconnect() end
-        if destroyConn then destroyConn:Disconnect() end
-        soundHooks[sound] = nil
-        soundBlockedUntil[sound] = nil
-    end)
-
-    soundHooks[sound] = {playedConn, propConn, destroyConn}
-
-    if sound.IsPlaying then pcall(attempt, sound) end
+    return closest
 end
 
--- Hook all existing sounds
-for _, desc in ipairs(game:GetDescendants()) do
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
-    end
+local function extractNumericSoundId(sound)
+    if not sound or not sound.SoundId then return nil end
+    local sid = tostring(sound.SoundId)
+
+    -- Prefer numeric id if present
+    local num = sid:match("%d+")
+    if num then return num end
+
+    -- Fallbacks (these won't match your numeric whitelist, but kept for completeness)
+    local hash = sid:match("[&%?]hash=([^&]+)")
+    if hash then return "&hash="..hash end
+    local path = sid:match("rbxasset://sounds/.+")
+    if path then return path end
+
+    return nil
 end
 
--- Hook future sounds
-game.DescendantAdded:Connect(function(desc)
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
+local function getSoundWorldPosition(sound)
+    if not sound then return nil end
+    if sound.Parent and sound.Parent:IsA("BasePart") then
+        return sound.Parent.Position, sound.Parent
     end
-end)
+    if sound.Parent and sound.Parent:IsA("Attachment") and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
+        return sound.Parent.Parent.Position, sound.Parent.Parent
+    end
+    -- deep search for any BasePart ancestor/descendant
+    local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
+    if found then
+        return found.Position, found
+    end
+    return nil, nil
+end
+
+local function getCharacterFromDescendant(inst)
+    if not inst then return nil end
+    local model = inst:FindFirstAncestorOfClass("Model")
+    if model and model:FindFirstChildOfClass("Humanoid") then
+        return model
+    end
+    return nil
+end
+
+local function isPointInsidePart(part, point)
+    if not (part and point) then return false end
+    -- convert world point to part-local coordinates and test against half-extents
+    local rel = part.CFrame:PointToObjectSpace(point)
+    local half = part.Size * 0.5
+    return math.abs(rel.X) <= half.X + 0.001 and
+           math.abs(rel.Y) <= half.Y + 0.001 and
+           math.abs(rel.Z) <= half.Z + 0.001
+end
 -- ===== End Robust Sound Auto Block =====
 
 -- Auto Punch (existing)
