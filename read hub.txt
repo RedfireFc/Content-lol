@@ -322,7 +322,7 @@ local function attemptBlockForSound(sound)
 
     local soundPos, soundPart = getSoundWorldPosition(sound)
     local shouldBlock = false
-    local facingOK = true
+    local facingOK = false
 
     if soundPos and soundPart then
         --  check if this part belongs to a Player character
