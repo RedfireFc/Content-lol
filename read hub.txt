@@ -237,9 +237,20 @@ end)()
 
 
 -- ===== Robust Sound Auto Block =====
+-- Fire the block Remote
+local function fireRemoteBlock()
+    local args = {"UseActorAbility", "Block"}
+    ReplicatedStorage:WaitForChild("Modules")
+        :WaitForChild("Network")
+        :WaitForChild("RemoteEvent")
+        :FireServer(unpack(args))
+end
+
+-- Tables for tracking hooked sounds
 local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
 
+-- Hook a single sound
 local function hookSound(sound)
     if not sound or soundHooks[sound] then return end
 
@@ -254,7 +265,7 @@ local function hookSound(sound)
         local pos = getSoundWorldPosition(sound)
         if pos and (myRoot.Position - pos).Magnitude <= detectionRange then
             fireRemoteBlock()
-            soundBlockedUntil[sound] = tick() + 0.1 -- throttle so it doesn’t spam
+            soundBlockedUntil[sound] = tick() + 0.1 -- throttle
         end
     end
 
