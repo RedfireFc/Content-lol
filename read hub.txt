@@ -358,36 +358,7 @@ local _cachedCharges = cachedCharges
 local LOCAL_BLOCK_COOLDOWN = 0.7   -- optimistic local cooldown (tune as needed)
 local lastLocalBlockTime = 0
 
--- Robust GUI-based activation (NO remotes)
-local function tryActivateButton(btn)
-    if not btn then return false end
-    -- safe pcall for :Activate()
-    pcall(function() btn:Activate() end)
-
-    -- Try exploit getconnections if available (many executors provide this)
-    local ok, conns = pcall(function()
-        if type(getconnections) == "function" then
-            return getconnections(btn.MouseButton1Click)
-        end
-        return nil
-    end)
-
-    if ok and conns then
-        for _, conn in ipairs(conns) do
-            pcall(function()
-                -- common field names in exploit connection wrappers
-                if conn.Function then
-                    conn.Function()
-                elseif conn.func then
-                    conn.func()
-                elseif conn.Fire then
-                    conn.Fire()
-                end
-            end)
-        end
-    end
-
-    -- As a last resort try firing Activated manually (some games use .Activated)
+-- As a last resort try firing Activated manually (some games use .Activated)
     pcall(function()
         if btn.Activated then
             btn.Activated:Fire()
@@ -396,21 +367,6 @@ local function tryActivateButton(btn)
 
     return true
 end
-
--- Replace previous fireRemoteBlock / fireRemotePunch with these:
-local function fireGuiBlock()
-    if cachedBlockBtn and tryActivateButton(cachedBlockBtn) then return end
-    -- if GUI not found, attempt a guarded remote call (only if you still want remote fallback)
-    -- but since you said remotes are patched, DON'T call remotes here.
-    -- pcall(function() ReplicatedStorage.Modules.Network.RemoteEvent:FireServer("UseActorAbility","Block") end)
-end
-
-local function fireGuiPunch()
-    if cachedPunchBtn and tryActivateButton(cachedPunchBtn) then return end
-    -- same note as above for remotes
-end
-
--- modify hookSound: store extracted id once
 
 -- optimized attemptBlockForSound (accepts optional precomputed id)
 local function attemptBlockForSound(sound, idParam)
