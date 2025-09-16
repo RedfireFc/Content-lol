@@ -191,7 +191,7 @@ CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(
 CombatTab:CreateToggle({Name="Range Visual", CurrentValue=true, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Fling Punch", CurrentValue=false, Callback=function(val) flingPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
-CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="10", RemoveTextAfterFocusLost=false, Callback=function(txt) detectionRange = tonumber(txt) or detectionRange end})
+CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="13", RemoveTextAfterFocusLost=false, Callback=function(txt) DetectionRange = tonumber(txt) or DetectionRange end})
 
 -- Misc
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
