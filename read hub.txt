@@ -269,7 +269,8 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ===== Robust Sound Auto Block  =====
+-- auto block ig
+
 local soundHooks = {}
 local soundBlockedUntil = {}
 
@@ -369,7 +370,6 @@ game.DescendantAdded:Connect(function(desc)
         pcall(hookSound, desc)
     end
 end)
--- ===== End Robust Sound Auto Block =====
 
 --================= GENERATORS =================
 local function GeneratorOnce()
