@@ -186,8 +186,24 @@ KillersFolder.ChildRemoved:Connect(function(killer)
     removeKillerCircle(killer)
 end)
 
-CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(state) AutoBlockAudioOn = state end})
-CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(state) autoPunchOn = state end})
+CombatTab:CreateToggle({
+    Name = "Auto Block",
+    CurrentValue = false,
+    Flag = "AutoBlockAudio",
+    Callback = function(state)
+        autoBlockAudioOn = state
+    end,
+})
+
+CombatTab:CreateToggle({
+    Name = "Auto Punch",
+    CurrentValue = false,
+    Flag = "AutoPunch",
+    Callback = function(Value)
+        autoPunchOn = Value
+    end,
+})
+
 CombatTab:CreateToggle({Name="Range Visual", CurrentValue=true, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Fling Punch", CurrentValue=false, Callback=function(val) flingPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
