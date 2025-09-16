@@ -188,7 +188,7 @@ end)
 
 CombatTab:CreateToggle({
     Name = "Auto Block",
-    CurrentValue = false,
+    CurrentValue = true,
     Flag = "AutoBlockAudio",
     Callback = function(state)
         autoBlockAudioOn = state
@@ -197,7 +197,7 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Name = "Auto Punch",
-    CurrentValue = false,
+    CurrentValue = true,
     Flag = "AutoPunch",
     Callback = function(Value)
         autoPunchOn = Value
