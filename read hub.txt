@@ -54,8 +54,8 @@ local autoBlockTriggerSounds = {
 }
 
 -- State (existing)
-local autoBlockAudioOn = true
-local autoPunchOn = true
+local autoBlockAudioOn = false
+local autoPunchOn = false
 local infiniteStamina = false
 local detectionRange = 13
 local apRange = 7 -- punch range in studs
