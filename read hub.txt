@@ -665,6 +665,70 @@ KillersFolder.DescendantAdded:Connect(function(desc)
 end)
 -- ===== End Robust Sound Auto Block =====
 
+-- ===== Needed Stuff For Audio Block =====
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local lp = Players.LocalPlayer
+
+-- ===== Cached Buttons =====
+-- Adjust these paths to match your game's UI
+cachedBlockBtn = Workspace:WaitForChild("UI"):WaitForChild("BlockButton") -- your block button path
+cachedPunchBtn = Workspace:WaitForChild("UI"):WaitForChild("PunchButton") -- your punch button path
+
+-- ===== Killer State Table =====
+killerState = {}
+
+-- ===== Facing Check Function =====
+function isFacing(myRoot, targetHrp)
+    if not myRoot or not targetHrp then return false end
+    local lookVector = myRoot.CFrame.LookVector
+    local directionToTarget = (targetHrp.Position - myRoot.Position).Unit
+    local dot = lookVector:Dot(directionToTarget)
+    return dot > 0.3 -- tweak threshold if needed
+end
+
+-- ===== RunService Updater =====
+RunService.RenderStepped:Connect(function(dt)
+    if dt <= 0 then return end
+    local killersFolder = Workspace:FindFirstChild("Players") and Workspace.Players:FindFirstChild("Killers")
+    if not killersFolder then return end
+
+    for _, killer in ipairs(killersFolder:GetChildren()) do
+        local hrp = killer:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local st = killerState[killer] or { prevPos = hrp.Position, prevLook = hrp.CFrame.LookVector, vel = Vector3.new(), angVel = 0 }
+            
+            -- Linear velocity & smoothing
+            local newVel = (hrp.Position - st.prevPos) / math.max(dt, 1e-6)
+            st.vel = st.vel and st.vel:Lerp(newVel, 0.2) or newVel
+
+            -- Angular velocity (signed)
+            local prevLook = st.prevLook or hrp.CFrame.LookVector
+            local look = hrp.CFrame.LookVector
+            local dot = math.clamp(prevLook:Dot(look), -1, 1)
+            local angle = math.acos(dot)
+            local crossY = prevLook:Cross(look).Y
+            local angSign = (crossY >= 0) and 1 or -1
+            st.angVel = (st.angVel * (1 - 0.2)) + (angle / math.max(dt, 1e-6) * angSign * 0.2)
+
+            st.prevPos = hrp.Position
+            st.prevLook = look
+            killerState[killer] = st
+        end
+    end
+end)
+
+-- ===== Optional UI Refresh Function =====
+-- Call this if the UI reloads or buttons change dynamically
+function refreshUIRefs()
+    cachedBlockBtn = Workspace:WaitForChild("UI"):WaitForChild("BlockButton")
+    cachedPunchBtn = Workspace:WaitForChild("UI"):WaitForChild("PunchButton")
+end
+
+-- ===== End Needed Stuff For Audio Block =====
+
 --================= GENERATORS =================
 local function GeneratorOnce()
     local IngameMapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame")
