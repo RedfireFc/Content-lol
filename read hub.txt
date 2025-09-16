@@ -63,7 +63,7 @@ local generatorCooldown = 2.5
 local flingPunchOn = false
 local flingPower = 10000
 local hiddenfling = false
-local looseFacing = true
+local looseFacing = false
 
 -- Infinite Stamina
 local function enableInfiniteStamina()
