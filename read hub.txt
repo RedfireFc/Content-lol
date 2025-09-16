@@ -54,7 +54,7 @@ local autoBlockTriggerSounds = {
 }
 
 -- State (existing)
-local autoBlockAudioOn = true
+local autoBlockAudioOn = false
 local autoPunchOn = true
 local infiniteStamina = true
 local detectionRange = 10
