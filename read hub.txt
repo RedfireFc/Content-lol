@@ -270,7 +270,6 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- auto block ig
-
 local soundHooks = {}
 local soundBlockedUntil = {}
 
