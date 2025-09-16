@@ -188,7 +188,7 @@ end)
 
 CombatTab:CreateToggle({
     Name = "Auto Block",
-    CurrentValue = true,
+    CurrentValue = false,
     Flag = "AutoBlockAudio",
     Callback = function(state)
         autoBlockAudioOn = state
@@ -197,16 +197,16 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Name = "Auto Punch",
-    CurrentValue = true,
+    CurrentValue = false,
     Flag = "AutoPunch",
     Callback = function(Value)
         autoPunchOn = Value
     end,
 })
 
-CombatTab:CreateToggle({Name="Range Visual", CurrentValue=true, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
+CombatTab:CreateToggle({Name="Range Visual", CurrentValue=false, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Fling Punch", CurrentValue=false, Callback=function(val) flingPunchOn = val end})
-CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
+CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=false, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
 CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="13", RemoveTextAfterFocusLost=false, Callback=function(txt) DetectionRange = tonumber(txt) or DetectionRange end})
 
 -- Misc
