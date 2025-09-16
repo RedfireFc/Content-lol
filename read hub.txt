@@ -254,14 +254,44 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ===== Robust Sound Auto Block  =====
-local soundHooks = {}     
-local soundBlockedUntil = {} 
+local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
+local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
 
--- Helpers
+local function getNearestKillerRoot(maxDist)
+    local killersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+    if not killersFolder then return nil end
+
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+
+    local closest, closestDist = nil, maxDist or math.huge
+    for _, killer in ipairs(killersFolder:GetChildren()) do
+        local hrp = killer:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local dist = (hrp.Position - myRoot.Position).Magnitude
+            if dist < closestDist then
+                closest, closestDist = hrp, dist
+            end
+        end
+    end
+    return closest
+end
+
 local function extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
     local sid = tostring(sound.SoundId)
-    return sid:match("%d+")
+
+    -- Prefer numeric id if present
+    local num = sid:match("%d+")
+    if num then return num end
+
+    -- Fallbacks (these won't match your numeric whitelist, but kept for completeness)
+    local hash = sid:match("[&%?]hash=([^&]+)")
+    if hash then return "&hash="..hash end
+    local path = sid:match("rbxasset://sounds/.+")
+    if path then return path end
+
+    return nil
 end
 
 local function getSoundWorldPosition(sound)
@@ -272,6 +302,7 @@ local function getSoundWorldPosition(sound)
     if sound.Parent and sound.Parent:IsA("Attachment") and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
         return sound.Parent.Parent.Position, sound.Parent.Parent
     end
+    -- deep search for any BasePart ancestor/descendant
     local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
     if found then
         return found.Position, found
@@ -290,6 +321,7 @@ end
 
 local function isPointInsidePart(part, point)
     if not (part and point) then return false end
+    -- convert world point to part-local coordinates and test against half-extents
     local rel = part.CFrame:PointToObjectSpace(point)
     local half = part.Size * 0.5
     return math.abs(rel.X) <= half.X + 0.001 and
@@ -297,34 +329,125 @@ local function isPointInsidePart(part, point)
            math.abs(rel.Z) <= half.Z + 0.001
 end
 
--- safety/defaults (won't clobber globals if already set)
-local LOCAL_BLOCK_COOLDOWN = LOCAL_BLOCK_COOLDOWN or 0.7
-local lastLocalBlockTime = lastLocalBlockTime or 0
+-- ===== predictive helpers (paste near top, before attemptBlockForSound) =====
 
-local SMOOTHING_LERP = SMOOTHING_LERP or 0.25
-local PRED_SECONDS_FORWARD = PRED_SECONDS_FORWARD or 0.15
-local PRED_SECONDS_LATERAL = PRED_SECONDS_LATERAL or 0.12
-local ANG_TURN_MULTIPLIER = ANG_TURN_MULTIPLIER or 2
-local PRED_MAX_FORWARD = PRED_MAX_FORWARD or 5
-local PRED_MAX_LATERAL = PRED_MAX_LATERAL or 3
+-- keep killerState updated each frame (lightweight)
+RunService.RenderStepped:Connect(function(dt)
+    if dt <= 0 then return end
+    local killersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+    if not killersFolder then return end
 
--- Normal block attempt
+    for _, killer in ipairs(killersFolder:GetChildren()) do
+        if killer and killer.Parent then
+            local hrp = killer:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local st = killerState[killer] or { prevPos = hrp.Position, prevLook = hrp.CFrame.LookVector, vel = Vector3.new(), angVel = 0 }
+                -- linear velocity sample & smoothing
+                local newVel = (hrp.Position - st.prevPos) / math.max(dt, 1e-6)
+                st.vel = st.vel and st.vel:Lerp(newVel, SMOOTHING_LERP) or newVel
+
+                -- angular velocity (radians/sec, signed by left/right)
+                local prevLook = st.prevLook or hrp.CFrame.LookVector
+                local look = hrp.CFrame.LookVector
+                local dot = math.clamp(prevLook:Dot(look), -1, 1)
+                local angle = math.acos(dot) -- 0..pi
+                local crossY = prevLook:Cross(look).Y
+                local angSign = (crossY >= 0) and 1 or -1
+                local newAngVel = (angle / math.max(dt, 1e-6)) * angSign
+                st.angVel = (st.angVel * (1 - SMOOTHING_LERP)) + (newAngVel * SMOOTHING_LERP)
+
+                st.prevPos = hrp.Position
+                st.prevLook = look
+                killerState[killer] = st
+            end
+        end
+    end
+end)
+
+-- near top with other locals
+local _LP = Players.LocalPlayer
+local _isFacing = isFacing
+local _fireRemoteBlock = fireRemoteBlock
+local _fireRemotePunch = fireRemotePunch
+local _cachedBlockBtn = cachedBlockBtn
+local _cachedCooldown = cachedCooldown            -- these may be updated by refreshUIRefs
+local _cachedCharges = cachedCharges
+local LOCAL_BLOCK_COOLDOWN = 0.7   -- optimistic local cooldown (tune as needed)
+local lastLocalBlockTime = 0
+
+-- Robust GUI-based activation (NO remotes)
+local function tryActivateButton(btn)
+    if not btn then return false end
+    -- safe pcall for :Activate()
+    pcall(function() btn:Activate() end)
+
+    -- Try exploit getconnections if available (many executors provide this)
+    local ok, conns = pcall(function()
+        if type(getconnections) == "function" then
+            return getconnections(btn.MouseButton1Click)
+        end
+        return nil
+    end)
+
+    if ok and conns then
+        for _, conn in ipairs(conns) do
+            pcall(function()
+                -- common field names in exploit connection wrappers
+                if conn.Function then
+                    conn.Function()
+                elseif conn.func then
+                    conn.func()
+                elseif conn.Fire then
+                    conn.Fire()
+                end
+            end)
+        end
+    end
+
+    -- As a last resort try firing Activated manually (some games use .Activated)
+    pcall(function()
+        if btn.Activated then
+            btn.Activated:Fire()
+        end
+    end)
+
+    return true
+end
+
+-- Replace previous fireRemoteBlock / fireRemotePunch with these:
+local function fireGuiBlock()
+    if cachedBlockBtn and tryActivateButton(cachedBlockBtn) then return end
+    -- if GUI not found, attempt a guarded remote call (only if you still want remote fallback)
+    -- but since you said remotes are patched, DON'T call remotes here.
+    -- pcall(function() ReplicatedStorage.Modules.Network.RemoteEvent:FireServer("UseActorAbility","Block") end)
+end
+
+local function fireGuiPunch()
+    if cachedPunchBtn and tryActivateButton(cachedPunchBtn) then return end
+    -- same note as above for remotes
+end
+
+-- modify hookSound: store extracted id once
+
+-- optimized attemptBlockForSound (accepts optional precomputed id)
 local function attemptBlockForSound(sound, idParam)
     if not autoBlockAudioOn then return end
     if not sound or not sound:IsA("Sound") then return end
     if not sound.IsPlaying then return end
 
+    -- use precomputed id if provided
     local id = idParam or extractNumericSoundId(sound)
     if not id or not autoBlockTriggerSounds[id] then return end
 
     local t = tick()
     if soundBlockedUntil[sound] and t < soundBlockedUntil[sound] then return end
 
+    -- local optimistic global cooldown: avoids waiting for server UI updates (helps on high ping)
     if t < lastLocalBlockTime + LOCAL_BLOCK_COOLDOWN then
         return
     end
 
-    local lp = Players.LocalPlayer
+    local lp = _LP or Players.LocalPlayer
     local myChar = lp and lp.Character
     local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
@@ -339,35 +462,37 @@ local function attemptBlockForSound(sound, idParam)
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    local range = detectionRange or 10
-    local detectionRangeSq = range * range
-
+    -- distance squared check (no sqrt)
     local dvec = hrp.Position - myRoot.Position
     local distSq = dvec.X * dvec.X + dvec.Y * dvec.Y + dvec.Z * dvec.Z
     if detectionRangeSq and distSq > detectionRangeSq then
         return
     end
 
+    -- local UI cooldown check (use cached UI refs)
     if cachedCooldown and cachedCooldown.Text ~= "" then
         return
     end
 
-    if facingCheckEnabled and type(isFacing) == "function" and not isFacing(myRoot, hrp) then
+    -- facing check (fast local call)
+    if facingCheckEnabled and not _isFacing(myRoot, hrp) then
         return
     end
 
-    -- FIRE remote calls (remote-only)
-    pcall(function() fireRemoteBlock() end)
+    -- FIRE remote calls immediately (server handles authoritative checks)
+    fireGuiBlock()
 
     if doubleblocktech and cachedCharges and cachedCharges.Text == "1" then
-        pcall(function() fireRemotePunch() end)
+        fireGuiPunch()
     end
 
+    -- optimistic local time-blocking so we don't spam while waiting server
     lastLocalBlockTime = tick()
+
+    -- throttle repeating triggers for this sound
     soundBlockedUntil[sound] = t + 1.2
 end
 
--- Predictive / anti-flick path (runs when antiFlickOn is true)
 local function attemptBDParts(sound)
     if not autoBlockAudioOn then return end
     if not sound or not sound:IsA("Sound") then return end
@@ -397,7 +522,7 @@ local function attemptBDParts(sound)
     local Debris = game:GetService("Debris")
 
     if antiFlickOn then
-        local basePartSize = Vector3.new(5.5, 7.5, 8.5)
+        local basePartSize = Vector3.new(5.5, 7.5, 8.5)  -- original / default size
         local partSize = basePartSize * (blockPartsSizeMultiplier or 1)
         local count = math.max(1, antiFlickParts or 4)
         local base  = antiFlickBaseOffset or 2.5
@@ -412,19 +537,22 @@ local function attemptBDParts(sound)
 
                 local dist = base + (i - 1) * step
 
-                local st = (type(killerState) == "table" and killerState[char]) or { vel = hrp.Velocity or Vector3.new(), angVel = 0 }
+                local st = killerState[char] or { vel = hrp.Velocity or Vector3.new(), angVel = 0 }
                 local vel = st.vel or hrp.Velocity or Vector3.new()
 
                 local forwardSpeed = vel:Dot(hrp.CFrame.LookVector)
                 local lateralSpeed = vel:Dot(hrp.CFrame.RightVector)
 
+                -- separate multipliers
                 local pStrength = (type(predictionStrength) == "number" and predictionStrength) or 1
                 local pTurn = (type(predictionTurnStrength) == "number" and predictionTurnStrength) or 1
 
+                -- raw predicted displacements
                 local forwardPredictRaw = forwardSpeed * PRED_SECONDS_FORWARD * pStrength
                 local lateralPredictRaw = lateralSpeed * PRED_SECONDS_LATERAL * pStrength
                 local turnLateralRaw    = st.angVel * ANG_TURN_MULTIPLIER * pTurn
 
+                -- clamps (scaled separately)
                 local forwardClamp = PRED_MAX_FORWARD * pStrength
                 local lateralClamp = PRED_MAX_LATERAL * pStrength
                 local turnClamp    = PRED_MAX_LATERAL * pTurn
@@ -465,11 +593,11 @@ local function attemptBDParts(sound)
                 end
 
                 if blocked then
-                    if not (facingCheckEnabled and type(isFacing) == "function" and not isFacing(myRoot, hrp)) then
-                        pcall(function() fireRemoteBlock() end)
-
+                    if not (facingCheckEnabled and not isFacing(myRoot, hrp)) then
+                        fireGuiBlock()
+                        
                         if doubleblocktech and cachedCharges and cachedCharges.Text == "1" then
-                            pcall(function() fireRemotePunch() end)
+                            fireGuiPunch()
                         end
                         soundBlockedUntil[sound] = t + 1.2
                     end
@@ -487,11 +615,11 @@ local function attemptBDParts(sound)
     end
 end
 
--- Hook a sound (connect play/IsPlaying and cleanup)
 local function hookSound(sound)
     if not sound or not sound:IsA("Sound") then return end
-    if soundHooks[sound] then return end
+    if soundHooks[sound] then return end -- already hooked
 
+    -- precompute numeric id once and store in hooks
     local preId = extractNumericSoundId(sound)
 
     local playedConn = sound.Played:Connect(function()
@@ -535,36 +663,19 @@ local function hookSound(sound)
     end
 end
 
--- Hook existing Sounds in the Killers folder (fallbacks if missing)
-local KillersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
-if not KillersFolder then
-    KillersFolder = workspace:FindFirstChild("Killers") or workspace:FindFirstChild("Enemies")
+-- Hook existing Sounds across the game (covers workspace, SoundService, Lighting, etc.)
+for _, desc in ipairs(KillersFolder:GetDescendants()) do
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
 end
 
-if KillersFolder then
-    for _, desc in ipairs(KillersFolder:GetDescendants()) do
-        if desc:IsA("Sound") then
-            pcall(hookSound, desc)
-        end
+-- Hook any future Sounds
+KillersFolder.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
     end
-    KillersFolder.DescendantAdded:Connect(function(desc)
-        if desc:IsA("Sound") then
-            pcall(hookSound, desc)
-        end
-    end)
-else
-    -- fallback to hooking broader workspace (if Killers folder isn't present)
-    for _, desc in ipairs(workspace:GetDescendants()) do
-        if desc:IsA("Sound") then
-            pcall(hookSound, desc)
-        end
-    end
-    workspace.DescendantAdded:Connect(function(desc)
-        if desc:IsA("Sound") then
-            pcall(hookSound, desc)
-        end
-    end)
-end
+end)
 -- ===== End Robust Sound Auto Block =====
 
 --================= GENERATORS =================
