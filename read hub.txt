@@ -198,43 +198,60 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
     pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
 end})
 
--- Auto Punch
+-- AUTO PUNCH
+local aiming = false
 
-local function fireRemoteBlock()
-local args = {"UseActorAbility", "Block"}
-ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
+local function AutoPunch(target)
+    if not target then return end
+    local remote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+    remote:FireServer("UseActorAbility", "Punch", target)
+    task.wait(0.05)
+    remote:FireServer("UseActorAbility", "Punch", target)
 end
 
-local function isFacing(localRoot, targetRoot)
-    local dir = (localRoot.Position - targetRoot.Position).Unit
-    local dot = targetRoot.CFrame.LookVector:Dot(dir)
-    return looseFacing and dot > -0.3 or dot > 0
-end
-
--- Fling coroutine
-coroutine.wrap(function()
-    local hrp, c, vel, movel = nil, nil, nil, 0.1
-    while true do
-        RunService.Heartbeat:Wait() 
-        if hiddenfling then
-            while hiddenfling and not (c and c.Parent and hrp and hrp.Parent) do
-                RunService.Heartbeat:Wait()
-                c = lp.Character
-                hrp = c and c:FindFirstChild("HumanoidRootPart")
-            end
-            if hiddenfling then
-                vel = hrp.Velocity
-                hrp.Velocity = vel * flingPower + Vector3.new(0, flingPower, 0)
-                RunService.RenderStepped:Wait()
-                hrp.Velocity = vel
-                RunService.Stepped:Wait()
-                hrp.Velocity = vel + Vector3.new(0, movel, 0)
-                movel = movel * -1
+RunService.Stepped:Connect(function()
+    if autoPunchOn then
+        local char = lp.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if dist <= 13 then
+                    AutoPunch(plr.Character)
+                end
             end
         end
     end
-end)()
+end)
 
+RunService.RenderStepped:Connect(function()
+    if not autoPunchOn or aiming then return end
+
+    local gui = lp:FindFirstChild("PlayerGui")
+    local chargesObj = gui and gui:FindFirstChild("MainUI")
+        and gui.MainUI:FindFirstChild("AbilityContainer")
+        and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
+        and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
+
+    if chargesObj and tostring(chargesObj.Text) == "1" then
+        local target = closestKiller()
+        local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+        if target and root then
+            aiming = true
+            firePunch()
+            local startTime = tick()
+            task.spawn(function()
+                while tick() - startTime < 2 and root and target do
+                    root.CFrame = CFrame.new(root.Position, target.Position)
+                    task.wait()
+                end
+                aiming = false
+            end)
+        end
+    end
+end)
 
 -- ===== Robust Sound Auto Block  =====
 local soundHooks = {}
