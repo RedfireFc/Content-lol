@@ -54,7 +54,7 @@ local autoBlockTriggerSounds = {
 }
 
 -- State (existing)
-local autoBlockOn = true
+local autoBlockAudioOn = true
 local autoPunchOn = true
 local infiniteStamina = true
 local detectionRange = 10
@@ -186,7 +186,7 @@ KillersFolder.ChildRemoved:Connect(function(killer)
     removeKillerCircle(killer)
 end)
 
-CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) AutoBlock = val end})
+CombatTab:CreateToggle({Name="Auto Block", CurrentValue=true, Callback=function(val) AutoBlockAudio = val end})
 CombatTab:CreateToggle({Name="Auto Punch", CurrentValue=true, Callback=function(val) AutoPunch = val end})
 CombatTab:CreateToggle({Name="Range Visual", CurrentValue=true, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Fling Punch", CurrentValue=false, Callback=function(val) flingPunchOn = val end})
