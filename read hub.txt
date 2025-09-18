@@ -220,9 +220,9 @@ local aiming = false
 local function AutoPunch(target)
     if not target then return end
     local remote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-    remote:fireGuiPunch()("UseActorAbility", "Punch", target)
+    fireGuiPunch()
     task.wait(0.05)
-    remote:fireGuiPunch()("UseActorAbility", "Punch", target)
+    fireGuiPunch()
 end
 
 RunService.Stepped:Connect(function()
