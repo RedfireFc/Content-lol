@@ -1,5 +1,7 @@
 -- Lead Hub
 
+
+
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -64,6 +66,120 @@ local flingPunchOn = false
 local flingPower = 10000
 local hiddenfling = false
 local looseFacing = false
+
+local cachedPlayerGui = PlayerGui
+local cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
+local detectionRangeSq = detectionRange * detectionRange
+
+local function refreshUIRefs()
+    -- ensure we have the most up-to-date references for MainUI and ability buttons
+    cachedPlayerGui = lp:FindFirstChild("PlayerGui") or PlayerGui
+    local main = cachedPlayerGui and cachedPlayerGui:FindFirstChild("MainUI")
+    if main then
+        local ability = main:FindFirstChild("AbilityContainer")
+        cachedPunchBtn = ability and ability:FindFirstChild("Punch")
+        cachedBlockBtn = ability and ability:FindFirstChild("Block")
+        cachedCharges = cachedPunchBtn and cachedPunchBtn:FindFirstChild("Charges")
+        cachedCooldown = cachedBlockBtn and cachedBlockBtn:FindFirstChild("CooldownTime")
+    else
+        cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
+    end
+end
+
+-- call once at startup
+refreshUIRefs()
+
+-- refresh on GUI or character changes (keeps caches fresh)
+if cachedPlayerGui then
+    cachedPlayerGui.ChildAdded:Connect(function(child)
+        if child.Name == "MainUI" then
+            task.delay(0.02, refreshUIRefs)
+        end
+    end)
+end
+
+lp.CharacterAdded:Connect(function()
+    task.delay(0.5, refreshUIRefs)
+end)
+
+-- near top with other locals
+local _LP = Players.LocalPlayer
+local _isFacing = isFacing
+local _fireRemoteBlock = fireRemoteBlock
+local _fireRemotePunch = fireRemotePunch
+local _cachedBlockBtn = cachedBlockBtn
+local _cachedCooldown = cachedCooldown            -- these may be updated by refreshUIRefs
+local _cachedCharges = cachedCharges
+local LOCAL_BLOCK_COOLDOWN = 0.7   -- optimistic local cooldown (tune as needed)
+local lastLocalBlockTime = 0
+
+local function getNearestKillerRoot(maxDist)
+    local killersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+    if not killersFolder then return nil end
+
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+
+    local closest, closestDist = nil, maxDist or math.huge
+    for _, killer in ipairs(killersFolder:GetChildren()) do
+        local hrp = killer:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local dist = (hrp.Position - myRoot.Position).Magnitude
+            if dist < closestDist then
+                closest, closestDist = hrp, dist
+            end
+        end
+    end
+    return closest
+end
+
+-- Robust GUI-based activation (NO remotes)
+local function tryActivateButton(btn)
+    if not btn then return false end
+    -- safe pcall for :Activate()
+    pcall(function() btn:Activate() end)
+
+    -- Try exploit getconnections if available (many executors provide this)
+    local ok, conns = pcall(function()
+        if type(getconnections) == "function" then
+            return getconnections(btn.MouseButton1Click)
+        end
+        return nil
+    end)
+
+    if ok and conns then
+        for _, conn in ipairs(conns) do
+            pcall(function()
+                -- common field names in exploit connection wrappers
+                if conn.Function then
+                    conn.Function()
+                elseif conn.func then
+                    conn.func()
+                elseif conn.Fire then
+                    conn.Fire()
+                end
+            end)
+        end
+    end
+
+    -- As a last resort try firing Activated manually (some games use .Activated)
+    pcall(function()
+        if btn.Activated then
+            btn.Activated:Fire()
+        end
+    end)
+
+    return true
+end
+
+-- Replace previous fireRemoteBlock / fireRemotePunch with these:
+local function fireGuiBlock()
+    if cachedBlockBtn and tryActivateButton(cachedBlockBtn) then return end
+end
+
+local function fireGuiPunch()
+    if cachedPunchBtn and tryActivateButton(cachedPunchBtn) then return end
+end
 
 -- Infinite Stamina
 local function enableInfiniteStamina()
@@ -217,31 +333,6 @@ end})
 -- AUTO PUNCH
 local aiming = false
 
-local function AutoPunch(target)
-    if not target then return end
-    local remote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-    fireGuiPunch()
-    task.wait(0.05)
-    fireGuiPunch()
-end
-
-RunService.Stepped:Connect(function()
-    if autoPunchOn then
-        local char = lp.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
-                if dist <= 13 then
-                    AutoPunch(plr.Character)
-                end
-            end
-        end
-    end
-end)
-
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
 
@@ -252,14 +343,14 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
     if chargesObj and tostring(chargesObj.Text) == "1" then
-        local target = closestKiller()
+        local target = getNearestKillerRoot()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         if target and root then
             aiming = true
             fireGuiPunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 2 and root and target do
+                while tick() - startTime < 1.3 and root and target do
                     root.CFrame = CFrame.new(root.Position, target.Position)
                     task.wait()
                 end
@@ -269,40 +360,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-local cachedPlayerGui = PlayerGui
-local cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
-local detectionRangeSq = detectionRange * detectionRange
 
-local function refreshUIRefs()
-    -- ensure we have the most up-to-date references for MainUI and ability buttons
-    cachedPlayerGui = lp:FindFirstChild("PlayerGui") or PlayerGui
-    local main = cachedPlayerGui and cachedPlayerGui:FindFirstChild("MainUI")
-    if main then
-        local ability = main:FindFirstChild("AbilityContainer")
-        cachedPunchBtn = ability and ability:FindFirstChild("Punch")
-        cachedBlockBtn = ability and ability:FindFirstChild("Block")
-        cachedCharges = cachedPunchBtn and cachedPunchBtn:FindFirstChild("Charges")
-        cachedCooldown = cachedBlockBtn and cachedBlockBtn:FindFirstChild("CooldownTime")
-    else
-        cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
-    end
-end
-
--- call once at startup
-refreshUIRefs()
-
--- refresh on GUI or character changes (keeps caches fresh)
-if cachedPlayerGui then
-    cachedPlayerGui.ChildAdded:Connect(function(child)
-        if child.Name == "MainUI" then
-            task.delay(0.02, refreshUIRefs)
-        end
-    end)
-end
-
-lp.CharacterAdded:Connect(function()
-    task.delay(0.5, refreshUIRefs)
-end)
 
 -- auto block (integrated and skidded from my own script @scripted.skibidi WAS HERE)
 local cachedAnimator = nil
@@ -330,25 +388,7 @@ end)
 local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
 
-local function getNearestKillerRoot(maxDist)
-    local killersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
-    if not killersFolder then return nil end
 
-    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return nil end
-
-    local closest, closestDist = nil, maxDist or math.huge
-    for _, killer in ipairs(killersFolder:GetChildren()) do
-        local hrp = killer:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local dist = (hrp.Position - myRoot.Position).Magnitude
-            if dist < closestDist then
-                closest, closestDist = hrp, dist
-            end
-        end
-    end
-    return closest
-end
 
 local function extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
@@ -390,65 +430,6 @@ local function getCharacterFromDescendant(inst)
         return model
     end
     return nil
-end
-
--- near top with other locals
-local _LP = Players.LocalPlayer
-local _isFacing = isFacing
-local _fireRemoteBlock = fireRemoteBlock
-local _fireRemotePunch = fireRemotePunch
-local _cachedBlockBtn = cachedBlockBtn
-local _cachedCooldown = cachedCooldown            -- these may be updated by refreshUIRefs
-local _cachedCharges = cachedCharges
-local LOCAL_BLOCK_COOLDOWN = 0.7   -- optimistic local cooldown (tune as needed)
-local lastLocalBlockTime = 0
-
--- Robust GUI-based activation (NO remotes)
-local function tryActivateButton(btn)
-    if not btn then return false end
-    -- safe pcall for :Activate()
-    pcall(function() btn:Activate() end)
-
-    -- Try exploit getconnections if available (many executors provide this)
-    local ok, conns = pcall(function()
-        if type(getconnections) == "function" then
-            return getconnections(btn.MouseButton1Click)
-        end
-        return nil
-    end)
-
-    if ok and conns then
-        for _, conn in ipairs(conns) do
-            pcall(function()
-                -- common field names in exploit connection wrappers
-                if conn.Function then
-                    conn.Function()
-                elseif conn.func then
-                    conn.func()
-                elseif conn.Fire then
-                    conn.Fire()
-                end
-            end)
-        end
-    end
-
-    -- As a last resort try firing Activated manually (some games use .Activated)
-    pcall(function()
-        if btn.Activated then
-            btn.Activated:Fire()
-        end
-    end)
-
-    return true
-end
-
--- Replace previous fireRemoteBlock / fireRemotePunch with these:
-local function fireGuiBlock()
-    if cachedBlockBtn and tryActivateButton(cachedBlockBtn) then return end
-end
-
-local function fireGuiPunch()
-    if cachedPunchBtn and tryActivateButton(cachedPunchBtn) then return end
 end
 
 -- modify hookSound: store extracted id once
