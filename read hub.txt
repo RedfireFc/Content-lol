@@ -256,7 +256,7 @@ RunService.RenderStepped:Connect(function()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         if target and root then
             aiming = true
-            firePunch()
+            fireGuiPunch()
             local startTime = tick()
             task.spawn(function()
                 while tick() - startTime < 2 and root and target do
