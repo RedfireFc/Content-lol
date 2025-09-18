@@ -359,16 +359,7 @@ local function hookSound(sound)
     end
 end
 
-for _, desc in ipairs(game:GetDescendants()) do
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
-    end
-end
-game.DescendantAdded:Connect(function(desc)
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
-    end
-end)
+
 
 --================= GENERATORS ================= Credits to skibidi i guess
 local function GeneratorOnce()
@@ -395,7 +386,16 @@ GeneratorTab:CreateToggle({
             GeneratorTab._loop = RunService.Heartbeat:Connect(function(dt)
                 GeneratorTab._timer = GeneratorTab._timer + dt
                 if GeneratorTab._timer >= generatorCooldown then
-                    GeneratorTab._timer = 0
+    for _, desc in ipairs(game:GetDescendants()) do
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end
+game.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end)                GeneratorTab._timer = 0
                     GeneratorOnce()
                 end
             end)
