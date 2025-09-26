@@ -56,9 +56,9 @@ local autoBlockTriggerSounds = {
 }
 
 -- State (existing)
-local autoBlockOn = false
-local autoPunchOn = false
-local infiniteStamina = false
+local autoBlockOn = true
+local autoPunchOn = true
+local infiniteStamina = true
 local detectionRange = 13
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
@@ -66,7 +66,7 @@ local flingPunchOn = false
 local flingPower = 10000
 local hiddenfling = false
 local looseFacing = false
-local hitboxDraggingTech = false
+local hitboxDraggingTech = true
 
 local cachedPlayerGui = PlayerGui
 local cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
@@ -304,14 +304,14 @@ KillersFolder.ChildRemoved:Connect(function(killer)
 end)
 
 -- Hitbox Dragging Tech
-local hitboxDraggingTech = false
+local hitboxDraggingTech = true
 local _hitboxDraggingDebounce = false
 local HITBOX_DRAG_DURATION = 1.4
 local HITBOX_DETECT_RADIUS = 6
 
 CombatTab:CreateToggle({
     Name = "Hitbox Dragging tech",
-    CurrentValue = false,
+    CurrentValue = true,
     Flag = "HitboxDraggingToggle",
     Callback = function(state)
         hitboxDraggingTech = state
@@ -320,7 +320,7 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Name = "Auto Block",
-    CurrentValue = false,
+    CurrentValue = true,
     Flag = "AutoBlock",
     Callback = function(state)
         autoBlockAudioOn = state
@@ -329,7 +329,7 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Name = "Auto Punch",
-    CurrentValue = false,
+    CurrentValue = true,
     Flag = "AutoPunch",
     Callback = function(Value)
         autoPunchOn = Value
@@ -338,7 +338,7 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({Name="Range Visual", CurrentValue=false, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Fling Punch", CurrentValue=false, Callback=function(val) flingPunchOn = val end})
-CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=false, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
+CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
 CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="13", RemoveTextAfterFocusLost=false, Callback=function(txt) DetectionRange = tonumber(txt) or DetectionRange end})
 
 -- Misc
