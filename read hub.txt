@@ -66,7 +66,6 @@ local flingPunchOn = false
 local flingPower = 10000
 local hiddenfling = false
 local looseFacing = false
-local hitboxDraggingTech = true
 
 local cachedPlayerGui = PlayerGui
 local cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
@@ -302,21 +301,6 @@ end)
 KillersFolder.ChildRemoved:Connect(function(killer)
     removeKillerCircle(killer)
 end)
-
--- Hitbox Dragging Tech
-local hitboxDraggingTech = true
-local _hitboxDraggingDebounce = false
-local HITBOX_DRAG_DURATION = 1.4
-local HITBOX_DETECT_RADIUS = 6
-
-CombatTab:CreateToggle({
-    Name = "Hitbox Dragging tech",
-    CurrentValue = true,
-    Flag = "HitboxDraggingToggle",
-    Callback = function(state)
-        hitboxDraggingTech = state
-    end,
-})
 
 CombatTab:CreateToggle({
     Name = "Auto Block",
