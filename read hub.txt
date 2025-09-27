@@ -1,6 +1,6 @@
 -- Lead Hub
 
-
+Rayfield:LoadConfiguration()
 
 -- Services
 local Players = game:GetService("Players")
@@ -1037,6 +1037,3 @@ ESPTab:CreateToggle({
         end
     end
 })
-
---================= CONFIG =================
-Rayfield:LoadConfiguration()
