@@ -60,7 +60,7 @@ local autoBlockTriggerSounds = {
 local autoBlockOn = false
 local autoPunchOn = false
 local infiniteStamina = true
-local detectionRange = 13
+local detectionRange = 15
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
 local flingPunchOn = false
@@ -250,7 +250,7 @@ local function addKillerCircle(killer)
     circle.AlwaysOnTop = true
     circle.ZIndex = 0
     circle.Transparency = 0.7
-    circle.Radius = detectionRange
+    circle.Radius = DetectionRange
     circle.Height = 0.1
     circle.Parent = hrp
 
@@ -285,7 +285,7 @@ end
 RunService.RenderStepped:Connect(function()
     for killer, circle in pairs(detectionCircles) do
         if circle and circle.Parent then
-            circle.Radius = detectionRange / 1.5
+            circle.Radius = DetectionRange / 1.5
             setCircleAtGround(killer, circle) -- <-- keep pinned to ground
         end
     end
@@ -345,7 +345,7 @@ CombatTab:CreateToggle({
 CombatTab:CreateToggle({Name="Range Visual", CurrentValue=false, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Fling Punch", CurrentValue=false, Callback=function(val) flingPunchOn = val end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
-CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="13", RemoveTextAfterFocusLost=false, Callback=function(txt) DetectionRange = tonumber(txt) or DetectionRange end})
+CombatTab:CreateInput({Name="Detection Range (studs)", PlaceholderText="15", RemoveTextAfterFocusLost=false, Callback=function(txt) DetectionRange = tonumber(txt) or DetectionRange end})
 
 -- Misc
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
