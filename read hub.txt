@@ -382,6 +382,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+local Dspeed = 5.6 -- you can tweak these numbers
+local Ddelay = 0
+
 -- auto block (integrated and skidded from my own script @scripted.skibidi WAS HERE)
 local cachedAnimator = nil
 local function refreshAnimator()
