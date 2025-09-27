@@ -351,59 +351,9 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
     pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
 end})
 
--- Auto Punch
-local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-local function fireGuiPunch()
-fireGuiPunch()
-end
-local killersFolder = Workspace:WaitForChild("Players"):WaitForChild("Killers")
-
-local function closestKiller()
-    local char = lp.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return nil end
-    local nearest, nearestDist = nil, math.huge
-    for _, killer in ipairs(killersFolder:GetChildren()) do
-        local kr = killer:FindFirstChild("HumanoidRootPart")
-        if kr then
-            local dist = (kr.Position - root.Position).Magnitude
-            if dist <= apRange and dist < nearestDist then
-                nearest = kr
-                nearestDist = dist
-            end
-        end
-    end
-    return nearest
-end
-
--- Prediction function (unchanged)
-local function getPredictedPosition(hrp, hum)
-    if not hrp or not hum then return hrp.Position end
-
-    local moveDir = hum.MoveDirection
-    local velocity = hrp.Velocity
-    local predictionTime = 0.45
-
-    if moveDir.Magnitude < 1 and velocity.Magnitude < 1 then
-        return hrp.Position
-    end
-
-    local offset
-    if moveDir.Magnitude > 0.1 then
-        offset = moveDir.Unit * hum.WalkSpeed * predictionTime
-    else
-        offset = velocity * predictionTime
-    end
-
-    if offset.Magnitude > 6 then
-        offset = offset.Unit * 6
-    end
-
-    return hrp.Position + offset
-end
-
--- Aimbot (unchanged)
+-- AUTO PUNCH
 local aiming = false
+
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
 
@@ -413,38 +363,19 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
-    if chargesObj and chargesObj.Text == "1" then
-        local targetRoot = closestKiller()
+    if chargesObj and tostring(chargesObj.Text) == "1" then
+        local target = getNearestKillerRoot()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        if targetRoot and root then
+        if target and root then
             aiming = true
             fireGuiPunch()
             local startTime = tick()
-            local original = root.Velocity
             task.spawn(function()
-                while tick() - startTime < 0.5 and root and targetRoot and targetRoot.Parent do
-                    local humanoid = targetRoot.Parent:FindFirstChildOfClass("Humanoid")
-                    local predictedPosition = getPredictedPosition(targetRoot, humanoid)
-
-                    root.CFrame = CFrame.lookAt(root.Position, predictedPosition)
+                while tick() - startTime < 1.3 and root and target do
+                    root.CFrame = CFrame.new(root.Position, target.Position)
                     task.wait()
                 end
                 aiming = false
-            end)
-        end
-        if flingPunchOn then
-            hiddenfling = true
-            local targetHRP = root
-            task.spawn(function()
-                local start = tick()
-                while tick() - start < 1 do
-                    if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and targetHRP and targetHRP.Parent then
-                        local frontPos = targetHRP.Position + (targetHRP.CFrame.LookVector * 2)
-                        lp.Character.HumanoidRootPart.CFrame = CFrame.new(frontPos, targetHRP.Position)
-                    end
-                    task.wait()
-                end
-                hiddenfling = false
             end)
         end
     end
