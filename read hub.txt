@@ -351,8 +351,8 @@ PlaceholderText = "13",
 RemoveTextAfterFocusLost = false,
 Flag = "DetectionRange",
 Callback = function(Text)
-detectionRange = tonumber(Text) or detectionRange
-detectionRangeSq = detectionRange * detectionRange
+DetectionRange = tonumber(Text) or DetectionRange
+DetectionRangeSq = DetectionRange * DetectionRange
 end
 })
 
