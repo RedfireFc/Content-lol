@@ -354,7 +354,7 @@ end})
 -- Auto Punch
 local netRem = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local function fireGuiPunch()
-    pcall(function() netRem:FireServer("UseActorAbility","Punch") end)
+fireGuiPunch()
 end
 local killersFolder = Workspace:WaitForChild("Players"):WaitForChild("Killers")
 
