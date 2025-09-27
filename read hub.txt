@@ -550,7 +550,7 @@ local function hookSound(sound)
 
     soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
 
-    if sound.IsPlaying thlen
+    if sound.IsPlaying then
         task.spawn(function()
             task.spawn(attemptBlockForSound, sound, preId)
         end)
