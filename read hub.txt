@@ -284,7 +284,7 @@ end
 RunService.RenderStepped:Connect(function()
     for killer, circle in pairs(detectionCircles) do
         if circle and circle.Parent then
-            circle.Radius = DetectionRange / 1.5
+            circle.Radius = DetectionRange
             setCircleAtGround(killer, circle) -- <-- keep pinned to ground
         end
     end
