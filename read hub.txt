@@ -1,6 +1,5 @@
 -- Lead Hub
 
-Rayfield:LoadConfiguration()
 
 -- Services
 local Players = game:GetService("Players")
