@@ -305,14 +305,14 @@ KillersFolder.ChildRemoved:Connect(function(killer)
 end)
 
 -- Hitbox Dragging Tech
-local hitboxDraggingTech = true
+local hitboxDraggingTech = false
 local _hitboxDraggingDebounce = false
 local HITBOX_DRAG_DURATION = 1.4
 local HITBOX_DETECT_RADIUS = 6
 
 HDTTab:CreateToggle({
     Name = "Hitbox Dragging tech (HDT)",
-    CurrentValue = true,
+    CurrentValue = false,
     Flag = "HitboxDraggingToggle",
     Callback = function(state)
         hitboxDraggingTech = state
