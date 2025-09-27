@@ -57,8 +57,8 @@ local autoBlockTriggerSounds = {
 }
 
 -- State (existing)
-local autoBlockOn = true
-local autoPunchOn = true
+local autoBlockOn = false
+local autoPunchOn = false
 local infiniteStamina = true
 local detectionRange = 13
 local apRange = 7 -- punch range in studs
@@ -326,7 +326,7 @@ HDTTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Name = "Auto Block",
-    CurrentValue = true,
+    CurrentValue = false,
     Flag = "AutoBlock",
     Callback = function(state)
         autoBlockAudioOn = state
@@ -335,7 +335,7 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Name = "Auto Punch",
-    CurrentValue = true,
+    CurrentValue = false,
     Flag = "AutoPunch",
     Callback = function(Value)
         autoPunchOn = Value
