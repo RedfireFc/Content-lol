@@ -309,6 +309,21 @@ KillersFolder.ChildRemoved:Connect(function(killer)
     removeKillerCircle(killer)
 end)
 
+-- Hitbox Dragging Tech
+local hitboxDraggingTech = false
+local _hitboxDraggingDebounce = false
+local HITBOX_DRAG_DURATION = 1.4
+local HITBOX_DETECT_RADIUS = 6
+
+HDTTab:CreateToggle({
+    Name = "Hitbox Dragging tech (HDT)",
+    CurrentValue = false,
+    Flag = "HitboxDraggingToggle",
+    Callback = function(state)
+        hitboxDraggingTech = state
+    end,
+})
+
 CombatTab:CreateToggle({
     Name = "Auto Block",
     CurrentValue = true,
