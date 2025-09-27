@@ -1,3 +1,7 @@
+-- Lead Hub
+
+
+
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -6,7 +10,6 @@ local Workspace = game:GetService("Workspace")
 local Stats = game:GetService("Stats")
 local LocalPlayer = Players.LocalPlayer
 local lp = LocalPlayer
-
 -- Rayfield
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
@@ -379,6 +382,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
 
 local Dspeed = 5.6 -- you can tweak these numbers
 local Ddelay = 0
