@@ -67,7 +67,6 @@ local flingPunchOn = false
 local flingPower = 10000
 local hiddenfling = false
 local looseFacing = false
-local hitboxDraggingTech = false
 
 local blockAnimIds = {
 "72722244508749",
