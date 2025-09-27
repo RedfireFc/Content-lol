@@ -572,93 +572,6 @@ KillersFolder.DescendantAdded:Connect(function(desc)
 end)
 -- ===== End Robust Sound Auto Block =====
 
-local function startChargeAimUntilChargeEnds(fallbackSec)
-    -- ensure only one thread at a time
-    stopChargeAim()
-    chargeAimActive = true
-
-    chargeAimThread = task.spawn(function()
-        local startWatch = tick()
-        local fallback = tonumber(fallbackSec) or 1.2
-
-        -- try to get humanoid/root/animator
-        local function getCharObjects()
-            local char = lp.Character
-            if not char then return nil, nil, nil end
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            local animator = char:FindFirstChildOfClass("Animator")
-            return hum, hrp, animator
-        end
-
-        local humanoid, myRoot, animator = getCharObjects()
-        if humanoid then
-            pcall(function() humanoid.AutoRotate = false end)
-        end
-
-        local seenChargeAnim = false
-        local watchStart = tick()
-
-        while chargeAimActive do
-            -- refresh references each loop in case character reloaded
-            humanoid, myRoot, animator = getCharObjects()
-            if not myRoot then break end
-
-            -- find nearest killer model and its hrp
-            local killerModel = getNearestKillerModel()
-            local targetHRP = (killerModel and killerModel:FindFirstChild("HumanoidRootPart")) or nil
-
-            if targetHRP then
-                -- predictionValue exists in your script (used by aimPunch). use it for nicer aiming.
-                local pred = (type(predictionValue) == "number") and predictionValue or 0
-                local predictedPos = targetHRP.Position + (targetHRP.CFrame.LookVector * pred)
-
-                -- set lookAt while keeping our position
-                pcall(function()
-                    myRoot.CFrame = CFrame.lookAt(myRoot.Position, predictedPos)
-                end)
-            end
-
-            -- check if charge animation is playing (if we can access animator)
-            local stillPlaying = false
-            if animator then
-                local ok, tracks = pcall(function() return animator:GetPlayingAnimationTracks() end)
-                if ok and tracks then
-                    for _, track in ipairs(tracks) do
-                        local animId = nil
-                        pcall(function() animId = tostring(track.Animation and track.Animation.AnimationId or ""):match("%d+") end)
-                        if animId and table.find(chargeAnimIds, animId) then
-                            stillPlaying = true
-                            seenChargeAnim = true
-                            break
-                        end
-                    end
-                end
-            end
-
-            -- stop conditions:
-            -- 1) we saw a charge anim and now it's gone -> stop
-            if seenChargeAnim and not stillPlaying then
-                break
-            end
-
-            -- 2) we never saw a charge anim and we've exceeded fallback -> stop
-            if not seenChargeAnim and (tick() - watchStart) > fallback then
-                break
-            end
-
-            task.wait()
-        end
-
-        -- restore AutoRotate
-        if humanoid then
-            pcall(function() humanoid.AutoRotate = true end)
-        end
-
-        chargeAimActive = false
-    end)
-end
-
 local function beginDragIntoKiller(killerModel)
     -- Basic guards
     if _hitboxDraggingDebounce then return end
@@ -772,7 +685,6 @@ RunService.RenderStepped:Connect(function()
                     -- spawn so we don't block the RenderStepped loop
                     task.wait(Ddelay)
                     task.spawn(function() beginDragIntoKiller(nearest) end)
-                    startChargeAimUntilChargeEnds(0.4)
                 end
             end
         end
