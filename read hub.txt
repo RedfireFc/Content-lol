@@ -1033,6 +1033,3 @@ ESPTab:CreateToggle({
         end
     end
 })
-
---================= CONFIG =================
-Rayfield:LoadConfiguration()
