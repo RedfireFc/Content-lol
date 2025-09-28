@@ -373,7 +373,7 @@ RunService.Stepped:Connect(function()
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
-                if dist <= apRange then
+                if dist <= 7 then
                     AutoPunch(plr.Character)
                 end
             end
@@ -409,7 +409,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
-local Dspeed = 5.6 -- you can tweak these numbers
+local Dspeed = 12 -- you can tweak these numbers
 local Ddelay = 0
 
 -- auto block (integrated and skidded from my own script @scripted.skibidi WAS HERE)
