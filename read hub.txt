@@ -56,7 +56,7 @@ local autoBlockTriggerSounds = {
 }
 
 -- State (existing)
-local autoBlockOn = false
+local autoBlockAudioOn = false
 local autoPunchOn = false
 local infiniteStamina = true
 local detectionRange = 13
@@ -324,7 +324,7 @@ CombatTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoBlock",
     Callback = function(state)
-        autoBlockOn = state
+        autoBlockAudioOn = state
     end,
 })
 
