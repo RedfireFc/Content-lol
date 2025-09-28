@@ -361,6 +361,7 @@ local aiming = false
 
 local function AutoPunch(target)
     if not target then return end
+    task.wait(1)
     fireGuiPunch()
 end
 
@@ -398,7 +399,7 @@ RunService.RenderStepped:Connect(function()
             fireGuiPunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 2 and root and target do
+                while tick() - startTime < 1.5 and root and target do
                     root.CFrame = CFrame.new(root.Position, target.Position)
                     task.wait()
                 end
