@@ -359,7 +359,7 @@ end})
 -- AUTO PUNCH
 local aiming = false
 
-RunService.RenderStepped:Connect(function()
+RunService.aprange:Connect(function()
     if not autoPunchOn or aiming then return end
 
     local gui = lp:FindFirstChild("PlayerGui")
