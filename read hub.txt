@@ -400,7 +400,6 @@ RunService.RenderStepped:Connect(function()
             task.spawn(function()
                 while tick() - startTime < 1.5 and root and target do
                     root.CFrame = CFrame.new(root.Position, target.Position)
-                    task.wait()
                 end
                 aiming = false
             end)
