@@ -519,16 +519,6 @@ local function attemptBlockForSound(sound, idParam)
         fireGuiPunch()
     end
 
-local chargeAimActive = false
-local chargeAimThread = nil
-
-local function stopChargeAim()
-    chargeAimActive = false
-    -- thread will exit when it notices the flag; we don't force-kill it
-end
-
--- Start aiming at nearest killer until the charge animation stops (or fallback timeout)
--- fallbackSec is optional (seconds) to stop attempting if no animation is detected.
 local function startChargeAimUntilChargeEnds(fallbackSec)
     -- ensure only one thread at a time
     stopChargeAim()
