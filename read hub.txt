@@ -387,7 +387,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
-local Dspeed = 12 -- you can tweak these numbers
+local Dspeed = 50 -- you can tweak these numbers
 local Ddelay = 0
 
 -- auto block (integrated and skidded from my own script @scripted.skibidi WAS HERE)
@@ -519,64 +519,6 @@ local function attemptBlockForSound(sound, idParam)
         fireGuiPunch()
     end
 
-    -- optimistic local time-blocking so we don't spam while waiting server
-    lastLocalBlockTime = tick()
-
-    -- throttle repeating triggers for this sound
-    soundBlockedUntil[sound] = t + 1.2
-end
-
-local function hookSound(sound)
-    if not sound or not sound:IsA("Sound") then return end
-    if soundHooks[sound] then return end -- already hooked
-
-    -- precompute numeric id once and store in hooks
-    local preId = extractNumericSoundId(sound)
-
-    local playedConn = sound.Played:Connect(function()
-        if not autoBlockAudioOn then return end
-        task.spawn(attemptBlockForSound, sound, preId)
-    end)
-
-    local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
-        if sound.IsPlaying and autoBlockAudioOn then
-            task.spawn(attemptBlockForSound, sound, preId)
-        end
-    end)
-
-    local destroyConn
-    destroyConn = sound.Destroying:Connect(function()
-        if playedConn and playedConn.Connected then playedConn:Disconnect() end
-        if propConn and propConn.Connected then propConn:Disconnect() end
-        if destroyConn and destroyConn.Connected then destroyConn:Disconnect() end
-        soundHooks[sound] = nil
-        soundBlockedUntil[sound] = nil
-    end)
-
-    soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
-
-    if sound.IsPlaying then
-        task.spawn(function()
-            task.spawn(attemptBlockForSound, sound, preId)
-        end)
-    end
-end
-
--- Hook existing Sounds across the game (covlers workspace, SoundService, Lighting, etc.)
-for _, desc in ipairs(KillersFolder:GetDescendants()) do
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
-    end
-end
-
--- Hook any future Sounds
-KillersFolder.DescendantAdded:Connect(function(desc)
-    if desc:IsA("Sound") then
-        pcall(hookSound, desc)
-    end
-end)
--- ===== End Robust Sound Auto Block =====
-
 local function startChargeAimUntilChargeEnds(fallbackSec)
     -- ensure only one thread at a time
     stopChargeAim()
@@ -663,6 +605,64 @@ local function startChargeAimUntilChargeEnds(fallbackSec)
         chargeAimActive = false
     end)
 end
+
+    -- optimistic local time-blocking so we don't spam while waiting server
+    lastLocalBlockTime = tick()
+
+    -- throttle repeating triggers for this sound
+    soundBlockedUntil[sound] = t + 1.2
+end
+
+local function hookSound(sound)
+    if not sound or not sound:IsA("Sound") then return end
+    if soundHooks[sound] then return end -- already hooked
+
+    -- precompute numeric id once and store in hooks
+    local preId = extractNumericSoundId(sound)
+
+    local playedConn = sound.Played:Connect(function()
+        if not autoBlockAudioOn then return end
+        task.spawn(attemptBlockForSound, sound, preId)
+    end)
+
+    local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
+        if sound.IsPlaying and autoBlockAudioOn then
+            task.spawn(attemptBlockForSound, sound, preId)
+        end
+    end)
+
+    local destroyConn
+    destroyConn = sound.Destroying:Connect(function()
+        if playedConn and playedConn.Connected then playedConn:Disconnect() end
+        if propConn and propConn.Connected then propConn:Disconnect() end
+        if destroyConn and destroyConn.Connected then destroyConn:Disconnect() end
+        soundHooks[sound] = nil
+        soundBlockedUntil[sound] = nil
+    end)
+
+    soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
+
+    if sound.IsPlaying then
+        task.spawn(function()
+            task.spawn(attemptBlockForSound, sound, preId)
+        end)
+    end
+end
+
+-- Hook existing Sounds across the game (covlers workspace, SoundService, Lighting, etc.)
+for _, desc in ipairs(KillersFolder:GetDescendants()) do
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end
+
+-- Hook any future Sounds
+KillersFolder.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end)
+-- ===== End Robust Sound Auto Block =====
 
 -- Utility to safely get a killer HRP
 local function getKillerHRP(killerModel)
