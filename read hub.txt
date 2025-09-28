@@ -373,7 +373,7 @@ RunService.Stepped:Connect(function()
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
-                if dist <= 7 then
+                if dist <= 13 then
                     AutoPunch(plr.Character)
                 end
             end
@@ -400,6 +400,7 @@ RunService.RenderStepped:Connect(function()
             task.spawn(function()
                 while tick() - startTime < 1.5 and root and target do
                     root.CFrame = CFrame.new(root.Position, target.Position)
+                    task.wait()
                 end
                 aiming = false
             end)
