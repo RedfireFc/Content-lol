@@ -324,7 +324,7 @@ CombatTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoBlock",
     Callback = function(state)
-        autoBlockAudioOn = state
+        autoBlockOn = state
     end,
 })
 
@@ -693,7 +693,7 @@ local function beginDragIntoKiller(killerModel)
         return
     end
 
-    _hitboxDraggingDebounce = true
+    _hitboxDraggingDebounce = false
 
     -- save old locomotion state so we can restore it
     local oldWalk = humanoid.WalkSpeed
