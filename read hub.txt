@@ -807,6 +807,52 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- If Better Detection (antiFlickOn) is enabled, watch for blue AntiFlickZone parts near the player
+-- and trigger dragging when they appear in range.
+task.spawn(function()
+    if not cachedBlockBtn or not cachedCooldown or not cachedCharges then
+        refreshUIRefs()
+    end
+
+    if cachedBlockBtn and cachedBlockBtn:FindFirstChild("CooldownTime") and cachedBlockBtn.CooldownTime.Text == "" then
+        print("yay")
+    else
+        return
+    end
+
+    while true do
+        RunService.Heartbeat:Wait()
+        if not (hitboxDraggingTech and antiFlickOn) then
+            task.wait(0.15)
+            continue
+        end
+
+        local char = lp.Character
+        local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+        if not myRoot then task.wait(0.15) continue end
+
+        -- look for parts named "AntiFlickZone" inside radius (fast and simple)
+        local found = nil
+        for _, part in ipairs(workspace:GetDescendants()) do
+            if not part:IsA("BasePart") then continue end
+            if part.Name ~= "AntiFlickZone" then continue end
+            if (part.Position - myRoot.Position).Magnitude <= HITBOX_DETECT_RADIUS then
+                found = part
+                break
+            end
+        end        
+        if found and not _hitboxDraggingDebounce then
+            local nearest = getNearestKillerModel()
+            if nearest then
+                task.wait(Ddelay)
+                task.spawn(function() beginDragIntoKiller(nearest) end)
+                startChargeAimUntilChargeEnds(0.4)
+            end
+        end
+        task.wait(0.12) -- throttle checks
+    end
+end)
+
 --================= GENERATORS ================= Credits to skibidi i guess
 local function GeneratorOnce()
     local IngameMapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame")
