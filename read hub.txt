@@ -671,6 +671,19 @@ local function startChargeAimUntilChargeEnds(fallbackSec)
     end)
 end
 
+-- Utility to safely get a killer HRP
+local function getKillerHRP(killerModel)
+    if not killerModel then return nil end
+    if killerModel:FindFirstChild("HumanoidRootPart") then
+        return killerModel:FindFirstChild("HumanoidRootPart")
+    end
+    if killerModel.PrimaryPart then
+        return killerModel.PrimaryPart
+    end
+    -- try finding any basepart descendant
+    return killerModel:FindFirstChildWhichIsA("BasePart", true)
+end
+
 local function beginDragIntoKiller(killerModel)
     -- Basic guards
     if _hitboxDraggingDebounce then return end
