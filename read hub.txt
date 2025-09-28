@@ -319,13 +319,6 @@ HDTTab:CreateToggle({
     end,
 })
 
-MiscTab:CreateButton({
-    Name = "Run ping counter",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Ping%20counter"))()
-    end,
-})
-
 CombatTab:CreateToggle({
     Name = "Auto Block",
     CurrentValue = false,
@@ -362,6 +355,13 @@ end
 MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
     pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
 end})
+
+MiscTab:CreateButton({
+    Name = "Run ping counter",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Ping%20counter"))()
+    end,
+})
 
 -- AUTO PUNCH
 local aiming = false
