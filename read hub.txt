@@ -319,6 +319,15 @@ HDTTab:CreateToggle({
     end,
 })
 
+
+-- Button to run ping counter
+MiscTab:CreateButton({
+    Name = "Run ping counter",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Ping%20counter"))()
+    end,
+})
+
 CombatTab:CreateToggle({
     Name = "Auto Block",
     CurrentValue = false,
