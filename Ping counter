@@ -1,0 +1,51 @@
+local P = game:GetService("Players")
+local S = game:GetService("Stats")
+local C = game:GetService("CollectionService")
+
+local G2L = {}
+
+G2L["ScreenGui"] = Instance.new("ScreenGui", P.LocalPlayer:WaitForChild("PlayerGui"))
+G2L["ScreenGui"].ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+G2L["ScreenGui"].ResetOnSpawn = false
+C:AddTag(G2L["ScreenGui"], "main")
+G2L["ScreenGui"].Enabled = true
+
+G2L["Frame"] = Instance.new("Frame", G2L["ScreenGui"])
+G2L["Frame"].ZIndex = 10
+G2L["Frame"].BorderSizePixel = 0
+G2L["Frame"].BackgroundColor3 = Color3.fromRGB(231, 231, 231)
+G2L["Frame"].Size = UDim2.new(0, 60, 0, 22)
+G2L["Frame"].Position = UDim2.new(0, 10, 0, 6)
+G2L["Frame"].BackgroundTransparency = 0.7
+
+G2L["UICorner"] = Instance.new("UICorner", G2L["Frame"])
+
+G2L["UIStroke"] = Instance.new("UIStroke", G2L["Frame"])
+G2L["UIStroke"].Color = Color3.fromRGB(117, 117, 117)
+G2L["UIStroke"].Transparency = 0.6
+
+G2L["TextLabel"] = Instance.new("TextLabel", G2L["Frame"])
+G2L["TextLabel"].TextStrokeTransparency = 1
+G2L["TextLabel"].BorderSizePixel = 0
+G2L["TextLabel"].TextSize = 10
+G2L["TextLabel"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L["TextLabel"].FontFace = Font.new("rbxasset://fonts/families/Arial.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+G2L["TextLabel"].BackgroundTransparency = 1
+G2L["TextLabel"].Size = UDim2.new(0, 50, 0, 16)
+G2L["TextLabel"].Text = "0 ms"
+G2L["TextLabel"].TextTransparency = 0.25
+G2L["TextLabel"].Position = UDim2.new(0, 5, 0, 3)
+
+task.spawn(function()
+    while task.wait(1) do
+        local ping = math.round(S.PerformanceStats.Ping:GetValue())
+        G2L["TextLabel"].Text = tostring(ping) .. " ms"
+        if ping >= 200 then
+            G2L["TextLabel"].TextColor3 = Color3.fromRGB(255, 70, 70)
+        elseif ping >= 150 then
+            G2L["TextLabel"].TextColor3 = Color3.fromRGB(255, 220, 50)
+        else
+            G2L["TextLabel"].TextColor3 = Color3.fromRGB(70, 255, 70)
+        end
+    end
+end)
