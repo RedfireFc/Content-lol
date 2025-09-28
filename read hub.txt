@@ -850,6 +850,7 @@ GeneratorTab:CreateSlider({
         generatorCooldown = val
     end
 })
+
 --================= ESP =================
 local espKillers = false
 local espSurvivors = false
