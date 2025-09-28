@@ -562,7 +562,7 @@ local function hookSound(sound)
     end
 end
 
--- Hook existing Sounds across the game (covers workspace, SoundService, Lighting, etc.)
+-- Hook existing Sounds across the game (covlers workspace, SoundService, Lighting, etc.)
 for _, desc in ipairs(KillersFolder:GetDescendants()) do
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
@@ -693,7 +693,7 @@ local function beginDragIntoKiller(killerModel)
         return
     end
 
-    _hitboxDraggingDebounce = false
+    _hitboxDraggingDebounce = true
 
     -- save old locomotion state so we can restore it
     local oldWalk = humanoid.WalkSpeed
