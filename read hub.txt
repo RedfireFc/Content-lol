@@ -357,23 +357,6 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
 end})
 
 -- AUTO PUNCH
-RunService.Stepped:Connect(function()
-    if autoPunchOn then
-        local char = lp.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
-                if dist <= 7 then
-                    AutoPunch(plr.Character)
-                end
-            end
-        end
-    end
-end)
-
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
 
