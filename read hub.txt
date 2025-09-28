@@ -319,8 +319,6 @@ HDTTab:CreateToggle({
     end,
 })
 
-
--- Button to run ping counter
 MiscTab:CreateButton({
     Name = "Run ping counter",
     Callback = function()
