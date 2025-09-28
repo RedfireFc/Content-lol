@@ -498,7 +498,7 @@ local function attemptBlockForSound(sound, idParam)
     -- distance squared check (no sqrt)
     local dvec = hrp.Position - myRoot.Position
     local distSq = dvec.X * dvec.X + dvec.Y * dvec.Y + dvec.Z * dvec.Z
-    if detectionRangeSq and distSq > detectionRangeSq then
+    if DetectionRangeSq and distSq > DetectionRangeSq then
         return
     end
 
