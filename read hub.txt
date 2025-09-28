@@ -359,6 +359,29 @@ end})
 -- AUTO PUNCH
 local aiming = false
 
+local function AutoPunch(target)
+    if not target then return end
+    task.wait(1)
+    fireGuiPunch()
+end
+
+RunService.Stepped:Connect(function()
+    if autoPunchOn then
+        local char = lp.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if dist <= apRange then
+                    AutoPunch(plr.Character)
+                end
+            end
+        end
+    end
+end)
+
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
 
@@ -369,14 +392,14 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
     if chargesObj and tostring(chargesObj.Text) == "1" then
-        local target = getNearestKillerRoot()
+        local target = closestKiller()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         if target and root then
             aiming = true
             fireGuiPunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 1.3 and root and target do
+                while tick() - startTime < 2 and root and target do
                     root.CFrame = CFrame.new(root.Position, target.Position)
                     task.wait()
                 end
