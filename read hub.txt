@@ -357,6 +357,8 @@ MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
 end})
 
 -- AUTO PUNCH
+local aiming = false
+
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
 
@@ -367,14 +369,14 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
     if chargesObj and tostring(chargesObj.Text) == "1" then
-        local target = closestKiller()
+        local target = getNearestKillerRoot()
         local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         if target and root then
             aiming = true
             fireGuiPunch()
             local startTime = tick()
             task.spawn(function()
-                while tick() - startTime < 2 and root and target do
+                while tick() - startTime < 1.3 and root and target do
                     root.CFrame = CFrame.new(root.Position, target.Position)
                     task.wait()
                 end
