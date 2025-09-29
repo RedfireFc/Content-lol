@@ -88,6 +88,7 @@ local function refreshUIRefs()
     end
 end
 
+local KillersFolder = workspace:WaitForChild("Players"):WaitForChild("Killers")
 local function getNearestKillerModel()
     local myChar = lp.Character
     local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
