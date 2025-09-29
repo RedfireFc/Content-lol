@@ -88,6 +88,26 @@ local function refreshUIRefs()
     end
 end
 
+local function getNearestKillerModel()
+    local myChar = lp.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+ 
+    local closest, closestDist = nil, math.huge
+    for _, k in ipairs(KillersFolder:GetChildren()) do
+        if k and k:IsA("Model") then
+            local hrp = k:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local d = (hrp.Position - myRoot.Position).Magnitude
+                if d < closestDist then
+                    closest, closestDist = k, d
+                end
+            end
+        end
+    end
+    return closest
+end
+
 -- call once at startup
 refreshUIRefs()
 
