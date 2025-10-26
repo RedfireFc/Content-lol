@@ -468,22 +468,22 @@ MiscTab:CreateButton({
     Name = "Console spoof",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Console"))()
-    end)
-end})
+    end,
+})
 
 MiscTab:CreateButton({
     Name = "Pc spoof",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Pc"))()
-    end)
-end})
+    end,
+})
 
 MiscTab:CreateButton({
     Name = "Mobile spoof",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/Mobile"))()
-    end)
-end})
+    end,
+})
 
 -- AUTO PUNCH
 local aiming = false
