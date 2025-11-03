@@ -15,7 +15,7 @@ G2L["Frame"].ZIndex = 10
 G2L["Frame"].BorderSizePixel = 0
 G2L["Frame"].BackgroundColor3 = Color3.fromRGB(231, 231, 231)
 G2L["Frame"].Size = UDim2.new(0, 60, 0, 22)
-G2L["Frame"].Position = UDim2.new(0, -10, 0, 6)
+G2L["Frame"].Position = UDim2.new(1, -10, 0, 6)
 G2L["Frame"].BackgroundTransparency = 0.7
 
 G2L["UICorner"] = Instance.new("UICorner", G2L["Frame"])
