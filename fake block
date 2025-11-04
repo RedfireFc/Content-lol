@@ -1,78 +1,331 @@
--- ==========================================
--- 🟪 Fake Block GUI
--- ==========================================
-            -- Create GUI
-            fakeBlockGui = Instance.new("ScreenGui")
-            fakeBlockGui.Name = "FakeBlockGui"
-            fakeBlockGui.ResetOnSpawn = false
-            fakeBlockGui.Parent = game:GetService("CoreGui")
+--// Fake Block GUI - Modern, Draggable, Independent \\--
 
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(0, 220, 0, 120)
-            frame.Position = UDim2.new(0.4, 0, 0.5, 0)
-            frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            frame.Active = true
-            frame.Draggable = true
-            frame.Parent = fakeBlockGui
 
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 12)
-            corner.Parent = frame
+local Players = game:GetService("Players")
 
-            -- Normal Block Button
-            local normalBlockBtn = Instance.new("TextButton")
-            normalBlockBtn.Size = UDim2.new(0.8, 0, 0, 40)
-            normalBlockBtn.Position = UDim2.new(0.1, 0, 0.15, 0)
-            normalBlockBtn.BackgroundColor3 = Color3.fromRGB(0, 1, 0)
-            normalBlockBtn.Text = "Normal Block"
-            normalBlockBtn.TextColor3 = Color3.new(1, 1, 1)
-            normalBlockBtn.Font = Enum.Font.GothamBold
-            normalBlockBtn.TextSize = 18
-            normalBlockBtn.Parent = frame
+local TweenService = game:GetService("TweenService")
 
-            local corner1 = Instance.new("UICorner")
-            corner1.CornerRadius = UDim.new(0, 10)
-            corner1.Parent = normalBlockBtn
+local localPlayer = Players.LocalPlayer
 
-            -- M3–M4 Block Button
-            local m3m4Btn = Instance.new("TextButton")
-            m3m4Btn.Size = UDim2.new(0.8, 0, 0, 40)
-            m3m4Btn.Position = UDim2.new(0.1, 0, 0.55, 0)
-            m3m4Btn.BackgroundColor3 = Color3.fromRGB(1, 0, 0)
-            m3m4Btn.Text = "M3–M4 Block"
-            m3m4Btn.TextColor3 = Color3.new(1, 1, 1)
-            m3m4Btn.Font = Enum.Font.GothamBold
-            m3m4Btn.TextSize = 18
-            m3m4Btn.Parent = frame
 
-            local corner2 = Instance.new("UICorner")
-            corner2.CornerRadius = UDim.new(0, 10)
-            corner2.Parent = m3m4Btn
+-- Destroy existing
 
-            -- Play Animations
-            local function playAnimation(id)
-                local char = lp.Character or lp.CharacterAdded:Wait()
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    local anim = Instance.new("Animation")
-                    anim.AnimationId = id
-                    local track = humanoid:LoadAnimation(anim)
-                    track:Play()
-                end
-            end
+if game.CoreGui:FindFirstChild("FakeBlockGui") then
 
-            normalBlockBtn.MouseButton1Click:Connect(function()
-                playAnimation("rbxassetid://72722244508749")
-            end)
+    game.CoreGui:FindFirstChild("FakeBlockGui"):Destroy()
 
-            m3m4Btn.MouseButton1Click:Connect(function()
-                playAnimation("rbxassetid://96959123077498")
-            end)
-        else
-            if fakeBlockGui then
-                fakeBlockGui:Destroy()
-                fakeBlockGui = nil
-            end
-        end
+end
+
+
+-- Create GUI
+
+local gui = Instance.new("ScreenGui")
+
+gui.Name = "FakeBlockGui"
+
+gui.ResetOnSpawn = false
+
+gui.Parent = game.CoreGui
+
+
+-- Main Frame
+
+local frame = Instance.new("Frame")
+
+frame.Name = "MainFrame"
+
+frame.Size = UDim2.new(0, 180, 0, 170)
+
+frame.Position = UDim2.new(0, 10, 0, 10)
+
+frame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+
+frame.BorderSizePixel = 0
+
+frame.Active = true
+
+frame.Draggable = true
+
+frame.Parent = gui
+
+
+-- Corner rounding
+
+local corner = Instance.new("UICorner")
+
+corner.CornerRadius = UDim.new(0, 12)
+
+corner.Parent = frame
+
+
+-- Title Bar
+
+local title = Instance.new("TextLabel")
+
+title.Name = "Title"
+
+title.Size = UDim2.new(1, 0, 0, 30)
+
+title.BackgroundTransparency = 1
+
+title.Text = "Fake Block"
+
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+title.Font = Enum.Font.GothamBold
+
+title.TextSize = 14
+
+title.Parent = frame
+
+
+-- Close / Minimize Button
+
+local hideBtn = Instance.new("TextButton")
+
+hideBtn.Name = "HideBtn"
+
+hideBtn.Size = UDim2.new(0, 24, 0, 24)
+
+hideBtn.Position = UDim2.new(1, -28, 0, 3)
+
+hideBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+
+hideBtn.Text = "−"
+
+hideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+hideBtn.Font = Enum.Font.GothamBold
+
+hideBtn.Parent = frame
+
+
+local hideCorner = Instance.new("UICorner")
+
+hideCorner.CornerRadius = UDim.new(0, 8)
+
+hideCorner.Parent = hideBtn
+
+
+-- Content Container
+
+local content = Instance.new("Frame")
+
+content.Name = "Content"
+
+content.Size = UDim2.new(1, -16, 1, -40)
+
+content.Position = UDim2.new(0, 8, 0, 32)
+
+content.BackgroundTransparency = 1
+
+content.Parent = frame
+
+
+-- UI List Layout
+
+local layout = Instance.new("UIListLayout")
+
+layout.Padding = UDim.new(0, 8)
+
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+layout.Parent = content
+
+
+-- Padding
+
+local padding = Instance.new("UIPadding")
+
+padding.PaddingLeft = UDim.new(0, 4)
+
+padding.PaddingRight = UDim.new(0, 4)
+
+padding.Parent = content
+
+
+-- Mode Buttons
+
+local function createModeButton(name, text, layoutOrder)
+
+    local btn = Instance.new("TextButton")
+
+    btn.Name = name
+
+    btn.Size = UDim2.new(1, 0, 0, 32)
+
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+
+    btn.Text = text
+
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+
+    btn.Font = Enum.Font.Gotham
+
+    btn.TextSize = 13
+
+    btn.LayoutOrder = layoutOrder
+
+    btn.Parent = content
+
+
+    local btnCorner = Instance.new("UICorner")
+
+    btnCorner.CornerRadius = UDim.new(0, 8)
+
+    btnCorner.Parent = btn
+
+
+    return btn
+
+end
+
+
+local normalBtn = createModeButton("NormalBtn", "Normal Mode", 1)
+
+local m3Btn = createModeButton("M3Btn", "M3 & M4 Mode", 2)
+
+local fakeBlockBtn = createModeButton("FakeBlockBtn", "▶ Fake Block", 3)
+
+
+-- State
+
+local mode = "Normal"
+
+local isVisible = true
+
+
+-- Highlight selected mode
+
+local function updateModeHighlight()
+
+    normalBtn.BackgroundColor3 = (mode == "Normal") and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(50, 50, 65)
+
+    m3Btn.BackgroundColor3 = (mode == "M3&4") and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(50, 50, 65)
+
+end
+
+
+-- Button Actions
+
+normalBtn.MouseButton1Click:Connect(function()
+
+    mode = "Normal"
+
+    updateModeHighlight()
+
+end)
+
+
+m3Btn.MouseButton1Click:Connect(function()
+
+    mode = "M3&4"
+
+    updateModeHighlight()
+
+end)
+
+
+hideBtn.MouseButton1Click:Connect(function()
+
+    isVisible = not isVisible
+
+    hideBtn.Text = isVisible and "−" or "+"
+
+    frame.Size = isVisible and UDim2.new(0, 180, 0, 170) or UDim2.new(0, 180, 0, 36)
+
+    content.Visible = isVisible
+
+    title.Visible = isVisible
+
+end)
+
+
+-- Animation Function
+
+local function playFakeBlockAnimation(animId)
+
+    local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+    if not humanoid then return end
+
+
+    local anim = Instance.new("Animation")
+
+    anim.AnimationId = "rbxassetid://" .. animId
+
+    local track = humanoid:LoadAnimation(anim)
+
+    track.Priority = Enum.AnimationPriority.Action
+
+    track:Play()
+
+   
+
+    -- Auto cleanup
+
+    track.Stopped:Connect(function()
+
+        anim:Destroy()
+
+    end)
+
+end
+
+
+-- Fake Block Button Click
+
+fakeBlockBtn.MouseButton1Click:Connect(function()
+
+    if mode == "Normal" then
+
+        playFakeBlockAnimation("72722244508749")
+
+    elseif mode == "M3&4" then
+
+        playFakeBlockAnimation("96959123077498")
+
     end
-})
+
+end)
+
+
+-- Initial Highlight
+
+updateModeHighlight()
+
+
+-- Optional: Add hover effects
+
+local function addHoverEffect(btn, hoverColor, normalColor)
+
+    btn.MouseEnter:Connect(function()
+
+        if btn.BackgroundColor3 ~= Color3.fromRGB(0, 170, 255) then
+
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+
+        end
+
+    end)
+
+    btn.MouseLeave:Connect(function()
+
+        if btn.BackgroundColor3 ~= Color3.fromRGB(0, 170, 255) then
+
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
+
+        end
+
+    end)
+
+end
+
+
+addHoverEffect(normalBtn, Color3.fromRGB(70, 70, 90), Color3.fromRGB(50, 50, 65))
+
+addHoverEffect(m3Btn, Color3.fromRGB(70, 70, 90), Color3.fromRGB(50, 50, 65))
+
+addHoverEffect(fakeBlockBtn, Color3.fromRGB(0, 140, 220), Color3.fromRGB(50, 50, 65))
