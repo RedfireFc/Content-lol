@@ -1,0 +1,86 @@
+-- ==========================================
+-- 🟪 Fake Block GUI Toggle
+-- ==========================================
+local fakeBlockGui = nil
+
+CombatTab:CreateToggle({
+    Name = "Fake Block GUI",
+    CurrentValue = false,
+    Flag = "FakeBlockGUI",
+    Callback = function(state)
+        if state then
+            -- Create GUI
+            fakeBlockGui = Instance.new("ScreenGui")
+            fakeBlockGui.Name = "FakeBlockGui"
+            fakeBlockGui.ResetOnSpawn = false
+            fakeBlockGui.Parent = game:GetService("CoreGui")
+
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(0, 220, 0, 120)
+            frame.Position = UDim2.new(0.4, 0, 0.5, 0)
+            frame.BackgroundColor3 = Color3.fromRGB(80, 0, 120)
+            frame.Active = true
+            frame.Draggable = true
+            frame.Parent = fakeBlockGui
+
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 12)
+            corner.Parent = frame
+
+            -- Normal Block Button
+            local normalBlockBtn = Instance.new("TextButton")
+            normalBlockBtn.Size = UDim2.new(0.8, 0, 0, 40)
+            normalBlockBtn.Position = UDim2.new(0.1, 0, 0.15, 0)
+            normalBlockBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 200)
+            normalBlockBtn.Text = "Normal Block"
+            normalBlockBtn.TextColor3 = Color3.new(1, 1, 1)
+            normalBlockBtn.Font = Enum.Font.GothamBold
+            normalBlockBtn.TextSize = 18
+            normalBlockBtn.Parent = frame
+
+            local corner1 = Instance.new("UICorner")
+            corner1.CornerRadius = UDim.new(0, 10)
+            corner1.Parent = normalBlockBtn
+
+            -- M3–M4 Block Button
+            local m3m4Btn = Instance.new("TextButton")
+            m3m4Btn.Size = UDim2.new(0.8, 0, 0, 40)
+            m3m4Btn.Position = UDim2.new(0.1, 0, 0.55, 0)
+            m3m4Btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            m3m4Btn.Text = "M3–M4 Block"
+            m3m4Btn.TextColor3 = Color3.new(1, 1, 1)
+            m3m4Btn.Font = Enum.Font.GothamBold
+            m3m4Btn.TextSize = 18
+            m3m4Btn.Parent = frame
+
+            local corner2 = Instance.new("UICorner")
+            corner2.CornerRadius = UDim.new(0, 10)
+            corner2.Parent = m3m4Btn
+
+            -- Play Animations
+            local function playAnimation(id)
+                local char = lp.Character or lp.CharacterAdded:Wait()
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    local anim = Instance.new("Animation")
+                    anim.AnimationId = id
+                    local track = humanoid:LoadAnimation(anim)
+                    track:Play()
+                end
+            end
+
+            normalBlockBtn.MouseButton1Click:Connect(function()
+                playAnimation("rbxassetid://72722244508749")
+            end)
+
+            m3m4Btn.MouseButton1Click:Connect(function()
+                playAnimation("rbxassetid://96959123077498")
+            end)
+        else
+            if fakeBlockGui then
+                fakeBlockGui:Destroy()
+                fakeBlockGui = nil
+            end
+        end
+    end
+})
