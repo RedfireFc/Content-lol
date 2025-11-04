@@ -1,7 +1,6 @@
 -- ==========================================
 -- 🟪 Fake Block GUI
 -- ==========================================
-local fakeBlockGui = nil
             -- Create GUI
             fakeBlockGui = Instance.new("ScreenGui")
             fakeBlockGui.Name = "FakeBlockGui"
