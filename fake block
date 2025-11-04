@@ -18,7 +18,7 @@ CombatTab:CreateToggle({
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(0, 220, 0, 120)
             frame.Position = UDim2.new(0.4, 0, 0.5, 0)
-            frame.BackgroundColor3 = Color3.fromRGB(80, 0, 120)
+            frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             frame.Active = true
             frame.Draggable = true
             frame.Parent = fakeBlockGui
@@ -31,7 +31,7 @@ CombatTab:CreateToggle({
             local normalBlockBtn = Instance.new("TextButton")
             normalBlockBtn.Size = UDim2.new(0.8, 0, 0, 40)
             normalBlockBtn.Position = UDim2.new(0.1, 0, 0.15, 0)
-            normalBlockBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 200)
+            normalBlockBtn.BackgroundColor3 = Color3.fromRGB(0, 1, 0)
             normalBlockBtn.Text = "Normal Block"
             normalBlockBtn.TextColor3 = Color3.new(1, 1, 1)
             normalBlockBtn.Font = Enum.Font.GothamBold
@@ -46,7 +46,7 @@ CombatTab:CreateToggle({
             local m3m4Btn = Instance.new("TextButton")
             m3m4Btn.Size = UDim2.new(0.8, 0, 0, 40)
             m3m4Btn.Position = UDim2.new(0.1, 0, 0.55, 0)
-            m3m4Btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            m3m4Btn.BackgroundColor3 = Color3.fromRGB(1, 0, 0)
             m3m4Btn.Text = "M3–M4 Block"
             m3m4Btn.TextColor3 = Color3.new(1, 1, 1)
             m3m4Btn.Font = Enum.Font.GothamBold
