@@ -2,13 +2,6 @@
 -- 🟪 Fake Block GUI Toggle
 -- ==========================================
 local fakeBlockGui = nil
-
-CombatTab:CreateToggle({
-    Name = "Fake Block GUI",
-    CurrentValue = false,
-    Flag = "FakeBlockGUI",
-    Callback = function(state)
-        if state then
             -- Create GUI
             fakeBlockGui = Instance.new("ScreenGui")
             fakeBlockGui.Name = "FakeBlockGui"
