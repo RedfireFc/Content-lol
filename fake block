@@ -1,5 +1,5 @@
 -- ==========================================
--- 🟪 Fake Block GUI Toggle
+-- 🟪 Fake Block GUI
 -- ==========================================
 local fakeBlockGui = nil
             -- Create GUI
