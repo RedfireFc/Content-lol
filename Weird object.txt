@@ -812,8 +812,6 @@ local killersESPToggle = false
 local survivorsESPToggle = false
 local itemESPEnabled = false
 
-ESP:CreateSection("Main ESP")
-
 ESP:CreateToggle({
    Name = "Killers ESP",
    CurrentValue = false,
