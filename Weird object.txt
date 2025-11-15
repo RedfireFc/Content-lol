@@ -346,8 +346,8 @@ HDTTab:CreateToggle({
     end,
 })
 
-CombatTab:AddToggle("AutoBlockToggle", {
-    Text = "Auto Block",
+CombatTab:CreateToggle({
+    Name = "Auto Block",
     Default = false,
     Callback = function(enabled)
         config.Enabled = enabled
