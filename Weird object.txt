@@ -28,7 +28,6 @@ local HDTTab = Window:CreateTab("HDT", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
 -- State (existing)
-local autoBlockAudioOn = false
 local autoPunchOn = false
 local infiniteStamina = true
 local detectionRange = 13
