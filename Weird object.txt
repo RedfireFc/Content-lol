@@ -27,7 +27,6 @@ local ESPTab = Window:CreateTab("ESP", 4483362458)
 local HDTTab = Window:CreateTab("HDT", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
--- Audio Block IDs
 local autoBlockTriggerSounds = {
     ["102228729296384"] = true,
     ["140242176732868"] = true,
@@ -69,7 +68,8 @@ local autoBlockTriggerSounds = {
     ["121954639447247"] = true,
     ["125213046326879"] = true,
     ["131406927389838"] = true,
-    ["117173212095661"] = true,
+    ["71834552297085"] = true, -- Guest666 leap ability thingy
+    ["805165833096"] = true,
 }
 
 -- State (existing)
