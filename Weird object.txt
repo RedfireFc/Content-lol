@@ -79,7 +79,7 @@ local infiniteStamina = true
 local detectionRange = 13
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
-
+local loosefacing = true
 local blockAnimIds = {
 "72722244508749",
 "96959123077498",
