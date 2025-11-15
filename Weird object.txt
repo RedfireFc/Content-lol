@@ -394,10 +394,18 @@ HDTTab:CreateToggle({
 CombatTab:CreateToggle({
     Name = "Auto Block",
     CurrentValue = false,
-    Flag = "AutoBlock",
-    Callback = function(state)
-        autoBlockAudioOn = state
-    end,
+    Flag = "AutoBlockAudioOn",
+    Callback = function(enabled)
+        config.Enabled = enabled
+        if enabled then
+            combatConnection = RunService.Stepped:Connect(function()
+                pcall(CombatLoop)
+            end)
+        elseif combatConnection then
+            combatConnection:Disconnect()
+            combatConnection = nil
+        end
+    end
 })
 
 CombatTab:CreateToggle({
