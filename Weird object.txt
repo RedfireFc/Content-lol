@@ -812,7 +812,7 @@ local killersESPToggle = false
 local survivorsESPToggle = false
 local itemESPEnabled = false
 
-ESP:CreateToggle({
+ESPTab:CreateToggle({
    Name = "Killers ESP",
    CurrentValue = false,
    Flag = "KillersESP",
@@ -821,7 +821,7 @@ ESP:CreateToggle({
    end,
 })
 
-ESP:CreateToggle({
+ESPTab:CreateToggle({
    Name = "Survivors ESP",
    CurrentValue = false,
    Flag = "SurvivorsESP",
@@ -1383,7 +1383,7 @@ function disableItemESP()
 	end
 end
 
-ESP:CreateToggle({
+ESPTab:CreateToggle({
 	Name = "Items ESP",
 	CurrentValue = false,
 	Flag = "ItemESP_Toggle",
@@ -1397,7 +1397,7 @@ ESP:CreateToggle({
 	end,
 })
 
-ESP:CreateToggle({
+ESPTab:CreateToggle({
    Name = "Generators ESP",
    CurrentValue = false,
    Flag = "GeneratorsESP",
