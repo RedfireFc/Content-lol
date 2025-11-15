@@ -28,11 +28,13 @@ local HDTTab = Window:CreateTab("HDT", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
 -- State (existing)
+local autoBlockAudioOn
 local autoPunchOn = false
 local infiniteStamina = true
 local detectionRange = 13
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
+local detectionRange = 13
 
 local cachedPlayerGui = PlayerGui
 local cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
