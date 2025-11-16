@@ -28,6 +28,7 @@ local HDTTab = Window:CreateTab("HDT", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
 -- State (existing)
+local autoBlockOn = false
 local autoPunchOn = false
 local infiniteStamina = true
 local detectionRange = 13
@@ -347,6 +348,7 @@ HDTTab:CreateToggle({
 CombatTab:CreateToggle({
     Name = "Auto Block",
     CurrentValue = false,
+    Flag = "AutoBlock",
     Callback = function(enabled)
         config.Enabled = enabled
         if enabled then
