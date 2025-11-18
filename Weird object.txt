@@ -566,8 +566,8 @@ lp.CharacterAdded:Connect(function(char)
     refreshAnimator()
 end)
 
--- ===== Robust Sound Auto Block (replace your current Sound Auto Block) =====
-local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
+-- ===== Robust Sound Auto Block (replace your current Sound Auto Block) ====
+local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn, id}
 local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
 
 
@@ -617,13 +617,15 @@ end
 -- modify hookSound: store extracted id once
 
 -- optimized attemptBlockForSound (accepts optional precomputed id)
-local function attemptBlockForSound(sound, idParam)
+local function attemptBlockForSound(sound)
     if not autoBlockAudioOn then return end
     if not sound or not sound:IsA("Sound") then return end
     if not sound.IsPlaying then return end
 
-    -- use precomputed id if provided
-    local id = idParam or extractNumericSoundId(sound)
+    -- use precomputed id from hook data
+    local hookData = soundHooks[sound]
+    local id = hookData and hookData.id
+    
     if not id or not autoBlockTriggerSounds[id] then return end
 
     local t = tick()
@@ -686,15 +688,16 @@ local function hookSound(sound)
 
     -- precompute numeric id once and store in hooks
     local preId = extractNumericSoundId(sound)
+    if not preId then return end -- Only hook sounds we can ID
 
     local playedConn = sound.Played:Connect(function()
         if not autoBlockAudioOn then return end
-        task.spawn(attemptBlockForSound, sound, preId)
+        task.spawn(attemptBlockForSound, sound)
     end)
 
     local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
         if sound.IsPlaying and autoBlockAudioOn then
-            task.spawn(attemptBlockForSound, sound, preId)
+            task.spawn(attemptBlockForSound, sound)
         end
     end)
 
@@ -710,9 +713,7 @@ local function hookSound(sound)
     soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
 
     if sound.IsPlaying then
-        task.spawn(function()
-            task.spawn(attemptBlockForSound, sound, preId)
-        end)
+        task.spawn(attemptBlockForSound, sound)
     end
 end
 
