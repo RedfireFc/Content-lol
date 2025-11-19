@@ -1110,13 +1110,11 @@ local function createOrUpdateProgressESP(generator, progressValue)
 		esp = adornee:FindFirstChild("ESP_Fill")
 	end
 
-	if esp and progressValue then
-		esp.Color3 = Color3.fromHSV(progressValue / 100, 1, 1)
-		esp.Transparency = espTransparency
-	elseif esp then
-		esp.Color3 = Color3.fromRGB(220, 150, 255)
-		esp.Transparency = espTransparency
-	end
+if esp and progressValue and progressValue < 100 then
+    esp.Color3 = Color3.fromRGB(220, 150, 255)
+    esp.Transparency = espTransparency
+elseif esp then
+    esp:Destroy() -- remove ESP if generator is finished
 end
 
 local function updateGenerators()
