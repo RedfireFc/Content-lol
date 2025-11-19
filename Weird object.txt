@@ -511,7 +511,38 @@ MiscTab:CreateButton({
 })
 
 -- AUTO PUNCH
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 local aiming = false
+
+local autoPunchOn = true
+local LOCK_ON_HEAD = true
+local MAX_DISTANCE = 50
+local HOLD_TIME = 1.3
+
+local function getNearestKillerRoot()
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    local closest, closestDist = nil, MAX_DISTANCE
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= lp and plr.Character then
+            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+            local hum = plr.Character:FindFirstChild("Humanoid")
+            if hrp and hum and hum.Health > 0 then
+                local dist = (hrp.Position - myRoot.Position).Magnitude
+                if dist < closestDist then
+                    closest = hrp
+                    closestDist = dist
+                end
+            end
+        end
+    end
+    return closest
+end
 
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
@@ -522,24 +553,26 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
-    if chargesObj and tostring(chargesObj.Text) == "1" then
-        local target = getNearestKillerRoot()
-        local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        if target and root then
-            aiming = true
-            fireGuiPunch()
-            local startTime = tick()
-            task.spawn(function()
-                while tick() - startTime < 1.3 and root and target do
-                    root.CFrame = CFrame.new(root.Position, target.Position)
-                    task.wait()
-                end
-                aiming = false
-            end)
-        end
-    end
-end)
+    if not (chargesObj and tostring(chargesObj.Text) == "1") then return end
 
+    local targetRoot = getNearestKillerRoot()
+    if not targetRoot then return end
+
+    local targetPart = LOCK_ON_HEAD and targetRoot.Parent:FindFirstChild("Head") or targetRoot
+    if not targetPart then return end
+
+    aiming = true
+    fireGuiPunch()
+
+    local startTime = tick()
+    task.spawn(function()
+        while tick() - startTime < HOLD_TIME and targetPart and targetPart.Parent do
+            camera.CFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
+            task.wait()
+        end
+        aiming = false
+    end)
+end)
 
 local Dspeed = 12 -- you can tweak these numbers
 local Ddelay = 0
