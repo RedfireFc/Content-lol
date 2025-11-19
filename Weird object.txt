@@ -74,12 +74,11 @@ local autoBlockTriggerSounds = {
 
 -- State (existing)
 local autoBlockOn = false
-local autoPunchOn = false
 local infiniteStamina = true
 local detectionRange = 13
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
-local looseFacing = true
+local facingCheckEnabled = false
 
 local blockAnimIds = {
 "72722244508749",
@@ -463,6 +462,15 @@ CombatTab:CreateToggle({
     end,
 })
 
+CombatTab:CreateToggle({
+    Name = "Facing check",
+    CurrentValue = facingCheckEnabled,
+    Flag = "facingCheckEnabled",
+    Callback = function(Value)
+        facingCheckEnabled = Value
+    end,
+})
+
 CombatTab:CreateToggle({Name="Range Visual", CurrentValue=false, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
 
@@ -611,26 +619,39 @@ lp.CharacterAdded:Connect(function(char)
 end)
 
 -- ===== Robust Sound Auto Block (replace your current Sound Auto Block) ====
-local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn, id}
+local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
 
+local CONE_RADIUS = 3 -- width of cone in studs
 
+-- facing check logic: cone in front of attacker
+local function isAttackerFacingPlayer(playerRoot, attackerRoot)
+    if not attackerRoot or not playerRoot then return false end
 
+    local forward = attackerRoot.CFrame.LookVector
+    local toPlayer = playerRoot.Position - attackerRoot.Position
+
+    -- distance along attacker's forward
+    local forwardDist = forward:Dot(toPlayer)
+    if forwardDist < 0 or forwardDist > DetectionRange then
+        return false
+    end
+
+    -- perpendicular distance from forward line
+    local perp = (toPlayer - forward * forwardDist).Magnitude
+    if perp > CONE_RADIUS then
+        return false
+    end
+
+    return true
+end
+
+-- extract numeric ID from normal sound IDs
 local function extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
     local sid = tostring(sound.SoundId)
-
-    -- Prefer numeric id if present
     local num = sid:match("%d+")
-    if num then return num end
-
-    -- Fallbacks (these won't match your numeric whitelist, but kept for completeness)
-    local hash = sid:match("[&%?]hash=([^&]+)")
-    if hash then return "&hash="..hash end
-    local path = sid:match("rbxasset://sounds/.+")
-    if path then return path end
-
-    return nil
+    return num
 end
 
 local function getSoundWorldPosition(sound)
@@ -641,7 +662,6 @@ local function getSoundWorldPosition(sound)
     if sound.Parent and sound.Parent:IsA("Attachment") and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
         return sound.Parent.Parent.Position, sound.Parent.Parent
     end
-    -- deep search for any BasePart ancestor/descendant
     local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
     if found then
         return found.Position, found
@@ -658,24 +678,17 @@ local function getCharacterFromDescendant(inst)
     return nil
 end
 
--- modify hookSound: store extracted id once
-
--- optimized attemptBlockForSound (accepts optional precomputed id)
-local function attemptBlockForSound(sound)
+local function attemptBlockForSound(sound, idParam)
     if not autoBlockAudioOn then return end
     if not sound or not sound:IsA("Sound") then return end
     if not sound.IsPlaying then return end
 
-    -- use precomputed id from hook data
-    local hookData = soundHooks[sound]
-    local id = hookData and hookData.id
-    
+    local id = idParam or extractNumericSoundId(sound)
     if not id or not autoBlockTriggerSounds[id] then return end
 
     local t = tick()
     if soundBlockedUntil[sound] and t < soundBlockedUntil[sound] then return end
 
-    -- local optimistic global cooldown: avoids waiting for server UI updates (helps on high ping)
     if t < lastLocalBlockTime + LOCAL_BLOCK_COOLDOWN then
         return
     end
@@ -695,53 +708,44 @@ local function attemptBlockForSound(sound)
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- distance squared check (no sqrt)
-    local dvec = hrp.Position - myRoot.Position
-    local distSq = dvec.X * dvec.X + dvec.Y * dvec.Y + dvec.Z * dvec.Z
-    if DetectionRangeSq and distSq > DetectionRangeSq then
+-- distance check (always applies)
+local dvec = hrp.Position - myRoot.Position
+local distSq = dvec.X*dvec.X + dvec.Y*dvec.Y + dvec.Z*dvec.Z
+if DetectionRangeSq and distSq > DetectionRangeSq then
+    return
+end
+
+-- cone facing check (only if toggle is enabled)
+if facingCheckEnabled then
+    if not isAttackerFacingPlayer(myRoot, hrp) then
         return
     end
+end
 
-    -- local UI cooldown check (use cached UI refs)
-    if cachedCooldown and cachedCooldown.Text ~= "" then
-        return
-    end
-
-    -- facing check (fast local call)
-    if facingCheckEnabled and not _isFacing(myRoot, hrp) then
-        return
-    end
-
-    -- FIRE remote calls immediately (server handles authoritative checks)
     fireGuiBlock()
 
     if doubleblocktech and cachedCharges and cachedCharges.Text == "1" then
         fireGuiPunch()
     end
 
-    -- optimistic local time-blocking so we don't spam while waiting server
     lastLocalBlockTime = tick()
-
-    -- throttle repeating triggers for this sound
     soundBlockedUntil[sound] = t + 1.2
 end
 
 local function hookSound(sound)
     if not sound or not sound:IsA("Sound") then return end
-    if soundHooks[sound] then return end -- already hooked
+    if soundHooks[sound] then return end
 
-    -- precompute numeric id once and store in hooks
     local preId = extractNumericSoundId(sound)
-    if not preId then return end -- Only hook sounds we can ID
 
     local playedConn = sound.Played:Connect(function()
         if not autoBlockAudioOn then return end
-        task.spawn(attemptBlockForSound, sound)
+        task.spawn(attemptBlockForSound, sound, preId)
     end)
 
     local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
         if sound.IsPlaying and autoBlockAudioOn then
-            task.spawn(attemptBlockForSound, sound)
+            task.spawn(attemptBlockForSound, sound, preId)
         end
     end)
 
@@ -757,18 +761,18 @@ local function hookSound(sound)
     soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
 
     if sound.IsPlaying then
-        task.spawn(attemptBlockForSound, sound)
+        task.spawn(function()
+            task.spawn(attemptBlockForSound, sound, preId)
+        end)
     end
 end
 
--- Hook existing Sounds across the game (covlers workspace, SoundService, Lighting, etc.)
 for _, desc in ipairs(KillersFolder:GetDescendants()) do
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
     end
 end
 
--- Hook any future Sounds
 KillersFolder.DescendantAdded:Connect(function(desc)
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
