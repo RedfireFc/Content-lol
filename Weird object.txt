@@ -1112,8 +1112,6 @@ local function updateGenerators()
         if obj.Name == "Generator" then
             local progress = obj:FindFirstChild("Progress")
             local lastProgress = trackedGenerators[obj]
-                end
-            end
         end
     end
 end
