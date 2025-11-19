@@ -1262,5 +1262,5 @@ ESPTab:CreateToggle({
 
 local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
---================= CONFIGS =================
+--================= CONFIG =================
 Rayfield:LoadConfiguration()
