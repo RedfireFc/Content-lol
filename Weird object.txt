@@ -1101,18 +1101,21 @@ local function attachESPForExistingGenerators()
 end
 
 local function updateGenerators()
-	local rootMap = workspace:FindFirstChild("Map")
-	if not rootMap then return end
-	local ingame = rootMap:FindFirstChild("Ingame")
-	if not ingame then return end
-	local gameMap = ingame:FindFirstChild("Map")
-	if not gameMap then return end
+    local rootMap = workspace:FindFirstChild("Map")
+    if not rootMap then return end
+    local ingame = rootMap:FindFirstChild("Ingame")
+    if not ingame then return end
+    local gameMap = ingame:FindFirstChild("Map")
+    if not gameMap then return end
 
-	for _, obj in ipairs(gameMap:GetDescendants()) do
-		if obj.Name == "Generator" then
-			trackedGenerators[obj] = true
-		end
-	end
+    for _, obj in ipairs(gameMap:GetDescendants()) do
+        if obj.Name == "Generator" then
+            local progress = obj:FindFirstChild("Progress")
+            local lastProgress = trackedGenerators[obj]
+                end
+            end
+        end
+    end
 end
 
 local function updateAllESPSizes()
