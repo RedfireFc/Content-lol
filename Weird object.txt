@@ -1069,7 +1069,6 @@ local generatorESPEnabled = false
 local espConnection = nil
 local partEspName = "NurbsPath"
 local espTransparency = 0.5
-local camera = workspace.CurrentCamera
 
 local function calculateScale(pos)
 	if not camera then return DEFAULT_SIZE end
@@ -1102,48 +1101,57 @@ local function attachESPForExistingGenerators()
 end
 
 local function createOrUpdateProgressESP(generator, progressValue)
-    local adornee = generator.PrimaryPart or generator:FindFirstChildWhichIsA("BasePart")
-    if not adornee then return end
+	local adornee = generator.PrimaryPart or generator:FindFirstChildWhichIsA("BasePart")
+	if not adornee then return end
 
-    local esp = adornee:FindFirstChild("ESP_Fill")
-    if not esp then
-        attachESP(adornee)
-        esp = adornee:FindFirstChild("ESP_Fill")
-    end
+	local esp = adornee:FindFirstChild("ESP_Fill")
+	if not esp then
+		attachESP(adornee)
+		esp = adornee:FindFirstChild("ESP_Fill")
+	end
 
-    if esp and progressValue then
-        esp.Color3 = Color3.fromHSV(progressValue / 100, 1, 1)
-        esp.Transparency = espTransparency
-    elseif esp then
-        esp.Color3 = Color3.fromRGB(220, 150, 255)
-        esp.Transparency = espTransparency
-    end
+	if esp and progressValue then
+		esp.Color3 = Color3.fromHSV(progressValue / 100, 1, 1)
+		esp.Transparency = espTransparency
+	elseif esp then
+		esp.Color3 = Color3.fromRGB(220, 150, 255)
+		esp.Transparency = espTransparency
+	end
 end
 
 local function updateGenerators()
-    local rootMap = workspace:FindFirstChild("Map")
-    if not rootMap then return end
-    local ingame = rootMap:FindFirstChild("Ingame")
-    if not ingame then return end
-    local gameMap = ingame:FindFirstChild("Map")
-    if not gameMap then return end
+	local rootMap = workspace:FindFirstChild("Map")
+	if not rootMap then return end
+	local ingame = rootMap:FindFirstChild("Ingame")
+	if not ingame then return end
+	local gameMap = ingame:FindFirstChild("Map")
+	if not gameMap then return end
 
-    for _, obj in ipairs(gameMap:GetDescendants()) do
-        if obj.Name == "Generator" then
-            local progress = obj:FindFirstChild("Progress")
-            local lastProgress = trackedGenerators[obj]
+	for _, obj in ipairs(gameMap:GetDescendants()) do
+		if obj.Name == "Generator" then
+			local progress = obj:FindFirstChild("Progress")
+			local lastProgress = trackedGenerators[obj]
 
-            if progress and progress:IsA("ValueBase") then
-                if lastProgress ~= progress.Value then
-                    createOrUpdateProgressESP(obj, progress.Value)
-                    trackedGenerators[obj] = progress.Value
-                end
-            elseif lastProgress ~= nil then
-                createOrUpdateProgressESP(obj, nil)
-                trackedGenerators[obj] = nil
-            end
-        end
-    end
+			if progress and progress:IsA("ValueBase") then
+				if lastProgress ~= progress.Value then
+					createOrUpdateProgressESP(obj, progress.Value)
+					trackedGenerators[obj] = progress.Value
+				end
+			elseif lastProgress ~= nil then
+				createOrUpdateProgressESP(obj, nil)
+				trackedGenerators[obj] = nil
+			end
+		end
+	end
+end
+
+local function startGeneratorESP()
+	if espConnection then return end
+	espConnection = RunService.RenderStepped:Connect(function()
+		if generatorESPEnabled then
+			updateGenerators()
+		end
+	end)
 end
 
 local function stopGeneratorESP()
@@ -1256,5 +1264,5 @@ ESPTab:CreateToggle({
 
 local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
---================= CONFIG =================
+--================= CONFIGS =================
 Rayfield:LoadConfiguration()
