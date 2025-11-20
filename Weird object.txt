@@ -1100,22 +1100,53 @@ local function attachESPForExistingGenerators()
 	end
 end
 
-local function createOrUpdateProgressESP(generator, progressValue)
-	local adornee = generator.PrimaryPart or generator:FindFirstChildWhichIsA("BasePart")
-	if not adornee then return end
+local function getAdorneeFromGenerator(generator)
+	-- generator might be a Model or a BasePart
+	if not generator then return nil end
+	if generator:IsA("BasePart") then
+		return generator
+	end
+	if generator.PrimaryPart and generator.PrimaryPart:IsA("BasePart") then
+		return generator.PrimaryPart
+	end
+	-- fallback: first BasePart child
+	return generator:FindFirstChildWhichIsA("BasePart")
+end
 
-	local esp = adornee:FindFirstChild("ESP_Fill")
-	if not esp then
-		attachESP(adornee)
-		esp = adornee:FindFirstChild("ESP_Fill")
+local function createOrUpdateProgressESP(generator, progressValue)
+	local adornee = getAdorneeFromGenerator(generator)
+	if not adornee then
+		-- ensure we don't keep a stale tracked entry if adornee disappears
+		trackedGenerators[generator] = nil
+		return
 	end
 
-if esp and progressValue and progressValue < 100 then
-    esp.Color3 = Color3.fromRGB(220, 150, 255)
-    esp.Transparency = espTransparency
-elseif esp then
-    esp:Destroy()
-    trackedGenerators[generator] = nil
+	local esp = adornee:FindFirstChild("ESP_Fill")
+
+	-- If generator has a valid numeric progress and it's < 100 -> ensure ESP exists & update it
+	if type(progressValue) == "number" and progressValue < 100 then
+		if not esp then
+			attachESP(adornee)
+			esp = adornee:FindFirstChild("ESP_Fill")
+		end
+		if esp then
+			-- original purple color
+			esp.Color3 = Color3.fromRGB(220, 150, 255)
+			esp.Transparency = espTransparency
+			-- keep esp sized to adornee in case it changed
+			pcall(function() esp.Size = adornee.Size end)
+		end
+
+		-- store current numeric progress for change detection
+		trackedGenerators[generator] = progressValue
+
+	-- If progressValue is nil or >= 100 -> remove ESP and tracked entry
+	else
+		if esp then
+			pcall(function() esp:Destroy() end)
+		end
+		trackedGenerators[generator] = nil
+	end
 end
 
 local function updateGenerators()
@@ -1126,20 +1157,23 @@ local function updateGenerators()
 	local gameMap = ingame:FindFirstChild("Map")
 	if not gameMap then return end
 
+	-- iterate generators found in the map
 	for _, obj in ipairs(gameMap:GetDescendants()) do
+		-- accept both Model named "Generator" or a BasePart named "Generator"
 		if obj.Name == "Generator" then
-			local progress = obj:FindFirstChild("Progress")
-			local lastProgress = trackedGenerators[obj]
-
-			if progress and progress:IsA("ValueBase") then
-				if lastProgress ~= progress.Value then
-					createOrUpdateProgressESP(obj, progress.Value)
-					trackedGenerators[obj] = progress.Value
+			-- try to find a numeric progress value object (NumberValue / IntValue)
+			local progressObj = obj:FindFirstChild("Progress")
+			local progressValue = nil
+			if progressObj and (progressObj:IsA("NumberValue") or progressObj:IsA("IntValue") or typeof(progressObj.Value) == "number") then
+				-- protect access to .Value
+				local ok, val = pcall(function() return progressObj.Value end)
+				if ok and type(val) == "number" then
+					progressValue = val
 				end
-			elseif lastProgress ~= nil then
-				createOrUpdateProgressESP(obj, nil)
-				trackedGenerators[obj] = nil
 			end
+
+			-- only call createOrUpdateProgressESP with generator reference and numeric or nil
+			createOrUpdateProgressESP(obj, progressValue)
 		end
 	end
 end
@@ -1148,7 +1182,11 @@ local function startGeneratorESP()
 	if espConnection then return end
 	espConnection = RunService.RenderStepped:Connect(function()
 		if generatorESPEnabled then
-			updateGenerators()
+			-- wrap to avoid a single error breaking the connection
+			local ok, err = pcall(updateGenerators)
+			if not ok then
+				warn("updateGenerators error:", err)
+			end
 		end
 	end)
 end
@@ -1158,11 +1196,15 @@ local function stopGeneratorESP()
 		espConnection:Disconnect()
 		espConnection = nil
 	end
-	for gen in pairs(trackedGenerators) do
-		local adornee = gen.PrimaryPart or gen:FindFirstChildWhichIsA("BasePart")
+
+	-- safely destroy any remaining ESP adornments and clear tracked table
+	for genObj in pairs(trackedGenerators) do
+		local adornee = getAdorneeFromGenerator(genObj)
 		if adornee then
 			local fill = adornee:FindFirstChild("ESP_Fill")
-			if fill then fill:Destroy() end
+			if fill then
+				pcall(function() fill:Destroy() end)
+			end
 		end
 	end
 	trackedGenerators = {}
