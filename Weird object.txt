@@ -700,9 +700,9 @@ local function attemptBlockForSound(sound, idParam)
 
     local startTime = tick()
     local connection
-    connection = RunService.RenderStepped:Connect(function()
+    connection = RunService.Heartbeat:Connect(function()
         local t = tick()
-        if t - startTime > 1 then
+        if t - startTime > 0.5 then
             connection:Disconnect()
             soundHooks[sound].timer = nil
             return
