@@ -696,7 +696,7 @@ local function attemptBlockForSound(sound, idParam)
 
     local startTime = tick()
     local connection
-    connection = RunService.Heartbeat:Connect(function()
+    connection = RunService.RenderStepped:Connect(function()
         local t = tick()
         if t - startTime > 1 then
             connection:Disconnect()
