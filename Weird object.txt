@@ -639,10 +639,8 @@ local function isAttackerFacingPlayer(playerRoot, attackerRoot)
     local toPlayer = playerRoot.Position - attackerRoot.Position
     local forwardDist = forward:Dot(toPlayer)
     if forwardDist < 0 or forwardDist > DetectionRange then return false end
-    local perp = (toPlayer - forward * forwardDist).Magnitude
-    if perp > CONE_RADIUS then return false end
-    return true
-end
+    local perpSq = (toPlayer - forward * forwardDist).Magnitude^2
+if perpSq > CONE_RADIUS*CONE_RADIUS then return false end
 
 -- extract numeric ID from normal sound IDs
 local function extractNumericSoundId(sound)
