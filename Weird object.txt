@@ -1064,12 +1064,15 @@ handleChildAdded(survivorsFolder, false)
 local DEFAULT_SIZE = 5
 local MIN_SIZE = 3
 local MAX_SIZE = 15
+
 local trackedGenerators = {}
-local generatorESPEnabled = false
-local espConnection = nil
 local partEspName = "NurbsPath"
 local espTransparency = 0.5
+local partEspTrigger = nil
+local espConnection = nil
+local generatorESPEnabled = false
 
+-- == Scale Calculation ==
 local function calculateScale(pos)
 	if not camera then return DEFAULT_SIZE end
 	local distance = (camera.CFrame.Position - pos).Magnitude
@@ -1077,8 +1080,9 @@ local function calculateScale(pos)
 	return math.clamp(scale, MIN_SIZE, MAX_SIZE)
 end
 
+-- == BoxHandleAdornment ESP ==
 local function attachESP(part)
-	if not part:IsA("BasePart") then return end
+	if not part or not part:IsA("BasePart") then return end
 	if part:FindFirstChild("ESP_Fill") then return end
 
 	local fill = Instance.new("BoxHandleAdornment")
@@ -1088,46 +1092,19 @@ local function attachESP(part)
 	fill.ZIndex = 1
 	fill.Size = part.Size
 	fill.Transparency = espTransparency
-	fill.Color3 = Color3.fromRGB(220, 150, 255)
+	fill.Color3 = Color3.fromRGB(220,150,255)
 	fill.Parent = part
 end
 
-local function getAdorneeFromGenerator(generator)
-	if not generator then return nil end
-	if generator:IsA("BasePart") then return generator end
-	if generator.PrimaryPart then return generator.PrimaryPart end
-	return generator:FindFirstChildWhichIsA("BasePart")
-end
-
-local function createOrUpdateProgressESP(generator, progressValue)
-	local adornee = getAdorneeFromGenerator(generator)
-	if not adornee then
-		trackedGenerators[generator] = nil
-		return
-	end
-
-	local esp = adornee:FindFirstChild("ESP_Fill")
-
-	-- generator NOT finished (<100%)
-	if type(progressValue) == "number" and progressValue < 100 then
-		if not esp then
-			attachESP(adornee)
-			esp = adornee:FindFirstChild("ESP_Fill")
+local function attachESPForExistingParts()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v.Name:lower() == partEspName:lower() then
+			attachESP(v)
 		end
-		if esp then
-			esp.Color3 = Color3.fromRGB(220, 150, 255)
-			esp.Transparency = espTransparency
-			pcall(function() esp.Size = adornee.Size end)
-		end
-		trackedGenerators[generator] = progressValue
-
-	-- finished generator (>=100 or nil progress)
-	else
-		if esp then pcall(function() esp:Destroy() end) end
-		trackedGenerators[generator] = nil
 	end
 end
 
+-- == Update Generators ==
 local function updateGenerators()
 	local rootMap = workspace:FindFirstChild("Map")
 	if not rootMap then return end
@@ -1138,42 +1115,87 @@ local function updateGenerators()
 
 	for _, obj in ipairs(gameMap:GetDescendants()) do
 		if obj.Name == "Generator" then
-			local progressObj = obj:FindFirstChild("Progress")
-			local progressValue = nil
+			local progress = obj:FindFirstChild("Progress")
+			local lastProgress = trackedGenerators[obj]
 
-			if progressObj and typeof(progressObj.Value) == "number" then
-				progressValue = progressObj.Value
+			if progress and progress:IsA("ValueBase") then
+				if progress.Value < 100 then
+					if lastProgress ~= progress.Value then
+						local adornee = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+						if adornee then attachESP(adornee) end
+						trackedGenerators[obj] = progress.Value
+					end
+				else
+					-- finished, remove ESP
+					local adornee = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+					if adornee then
+						local esp = adornee:FindFirstChild("ESP_Fill")
+						if esp then esp:Destroy() end
+					end
+					trackedGenerators[obj] = nil
+				end
+			elseif lastProgress ~= nil then
+				trackedGenerators[obj] = nil
 			end
-
-			createOrUpdateProgressESP(obj, progressValue)
 		end
 	end
 end
 
-local function startGeneratorESP()
-	if espConnection then return end
-	espConnection = RunService.RenderStepped:Connect(function()
-		if generatorESPEnabled then
-			local ok, err = pcall(updateGenerators)
-			if not ok then warn("updateGenerators error:", err) end
+-- == Update all ESP sizes ==
+local function updateAllESPSizes()
+	for gen in pairs(trackedGenerators) do
+		local adornee = gen.PrimaryPart or gen:FindFirstChildWhichIsA("BasePart")
+		if adornee then
+			local esp = adornee:FindFirstChild("ESP_Fill")
+			if esp then
+				local scale = calculateScale(adornee.Position)
+				pcall(function() esp.Size = Vector3.new(scale, scale, scale) end)
+			end
 		end
-	end)
+	end
+end
+
+-- == Start/Stop ESP ==
+local updateThrottle = 0
+local function startGeneratorESP()
+	attachESPForExistingParts()
+	if not partEspTrigger then
+		partEspTrigger = workspace.DescendantAdded:Connect(function(v)
+			if v:IsA("BasePart") and v.Name:lower() == partEspName:lower() then
+				attachESP(v)
+			end
+		end)
+	end
+	if not espConnection then
+		espConnection = RunService.RenderStepped:Connect(function(dt)
+			if generatorESPEnabled then
+				updateThrottle += dt
+				if updateThrottle >= 0.5 then
+					updateGenerators()
+					updateAllESPSizes()
+					updateThrottle = 0
+				end
+			end
+		end)
+	end
 end
 
 local function stopGeneratorESP()
+	if partEspTrigger then
+		partEspTrigger:Disconnect()
+		partEspTrigger = nil
+	end
 	if espConnection then
 		espConnection:Disconnect()
 		espConnection = nil
 	end
-
-	for genObj in pairs(trackedGenerators) do
-		local adornee = getAdorneeFromGenerator(genObj)
+	for gen in pairs(trackedGenerators) do
+		local adornee = gen.PrimaryPart or gen:FindFirstChildWhichIsA("BasePart")
 		if adornee then
-			local fill = adornee:FindFirstChild("ESP_Fill")
-			if fill then pcall(function() fill:Destroy() end) end
+			local esp = adornee:FindFirstChild("ESP_Fill")
+			if esp then esp:Destroy() end
 		end
 	end
-
 	trackedGenerators = {}
 end
 
@@ -1272,5 +1294,5 @@ ESPTab:CreateToggle({
 
 local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
---================= CONFIG =================
+--================= CONFIGURATION =================
 Rayfield:LoadConfiguration()
