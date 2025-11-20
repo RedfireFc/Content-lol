@@ -635,13 +635,17 @@ local CONE_RADIUS = 3
 -- facing check cone
 local function isAttackerFacingPlayer(playerRoot, attackerRoot)
     if not attackerRoot or not playerRoot then return false end
+
     local forward = attackerRoot.CFrame.LookVector
     local toPlayer = playerRoot.Position - attackerRoot.Position
     local forwardDist = forward:Dot(toPlayer)
     if forwardDist < 0 or forwardDist > DetectionRange then return false end
-    local perpSq = (toPlayer - forward * forwardDist).Magnitude^2
-if perpSq > CONE_RADIUS*CONE_RADIUS then return false end
 
+    local perpSq = (toPlayer - forward * forwardDist).Magnitude^2
+    if perpSq > CONE_RADIUS * CONE_RADIUS then return false end
+
+    return true
+end
 -- extract numeric ID from normal sound IDs
 local function extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
@@ -1262,5 +1266,5 @@ ESPTab:CreateToggle({
 
 local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
---================= CONFIGURATION =================
+--================= CONFIG =================
 Rayfield:LoadConfiguration()
