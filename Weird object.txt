@@ -1092,59 +1092,38 @@ local function attachESP(part)
 	fill.Parent = part
 end
 
-local function attachESPForExistingGenerators()
-	for _, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and v.Name:lower() == partEspName:lower() then
-			attachESP(v)
-		end
-	end
-end
-
 local function getAdorneeFromGenerator(generator)
-	-- generator might be a Model or a BasePart
 	if not generator then return nil end
-	if generator:IsA("BasePart") then
-		return generator
-	end
-	if generator.PrimaryPart and generator.PrimaryPart:IsA("BasePart") then
-		return generator.PrimaryPart
-	end
-	-- fallback: first BasePart child
+	if generator:IsA("BasePart") then return generator end
+	if generator.PrimaryPart then return generator.PrimaryPart end
 	return generator:FindFirstChildWhichIsA("BasePart")
 end
 
 local function createOrUpdateProgressESP(generator, progressValue)
 	local adornee = getAdorneeFromGenerator(generator)
 	if not adornee then
-		-- ensure we don't keep a stale tracked entry if adornee disappears
 		trackedGenerators[generator] = nil
 		return
 	end
 
 	local esp = adornee:FindFirstChild("ESP_Fill")
 
-	-- If generator has a valid numeric progress and it's < 100 -> ensure ESP exists & update it
+	-- generator NOT finished (<100%)
 	if type(progressValue) == "number" and progressValue < 100 then
 		if not esp then
 			attachESP(adornee)
 			esp = adornee:FindFirstChild("ESP_Fill")
 		end
 		if esp then
-			-- original purple color
 			esp.Color3 = Color3.fromRGB(220, 150, 255)
 			esp.Transparency = espTransparency
-			-- keep esp sized to adornee in case it changed
 			pcall(function() esp.Size = adornee.Size end)
 		end
-
-		-- store current numeric progress for change detection
 		trackedGenerators[generator] = progressValue
 
-	-- If progressValue is nil or >= 100 -> remove ESP and tracked entry
+	-- finished generator (>=100 or nil progress)
 	else
-		if esp then
-			pcall(function() esp:Destroy() end)
-		end
+		if esp then pcall(function() esp:Destroy() end) end
 		trackedGenerators[generator] = nil
 	end
 end
@@ -1157,22 +1136,15 @@ local function updateGenerators()
 	local gameMap = ingame:FindFirstChild("Map")
 	if not gameMap then return end
 
-	-- iterate generators found in the map
 	for _, obj in ipairs(gameMap:GetDescendants()) do
-		-- accept both Model named "Generator" or a BasePart named "Generator"
 		if obj.Name == "Generator" then
-			-- try to find a numeric progress value object (NumberValue / IntValue)
 			local progressObj = obj:FindFirstChild("Progress")
 			local progressValue = nil
-			if progressObj and (progressObj:IsA("NumberValue") or progressObj:IsA("IntValue") or typeof(progressObj.Value) == "number") then
-				-- protect access to .Value
-				local ok, val = pcall(function() return progressObj.Value end)
-				if ok and type(val) == "number" then
-					progressValue = val
-				end
+
+			if progressObj and typeof(progressObj.Value) == "number" then
+				progressValue = progressObj.Value
 			end
 
-			-- only call createOrUpdateProgressESP with generator reference and numeric or nil
 			createOrUpdateProgressESP(obj, progressValue)
 		end
 	end
@@ -1182,11 +1154,8 @@ local function startGeneratorESP()
 	if espConnection then return end
 	espConnection = RunService.RenderStepped:Connect(function()
 		if generatorESPEnabled then
-			-- wrap to avoid a single error breaking the connection
 			local ok, err = pcall(updateGenerators)
-			if not ok then
-				warn("updateGenerators error:", err)
-			end
+			if not ok then warn("updateGenerators error:", err) end
 		end
 	end)
 end
@@ -1197,16 +1166,14 @@ local function stopGeneratorESP()
 		espConnection = nil
 	end
 
-	-- safely destroy any remaining ESP adornments and clear tracked table
 	for genObj in pairs(trackedGenerators) do
 		local adornee = getAdorneeFromGenerator(genObj)
 		if adornee then
 			local fill = adornee:FindFirstChild("ESP_Fill")
-			if fill then
-				pcall(function() fill:Destroy() end)
-			end
+			if fill then pcall(function() fill:Destroy() end) end
 		end
 	end
+
 	trackedGenerators = {}
 end
 
@@ -1305,5 +1272,5 @@ ESPTab:CreateToggle({
 
 local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
---================= CONFIGS =================
+--================= CONFIG =================
 Rayfield:LoadConfiguration()
