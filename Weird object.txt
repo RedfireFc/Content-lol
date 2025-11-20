@@ -1060,143 +1060,113 @@ end
 handleChildAdded(killersFolder, true)
 handleChildAdded(survivorsFolder, false)
 
--- === Generator ESP ===
-local DEFAULT_SIZE = 5
-local MIN_SIZE = 3
-local MAX_SIZE = 15
-
+-- == Generator ESP Variables ==
+local generatorESPEnabled = false
 local trackedGenerators = {}
-local partEspName = "NurbsPath"
-local espTransparency = 0.5
 local partEspTrigger = nil
 local espConnection = nil
-local generatorESPEnabled = false
-
--- == Scale Calculation ==
-local function calculateScale(pos)
-	if not camera then return DEFAULT_SIZE end
-	local distance = (camera.CFrame.Position - pos).Magnitude
-	local scale = DEFAULT_SIZE * (20 / distance)
-	return math.clamp(scale, MIN_SIZE, MAX_SIZE)
+ 
+-- == Highlight Generator ==
+local function highlightGenerator(generator)
+    if not generator or not generator:IsA("Model") then return end
+    if generator:FindFirstChild("GeneratorHighlight") then return end
+ 
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "GeneratorHighlight"
+    highlight.FillColor = Color3.fromRGB(220, 150, 255)
+    highlight.FillTransparency = 0.7
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = generator
+    highlight.Parent = generator
 end
-
--- == BoxHandleAdornment ESP ==
-local function attachESP(part)
-	if not part or not part:IsA("BasePart") then return end
-	if part:FindFirstChild("ESP_Fill") then return end
-
-	local fill = Instance.new("BoxHandleAdornment")
-	fill.Name = "ESP_Fill"
-	fill.Adornee = part
-	fill.AlwaysOnTop = true
-	fill.ZIndex = 1
-	fill.Size = part.Size
-	fill.Transparency = espTransparency
-	fill.Color3 = Color3.fromRGB(220,150,255)
-	fill.Parent = part
+ 
+-- == Remove Highlight ==
+local function removeHighlightFromGenerator(generator)
+    if generator then
+        local highlight = generator:FindFirstChild("GeneratorHighlight")
+        if highlight then 
+            highlight:Destroy()
+        end
+    end
+    trackedGenerators[generator] = nil
 end
-
-local function attachESPForExistingParts()
-	for _, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and v.Name:lower() == partEspName:lower() then
-			attachESP(v)
-		end
-	end
-end
-
+ 
 -- == Update Generators ==
 local function updateGenerators()
-	local rootMap = workspace:FindFirstChild("Map")
-	if not rootMap then return end
-	local ingame = rootMap:FindFirstChild("Ingame")
-	if not ingame then return end
-	local gameMap = ingame:FindFirstChild("Map")
-	if not gameMap then return end
-
-	for _, obj in ipairs(gameMap:GetDescendants()) do
-		if obj.Name == "Generator" then
-			local progress = obj:FindFirstChild("Progress")
-			local lastProgress = trackedGenerators[obj]
-
-			if progress and progress:IsA("ValueBase") then
-				if progress.Value < 100 then
-					if lastProgress ~= progress.Value then
-						local adornee = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
-						if adornee then attachESP(adornee) end
-						trackedGenerators[obj] = progress.Value
-					end
-				else
-					-- finished, remove ESP
-					local adornee = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
-					if adornee then
-						local esp = adornee:FindFirstChild("ESP_Fill")
-						if esp then esp:Destroy() end
-					end
-					trackedGenerators[obj] = nil
-				end
-			elseif lastProgress ~= nil then
-				trackedGenerators[obj] = nil
-			end
-		end
-	end
+    local rootMap = workspace:FindFirstChild("Map")
+    if not rootMap then return end
+    local ingame = rootMap:FindFirstChild("Ingame")
+    if not ingame then return end
+    local gameMap = ingame:FindFirstChild("Map")
+    if not gameMap then return end
+ 
+    -- Clean up finished or removed generators
+    for generator in pairs(trackedGenerators) do
+        if not generator:IsDescendantOf(gameMap) then
+            removeHighlightFromGenerator(generator)
+        else
+            local progress = generator:FindFirstChild("Progress")
+            if not progress or progress.Value >= 100 then
+                removeHighlightFromGenerator(generator)
+            end
+        end
+    end
+ 
+    -- Find new active generators
+    for _, obj in ipairs(gameMap:GetDescendants()) do
+        if obj.Name == "Generator" and not trackedGenerators[obj] then
+            local progress = obj:FindFirstChild("Progress")
+            if progress and progress:IsA("ValueBase") and progress.Value < 100 then
+                highlightGenerator(obj)
+                trackedGenerators[obj] = progress.Value
+            end
+        end
+    end
 end
-
--- == Update all ESP sizes ==
-local function updateAllESPSizes()
-	for gen in pairs(trackedGenerators) do
-		local adornee = gen.PrimaryPart or gen:FindFirstChildWhichIsA("BasePart")
-		if adornee then
-			local esp = adornee:FindFirstChild("ESP_Fill")
-			if esp then
-				local scale = calculateScale(adornee.Position)
-				pcall(function() esp.Size = Vector3.new(scale, scale, scale) end)
-			end
-		end
-	end
-end
-
--- == Start/Stop ESP ==
-local updateThrottle = 0
+ 
+-- == Start Generator ESP ==
 local function startGeneratorESP()
-	attachESPForExistingParts()
-	if not partEspTrigger then
-		partEspTrigger = workspace.DescendantAdded:Connect(function(v)
-			if v:IsA("BasePart") and v.Name:lower() == partEspName:lower() then
-				attachESP(v)
-			end
-		end)
-	end
-	if not espConnection then
-		espConnection = RunService.RenderStepped:Connect(function(dt)
-			if generatorESPEnabled then
-				updateThrottle += dt
-				if updateThrottle >= 0.5 then
-					updateGenerators()
-					updateAllESPSizes()
-					updateThrottle = 0
-				end
-			end
-		end)
-	end
+    updateGenerators()
+ 
+    if not partEspTrigger then
+        partEspTrigger = workspace.DescendantAdded:Connect(function(descendant)
+            if descendant.Name == "Generator" and descendant:IsA("Model") then
+                local progress = descendant:FindFirstChild("Progress")
+                if progress and progress.Value < 100 then
+                    highlightGenerator(descendant)
+                    trackedGenerators[descendant] = progress.Value
+                end
+            end
+        end)
+    end
+ 
+    if not espConnection then
+        espConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if generatorESPEnabled then
+                updateGenerators()
+            end
+        end)
+    end
 end
-
+ 
+-- == Stop Generator ESP ==
 local function stopGeneratorESP()
-	if partEspTrigger then
-		partEspTrigger:Disconnect()
-		partEspTrigger = nil
-	end
-	if espConnection then
-		espConnection:Disconnect()
-		espConnection = nil
-	end
-	for gen in pairs(trackedGenerators) do
-		local adornee = gen.PrimaryPart or gen:FindFirstChildWhichIsA("BasePart")
-		if adornee then
-			local esp = adornee:FindFirstChild("ESP_Fill")
-			if esp then esp:Destroy() end
-		end
-	end
-	trackedGenerators = {}
+    if partEspTrigger then
+        partEspTrigger:Disconnect()
+        partEspTrigger = nil
+    end
+    if espConnection then
+        espConnection:Disconnect()
+        espConnection = nil
+    end
+ 
+    -- Remove all highlights
+    for generator in pairs(trackedGenerators) do
+        removeHighlightFromGenerator(generator)
+    end
+    trackedGenerators = {}
 end
 
 -- === Item ESP ===
