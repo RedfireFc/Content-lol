@@ -625,39 +625,29 @@ lp.CharacterAdded:Connect(function(char)
 end)
 
 -- ===== Robust Sound Auto Block (replace your current Sound Auto Block) ====
-local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
-local soundBlockedUntil = {} -- [Sound] = timestamp when we can block again (throttle)
+local Players = game:GetService("Players")
+local _LP = Players.LocalPlayer
 
-local CONE_RADIUS = 3 -- width of cone in studs
+local soundHooks = {}          -- [Sound] = {playedConn, propConn, destroyConn, timer}
+local soundBlockedUntil = {}   -- [Sound] = timestamp throttle
+local CONE_RADIUS = 3
 
--- facing check logic: cone in front of attacker
+-- facing check cone
 local function isAttackerFacingPlayer(playerRoot, attackerRoot)
     if not attackerRoot or not playerRoot then return false end
-
     local forward = attackerRoot.CFrame.LookVector
     local toPlayer = playerRoot.Position - attackerRoot.Position
-
-    -- distance along attacker's forward
     local forwardDist = forward:Dot(toPlayer)
-    if forwardDist < 0 or forwardDist > DetectionRange then
-        return false
-    end
-
-    -- perpendicular distance from forward line
+    if forwardDist < 0 or forwardDist > DetectionRange then return false end
     local perp = (toPlayer - forward * forwardDist).Magnitude
-    if perp > CONE_RADIUS then
-        return false
-    end
-
+    if perp > CONE_RADIUS then return false end
     return true
 end
 
 -- extract numeric ID from normal sound IDs
 local function extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
-    local sid = tostring(sound.SoundId)
-    local num = sid:match("%d+")
-    return num
+    return tostring(sound.SoundId):match("%d+")
 end
 
 local function getSoundWorldPosition(sound)
@@ -669,35 +659,22 @@ local function getSoundWorldPosition(sound)
         return sound.Parent.Parent.Position, sound.Parent.Parent
     end
     local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
-    if found then
-        return found.Position, found
-    end
+    if found then return found.Position, found end
     return nil, nil
 end
 
 local function getCharacterFromDescendant(inst)
     if not inst then return nil end
     local model = inst:FindFirstAncestorOfClass("Model")
-    if model and model:FindFirstChildOfClass("Humanoid") then
-        return model
-    end
+    if model and model:FindFirstChildOfClass("Humanoid") then return model end
     return nil
 end
 
 local function attemptBlockForSound(sound, idParam)
     if not autoBlockAudioOn then return end
     if not sound or not sound:IsA("Sound") then return end
-    if not sound.IsPlaying then return end
-
     local id = idParam or extractNumericSoundId(sound)
     if not id or not autoBlockTriggerSounds[id] then return end
-
-    local t = tick()
-    if soundBlockedUntil[sound] and t < soundBlockedUntil[sound] then return end
-
-    if t < lastLocalBlockTime + LOCAL_BLOCK_COOLDOWN then
-        return
-    end
 
     local lp = _LP or Players.LocalPlayer
     local myChar = lp and lp.Character
@@ -714,28 +691,47 @@ local function attemptBlockForSound(sound, idParam)
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
--- distance check (always applies)
-local dvec = hrp.Position - myRoot.Position
-local distSq = dvec.X*dvec.X + dvec.Y*dvec.Y + dvec.Z*dvec.Z
-if DetectionRangeSq and distSq > DetectionRangeSq then
-    return
-end
-
--- cone facing check (only if toggle is enabled)
-if facingCheckEnabled then
-    if not isAttackerFacingPlayer(myRoot, hrp) then
-        return
-    end
-end
-
-    fireGuiBlock()
-
-    if doubleblocktech and cachedCharges and cachedCharges.Text == "1" then
-        fireGuiPunch()
+    -- start 1-second timer for this sound
+    if soundHooks[sound] and soundHooks[sound].timer then
+        soundHooks[sound].timer:Disconnect()
     end
 
-    lastLocalBlockTime = tick()
-    soundBlockedUntil[sound] = t + 1.2
+    local startTime = tick()
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        local t = tick()
+        if t - startTime > 1 then
+            connection:Disconnect()
+            soundHooks[sound].timer = nil
+            return
+        end
+
+        -- distance check
+        local dvec = hrp.Position - myRoot.Position
+        local distSq = dvec.X*dvec.X + dvec.Y*dvec.Y + dvec.Z*dvec.Z
+        if DetectionRangeSq and distSq > DetectionRangeSq then return end
+
+        -- facing check if enabled
+        if facingCheckEnabled and not isAttackerFacingPlayer(myRoot, hrp) then return end
+
+        -- fire block + optional punch
+        fireGuiBlock()
+        if doubleblocktech and cachedCharges and cachedCharges.Text == "1" then
+            fireGuiPunch()
+        end
+
+        lastLocalBlockTime = t
+        soundBlockedUntil[sound] = t + 1.2
+
+        -- disconnect timer immediately after successful block
+        if connection and connection.Connected then
+            connection:Disconnect()
+            soundHooks[sound].timer = nil
+        end
+    end)
+
+    soundHooks[sound] = soundHooks[sound] or {}
+    soundHooks[sound].timer = connection
 end
 
 local function hookSound(sound)
@@ -745,13 +741,14 @@ local function hookSound(sound)
     local preId = extractNumericSoundId(sound)
 
     local playedConn = sound.Played:Connect(function()
-        if not autoBlockAudioOn then return end
-        task.spawn(attemptBlockForSound, sound, preId)
+        if autoBlockAudioOn then
+            attemptBlockForSound(sound, preId)
+        end
     end)
 
     local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
         if sound.IsPlaying and autoBlockAudioOn then
-            task.spawn(attemptBlockForSound, sound, preId)
+            attemptBlockForSound(sound, preId)
         end
     end)
 
@@ -760,6 +757,9 @@ local function hookSound(sound)
         if playedConn and playedConn.Connected then playedConn:Disconnect() end
         if propConn and propConn.Connected then propConn:Disconnect() end
         if destroyConn and destroyConn.Connected then destroyConn:Disconnect() end
+        if soundHooks[sound] and soundHooks[sound].timer then
+            soundHooks[sound].timer:Disconnect()
+        end
         soundHooks[sound] = nil
         soundBlockedUntil[sound] = nil
     end)
@@ -767,18 +767,18 @@ local function hookSound(sound)
     soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
 
     if sound.IsPlaying then
-        task.spawn(function()
-            task.spawn(attemptBlockForSound, sound, preId)
-        end)
+        attemptBlockForSound(sound, preId)
     end
 end
 
+-- hook all existing sounds
 for _, desc in ipairs(KillersFolder:GetDescendants()) do
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
     end
 end
 
+-- hook future sounds
 KillersFolder.DescendantAdded:Connect(function(desc)
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
