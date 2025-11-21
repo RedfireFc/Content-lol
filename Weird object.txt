@@ -578,6 +578,8 @@ RunService.RenderStepped:Connect(function()
     local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
 
+task.spawn(function()
+    task.wait(0.4) -- wait before aiming
     aiming = true
     fireGuiPunch()
 
@@ -595,6 +597,7 @@ RunService.RenderStepped:Connect(function()
         task.wait()
     end
     aiming = false
+ end)
 end)
 
 local Dspeed = 12 -- you can tweak these numbers
