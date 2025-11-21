@@ -579,16 +579,20 @@ RunService.RenderStepped:Connect(function()
     if not myRoot then return end
 
     aiming = true
+    fireGuiPunch()
 
+    local startTime = tick()
     task.spawn(function()
-        task.wait(0.5) -- delay before punching
-        fireGuiPunch()
-
-        local startTime = tick()
         while tick() - startTime < HOLD_TIME and targetPart and targetPart.Parent do
+            -- Flatten target position to same Y-level as player
             local lookAtPosition = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
+
+            -- Rotate camera horizontally only
             camera.CFrame = CFrame.new(camera.CFrame.Position, lookAtPosition)
+
+            -- Rotate character horizontally only
             myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPosition)
+
             task.wait()
         end
         aiming = false
