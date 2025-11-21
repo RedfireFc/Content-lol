@@ -588,13 +588,13 @@ RunService.RenderStepped:Connect(function()
     local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
 
-    aiming = true
+aiming = true
 
-    local startTime = tick()
-    while tick() - startTime < HOLD_TIME
-        and targetPart
-        and targetPart.Parent
-    do
+local startTime = tick()
+while tick() - startTime < HOLD_TIME do
+fireGuiPunch()
+    -- Only rotate if target still exists
+    if targetPart and targetPart.Parent and myRoot then
         local lookAtPosition = Vector3.new(
             targetPart.Position.X,
             myRoot.Position.Y,
@@ -603,12 +603,12 @@ RunService.RenderStepped:Connect(function()
 
         camera.CFrame = CFrame.new(camera.CFrame.Position, lookAtPosition)
         myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPosition)
-
-        fireGuiPunch() -- THIS NOW WORKS EVERY FRAME
-        task.wait()    -- MUST have this or the loop freezes the game
     end
 
-    aiming = false
+    task.wait()
+end
+
+aiming = false
 end)
 
 local Dspeed = 12 -- you can tweak these numbers
