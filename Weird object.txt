@@ -627,37 +627,33 @@ end)
 -- ===== Robust Sound Auto Block (replace your current Sound Auto Block) ====
 local Players = game:GetService("Players")
 local _LP = Players.LocalPlayer
+local RS = game:GetService("RunService")
 
-local soundHooks = {}          -- [Sound] = {playedConn, propConn, destroyConn, timer}
-local soundBlockedUntil = {}   -- [Sound] = timestamp throttle
+local soundHooks = {}
 local CONE_RADIUS = 3
 
--- facing check cone
 local function isAttackerFacingPlayer(playerRoot, attackerRoot)
     if not attackerRoot or not playerRoot then return false end
-
     local forward = attackerRoot.CFrame.LookVector
     local toPlayer = playerRoot.Position - attackerRoot.Position
     local forwardDist = forward:Dot(toPlayer)
     if forwardDist < 0 or forwardDist > DetectionRange then return false end
-
     local perpSq = (toPlayer - forward * forwardDist).Magnitude^2
     if perpSq > CONE_RADIUS * CONE_RADIUS then return false end
-
     return true
 end
--- extract numeric ID from normal sound IDs
+
 local function extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
     return tostring(sound.SoundId):match("%d+")
 end
 
 local function getSoundWorldPosition(sound)
-    if not sound then return nil end
     if sound.Parent and sound.Parent:IsA("BasePart") then
         return sound.Parent.Position, sound.Parent
     end
-    if sound.Parent and sound.Parent:IsA("Attachment") and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
+    if sound.Parent and sound.Parent:IsA("Attachment") 
+    and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
         return sound.Parent.Parent.Position, sound.Parent.Parent
     end
     local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
@@ -672,118 +668,48 @@ local function getCharacterFromDescendant(inst)
     return nil
 end
 
-local function attemptBlockForSound(sound, idParam)
-    if not autoBlockAudioOn then return end
-    if not sound or not sound:IsA("Sound") then return end
-    local id = idParam or extractNumericSoundId(sound)
-    if not id or not autoBlockTriggerSounds[id] then return end
-
-    local lp = _LP or Players.LocalPlayer
-    local myChar = lp and lp.Character
-    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
-
-    local soundPos, soundPart = getSoundWorldPosition(sound)
-    if not soundPos or not soundPart then return end
-
-    local char = getCharacterFromDescendant(soundPart)
-    local plr = char and Players:GetPlayerFromCharacter(char)
-    if not plr or plr == lp then return end
-
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    -- start 1-second timer for this sound
-    if soundHooks[sound] and soundHooks[sound].timer then
-        soundHooks[sound].timer:Disconnect()
-    end
-
-    local startTime = tick()
-    local connection
-    connection = RunService.Heartbeat:Connect(function()
-        local t = tick()
-        if t - startTime > 0.5 then
-            connection:Disconnect()
-            soundHooks[sound].timer = nil
-            return
-        end
-
-        -- distance check
-        local dvec = hrp.Position - myRoot.Position
-        local distSq = dvec.X*dvec.X + dvec.Y*dvec.Y + dvec.Z*dvec.Z
-        if DetectionRangeSq and distSq > DetectionRangeSq then return end
-
-        -- facing check if enabled
-        if facingCheckEnabled and not isAttackerFacingPlayer(myRoot, hrp) then return end
-
-        -- fire block + optional punch
-        fireGuiBlock()
-        if doubleblocktech and cachedCharges and cachedCharges.Text == "1" then
-            fireGuiPunch()
-        end
-
-        lastLocalBlockTime = t
-        soundBlockedUntil[sound] = t + 1.2
-
-        -- disconnect timer immediately after successful block
-        if connection and connection.Connected then
-            connection:Disconnect()
-            soundHooks[sound].timer = nil
-        end
-    end)
-
-    soundHooks[sound] = soundHooks[sound] or {}
-    soundHooks[sound].timer = connection
-end
-
 local function hookSound(sound)
     if not sound or not sound:IsA("Sound") then return end
     if soundHooks[sound] then return end
-
-    local preId = extractNumericSoundId(sound)
-
-    local playedConn = sound.Played:Connect(function()
-        if autoBlockAudioOn then
-            attemptBlockForSound(sound, preId)
-        end
-    end)
-
-    local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
-        if sound.IsPlaying and autoBlockAudioOn then
-            attemptBlockForSound(sound, preId)
-        end
-    end)
-
-    local destroyConn
-    destroyConn = sound.Destroying:Connect(function()
-        if playedConn and playedConn.Connected then playedConn:Disconnect() end
-        if propConn and propConn.Connected then propConn:Disconnect() end
-        if destroyConn and destroyConn.Connected then destroyConn:Disconnect() end
-        if soundHooks[sound] and soundHooks[sound].timer then
-            soundHooks[sound].timer:Disconnect()
-        end
-        soundHooks[sound] = nil
-        soundBlockedUntil[sound] = nil
-    end)
-
-    soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
-
-    if sound.IsPlaying then
-        attemptBlockForSound(sound, preId)
-    end
+    soundHooks[sound] = true
 end
 
--- hook all existing sounds
 for _, desc in ipairs(KillersFolder:GetDescendants()) do
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
     end
 end
 
--- hook future sounds
 KillersFolder.DescendantAdded:Connect(function(desc)
     if desc:IsA("Sound") then
         pcall(hookSound, desc)
+    end
+end)
+
+RS.Heartbeat:Connect(function()
+    local lp = _LP
+    local myChar = lp.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    for _, obj in ipairs(KillersFolder:GetDescendants()) do
+        if obj:IsA("Sound") then
+            local id = extractNumericSoundId(obj)
+            if id and autoBlockTriggerSounds[id] then
+                local pos, part = getSoundWorldPosition(obj)
+                if pos and part then
+                    local char = getCharacterFromDescendant(part)
+                    if char then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        if hrp and (hrp.Position - myRoot.Position).Magnitude <= DetectionRange then
+                            if not facingCheckEnabled or isAttackerFacingPlayer(myRoot, hrp) then
+                                fireGuiBlock()
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end
 end)
 -- ===== End Robust Sound Auto Block =====
