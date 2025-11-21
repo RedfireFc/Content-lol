@@ -579,26 +579,24 @@ RunService.RenderStepped:Connect(function()
     if not myRoot then return end
 
 task.spawn(function()
-    task.wait(0.4)
+    task.wait(0.4) -- wait before aiming
     aiming = true
     fireGuiPunch()
 
     local startTime = tick()
-    task.spawn(function()
-        while tick() - startTime < HOLD_TIME and targetPart and targetPart.Parent do
-            -- Flatten target position to same Y-level as player
-            local lookAtPosition = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
+    while tick() - startTime < HOLD_TIME and targetPart and targetPart.Parent do
+        -- Flatten target position to same Y-level as player
+        local lookAtPosition = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
 
-            -- Rotate camera horizontally only
-            camera.CFrame = CFrame.new(camera.CFrame.Position, lookAtPosition)
+        -- Rotate camera horizontally only
+        camera.CFrame = CFrame.new(camera.CFrame.Position, lookAtPosition)
 
-            -- Rotate character horizontally only
-            myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPosition)
+        -- Rotate character horizontally only
+        myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPosition)
 
-            task.wait()
-        end
-        aiming = false
-    end)
+        task.wait()
+    end
+    aiming = false
 end)
 
 local Dspeed = 12 -- you can tweak these numbers
