@@ -219,12 +219,20 @@ local function tryActivateButton(btn)
 end
 
 -- Replace previous fireRemoteBlock / fireRemotePunch with these:
+local testRemote = game.ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local function fireGuiBlock()
-    if cachedBlockBtn and tryActivateButton(cachedBlockBtn) then return end
+    local blockAction = "UseActorAbility"
+    local blockData = {buffer.fromstring("\"Block\"")}
+    
+    testRemote:FireServer(blockAction, blockData)
 end
 
+local testRemote = game.ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
 local function fireGuiPunch()
-    if cachedPunchBtn and tryActivateButton(cachedPunchBtn) then return end
+    local blockAction = "UseActorAbility"
+    local blockData = {buffer.fromstring("\"Punch\"")}
+    
+    testRemote:FireServer(blockAction, blockData)
 end
 
 local function startChargeAimUntilChargeEnds(fallbackSec)
@@ -579,13 +587,7 @@ RunService.RenderStepped:Connect(function()
     if not myRoot then return end
  
     aiming = true
-local testRemote = game.ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-local function fireGuiPunch()
-    local blockAction = "UseActorAbility"
-    local blockData = {buffer.fromstring("\"Punch\"")}
-    
-    testRemote:FireServer(blockAction, blockData)
-end
+    fireGuiPunch()
  
     local startTime = tick()
     task.spawn(function()
