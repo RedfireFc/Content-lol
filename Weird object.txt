@@ -579,7 +579,13 @@ RunService.RenderStepped:Connect(function()
     if not myRoot then return end
  
     aiming = true
-    fireGuiPunch()
+local testRemote = game.ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+local function fireGuiPunch()
+    local blockAction = "UseActorAbility"
+    local blockData = {buffer.fromstring("\"Punch\"")}
+    
+    testRemote:FireServer(blockAction, blockData)
+end
  
     local startTime = tick()
     task.spawn(function()
