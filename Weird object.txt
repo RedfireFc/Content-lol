@@ -566,7 +566,7 @@ local function getNearestKillerRoot()
     return closest
 end
  
-RunService.RenderStepped:Connect(function()
+RunService.HeartBeat:Connect(function()
     if not autoPunchOn or aiming then return end
  
     local gui = lp:FindFirstChild("PlayerGui")
