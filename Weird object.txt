@@ -574,9 +574,16 @@ RunService.RenderStepped:Connect(function()
         and gui.MainUI:FindFirstChild("AbilityContainer")
         and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
- 
-    local chargeNum = tonumber(chargesObj.Text:match("%d+"))
-if chargeNum ~= 1 then return end
+
+if not chargesObj.Text then
+    return
+end
+
+local chargeNum = tonumber(chargesObj.Text:match("%d+"))
+
+if not chargeNum or chargeNum ~= 1 then
+    return
+end
  
     local targetRoot = getNearestKillerRoot()
     if not targetRoot then return end
