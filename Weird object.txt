@@ -652,7 +652,6 @@ RunService.RenderStepped:Connect(function()
     end
 
     aiming = false
-    end)
 end)
 
 local Dspeed = 12 -- you can tweak these numbers
