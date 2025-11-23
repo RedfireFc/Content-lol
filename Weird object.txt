@@ -219,15 +219,15 @@ local function tryActivateButton(btn)
 end
 
 -- Replace previous fireRemoteBlock / fireRemotePunch with these:
-local testRemote = game.ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-local function fireGuiBlock()
-    local blockAction = "UseActorAbility"
-    local blockData = {buffer.fromstring("\"Block\"")}
-    
-    testRemote:FireServer(blockAction, blockData)
+getgenv().fireGuiBlock = function()
+    local args = {
+        "UseActorAbility",
+        { buffer.fromstring("\"Block\"") }
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
 end
 
-getgenv().fireGuiPunch = function()
+getgenv().fireRemotePunch = function()
     local args = {
         "UseActorAbility",
         { buffer.fromstring("\"Punch\"") }
@@ -585,7 +585,7 @@ RunService.RenderStepped:Connect(function()
     if not myRoot then return end
 
     aiming = true
-    fireGuiPunch()
+    fireRemotePunch()
 
     local startTime = tick()
     task.spawn(function()
