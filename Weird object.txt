@@ -539,17 +539,20 @@ local lp = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local aiming = false
  
-local autoPunchOn = true
-local LOCK_ON_HEAD = false
-local MAX_DISTANCE = 50
-local HOLD_TIME = 1.3
- 
+getgenv().autoPunchOn = false
+getgenv().LOCK_ON_HEAD = false
+getgenv().MAX_DISTANCE = 50
+getgenv().HOLD_TIME = 1.3
+
+local camera = workspace.CurrentCamera
+local aiming = false
+
 local function getNearestKillerRoot()
     local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
- 
+
     local closest, closestDist = nil, MAX_DISTANCE
- 
+
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= lp and plr.Character then
             local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
@@ -565,43 +568,43 @@ local function getNearestKillerRoot()
     end
     return closest
 end
- 
+
 RunService.RenderStepped:Connect(function()
     if not autoPunchOn or aiming then return end
- 
+
     local gui = lp:FindFirstChild("PlayerGui")
     local chargesObj = gui and gui:FindFirstChild("MainUI")
         and gui.MainUI:FindFirstChild("AbilityContainer")
         and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
         and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
 
-local chargeNum = tonumber(chargesObj and chargesObj.Text:match("%d+") or "0")
-if chargeNum ~= 1 then return end
- 
+    local chargeNum = tonumber(chargesObj and chargesObj.Text:match("%d+") or "0")
+    if chargeNum ~= 1 then return end
+
     local targetRoot = getNearestKillerRoot()
     if not targetRoot then return end
- 
+
     local targetPart = LOCK_ON_HEAD and targetRoot.Parent:FindFirstChild("Head") or targetRoot
     if not targetPart then return end
- 
+
     local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
- 
+
     aiming = true
     fireGuiPunch()
- 
+
     local startTime = tick()
     task.spawn(function()
         while tick() - startTime < HOLD_TIME and targetPart and targetPart.Parent do
             -- Flatten target position to same Y-level as player
             local lookAtPosition = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
- 
+
             -- Rotate camera horizontally only
             camera.CFrame = CFrame.new(camera.CFrame.Position, lookAtPosition)
- 
+
             -- Rotate character horizontally only
             myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPosition)
- 
+
             task.wait()
         end
         aiming = false
