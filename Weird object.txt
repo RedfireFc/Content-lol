@@ -691,33 +691,6 @@ KillersFolder.DescendantAdded:Connect(function(desc)
         pcall(hookSound, desc)
     end
 end)
-
-RS.Heartbeat:Connect(function()
-    local lp = _LP
-    local myChar = lp.Character
-    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
-
-    for _, obj in ipairs(KillersFolder:GetDescendants()) do
-        if obj:IsA("Sound") then
-            local id = extractNumericSoundId(obj)
-            if id and autoBlockTriggerSounds[id] then
-                local pos, part = getSoundWorldPosition(obj)
-                if pos and part then
-                    local char = getCharacterFromDescendant(part)
-                    if char then
-                        local hrp = char:FindFirstChild("HumanoidRootPart")
-                        if hrp and (hrp.Position - myRoot.Position).Magnitude <= DetectionRange then
-                            if not facingCheckEnabled or isAttackerFacingPlayer(myRoot, hrp) then
-                                fireGuiBlock()
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end)
 -- ===== End Robust Sound Auto Block =====
 
 -- Utility to safely get a killer HRP
