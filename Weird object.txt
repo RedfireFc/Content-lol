@@ -227,12 +227,12 @@ local function fireGuiBlock()
     testRemote:FireServer(blockAction, blockData)
 end
 
-local testRemote = game.ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
-local function fireGuiPunch()
-    local blockAction = "UseActorAbility"
-    local blockData = {buffer.fromstring("\"Punch\"")}
-    
-    testRemote:FireServer(blockAction, blockData)
+getgenv().fireGuiPunch = function()
+    local args = {
+        "UseActorAbility",
+        { buffer.fromstring("\"Punch\"") }
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
 end
 
 local function startChargeAimUntilChargeEnds(fallbackSec)
@@ -533,12 +533,6 @@ MiscTab:CreateButton({
 })
 
 -- AUTO PUNCH
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local lp = Players.LocalPlayer
-local camera = workspace.CurrentCamera
-local aiming = false
- 
 getgenv().autoPunchOn = false
 getgenv().LOCK_ON_HEAD = false
 getgenv().MAX_DISTANCE = 50
