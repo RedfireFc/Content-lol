@@ -634,7 +634,7 @@ end)
 local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- removed usage (timer removed)
 
-local CONE_RADIUS = 6 -- width of cone in studs
+local CONE_RADIUS = 4 -- width of cone in studs
 
 -- facing check logic: cone in front of attacker
 local function isAttackerFacingPlayer(playerRoot, attackerRoot)
