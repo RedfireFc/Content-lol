@@ -493,10 +493,9 @@ CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=fun
 
 CombatTab:CreateInput({
     Name = "Detection Range",
-    CurrentValue = "13",
+    CurrentValue = tostring(DetectionRange),
     PlaceholderText = "13",
     RemoveTextAfterFocusLost = false,
-    Flag = "DetectionRange",
     Callback = function(Text)
         local num = tonumber(Text)
         if num then
