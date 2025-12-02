@@ -76,6 +76,7 @@ local autoBlockTriggerSounds = {
     ["112395455254818"] = true,
     ["109431876587852"] = true,
     ["108610718831698"] = true,
+    ["104910828105172"] = true,
 }
 
 -- State (existing)
