@@ -82,6 +82,7 @@ local autoBlockTriggerSounds = {
 -- State (existing)
 local autoBlockOn = false
 local infiniteStamina = true
+local DetectionRange = 13
 local facingCheckEnabled = false
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
