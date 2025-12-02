@@ -86,6 +86,8 @@ local detectionRange = 13
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
 local facingCheckEnabled = false
+local DetectionRange = 13,
+local DetectionRangeSq = 169,
 
 local blockAnimIds = {
 "72722244508749",
@@ -490,14 +492,18 @@ CombatTab:CreateToggle({Name="Range Visual", CurrentValue=false, Callback=functi
 CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
 
 CombatTab:CreateInput({
-Name = "Detection Range",
-PlaceholderText = "13",
-RemoveTextAfterFocusLost = false,
-Flag = "DetectionRange",
-Callback = function(Text)
-DetectionRange = tonumber(Text) or DetectionRange
-DetectionRangeSq = DetectionRange * DetectionRange
-end
+    Name = "Detection Range",
+    CurrentValue = "13",
+    PlaceholderText = "13",
+    RemoveTextAfterFocusLost = false,
+    Flag = "DetectionRange",
+    Callback = function(Text)
+        local num = tonumber(Text)
+        if num then
+            DetectionRange = num
+            DetectionRangeSq = num * num
+        end
+    end
 })
 
 -- Misc
