@@ -444,6 +444,8 @@ KillersFolder.ChildRemoved:Connect(function(killer)
     removeKillerCircle(killer)
 end)
 
+CombatTab:CreateLabel("Please enter your own Detection Range below or the script wont work:")
+
 -- Hitbox Dragging Tech
 local hitboxDraggingTech = false
 local _hitboxDraggingDebounce = false
