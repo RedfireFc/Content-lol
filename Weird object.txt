@@ -83,9 +83,6 @@ local autoBlockTriggerSounds = {
 local autoBlockOn = false
 local infiniteStamina = true
 local facingCheckEnabled = false
-
-local DetectionRange = 13
-local DetectionRangeSq = DetectionRange * DetectionRange
 local apRange = 7 -- punch range in studs
 local generatorCooldown = 2.5
 
@@ -445,6 +442,8 @@ end)
 KillersFolder.ChildRemoved:Connect(function(killer)
     removeKillerCircle(killer)
 end)
+
+CombatTab:CreateLabel("Please enter your own Detection Range below or the script wont work:")
 
 -- Hitbox Dragging Tech
 local hitboxDraggingTech = false
