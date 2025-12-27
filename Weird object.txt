@@ -735,78 +735,6 @@ local function getCharacterFromDescendant(inst)
     return nil
 end
 
-extractNumericSoundId(sound)
-    if not sound or not sound.SoundId then return nil end
-    local sid = tostring(sound.SoundId)
-    local num = sid:match("%d+")
-    return num
-end
-
-local function getSoundWorldPosition(sound)
-    if not sound then return nil end
-
-    if sound.Parent and sound.Parent:IsA("BasePart") then
-        return sound.Parent.Position, sound.Parent
-    end
-
-    if sound.Parent and sound.Parent:IsA("Attachment")
-    and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
-        return sound.Parent.Parent.Position, sound.Parent.Parent
-    end
-
-    local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
-    if found then
-        return found.Position, found
-    end
-
-    return nil, nil
-end
-
-local function getCharacterFromDescendant(inst)
-    if not inst then return nil end
-    local model = inst:FindFirstAncestorOfClass("Model")
-    if model and model:FindFirstChildOfClass("Humanoid") then
-        return model
-    end
-    return nil
-end
-
-extractNumericSoundId(sound)
-    if not sound or not sound.SoundId then return nil end
-    local sid = tostring(sound.SoundId)
-    local num = sid:match("%d+")
-    return num
-end
-
-local function getSoundWorldPosition(sound)
-    if not sound then return nil end
-
-    if sound.Parent and sound.Parent:IsA("BasePart") then
-        return sound.Parent.Position, sound.Parent
-    end
-
-    if sound.Parent and sound.Parent:IsA("Attachment")
-    and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
-        return sound.Parent.Parent.Position, sound.Parent.Parent
-    end
-
-    local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
-    if found then
-        return found.Position, found
-    end
-
-    return nil, nil
-end
-
-local function getCharacterFromDescendant(inst)
-    if not inst then return nil end
-    local model = inst:FindFirstAncestorOfClass("Model")
-    if model and model:FindFirstChildOfClass("Humanoid") then
-        return model
-    end
-    return nil
-end
-
 local function attemptBlockForSound(sound, idParam)
     if not autoBlockAudioOn then return end
     if not sound or not sound:IsA("Sound") then return end
@@ -1387,6 +1315,7 @@ local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
 --================= CONFIG =================
 Rayfield:LoadConfiguration()
+
 
 
 
