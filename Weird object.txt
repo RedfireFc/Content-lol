@@ -1,0 +1,1319 @@
+-- Lead Hub
+
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Stats = game:GetService("Stats")
+local LocalPlayer = Players.LocalPlayer
+local lp = LocalPlayer
+-- Rayfield
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Window = Rayfield:CreateWindow({
+    Name = "Lead Hub",
+    LoadingTitle = "Lead Hub",
+    LoadingSubtitle = "by Triplex",
+    ConfigurationSaving = {Enabled = true, FolderName = "LeadHub", FileName = "Settings"},
+    Discord = {Enabled = false},
+    KeySystem = false
+})
+
+-- Tabs
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local GeneratorTab = Window:CreateTab("Generators", 4483362458)
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+local HDTTab = Window:CreateTab("HDT", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+local autoBlockTriggerSounds = {
+    ["106300477136129"] = true,
+    ["127793641088496"] = true,
+    ["112809109188560"] = true,
+    ["109348678063422"] = true,
+    ["105200830849301"] = true,
+    ["79391273191671"] = true,
+    ["82221759983649"] = true,
+    ["121954639447247"] = true,
+    ["85853080745515"] = true,
+    ["84307400688050"] = true,
+    ["71834552297085"] = true,
+    ["79980897195554"] = true,
+    ["131406927389838"] = true,
+    ["76959687420003"] = true,
+    ["95079963655241"] = true,
+    ["102228729296384"] = true,
+    ["119942598489800"] = true,
+    ["119583605486352"] = true,
+    ["108907358619313"] = true,
+    ["117173212095661"] = true,
+    ["12222216"] = true,
+    ["114742322778642"] = true,
+    ["105840448036441"] = true,
+    ["71805956520207"] = true,
+    ["84116622032112"] = true,
+    ["119089145505438"] = true,
+    ["75330693422988"] = true,
+    ["86174610237192"] = true,
+    ["89004992452376"] = true,
+    ["81702359653578"] = true,
+    ["86833981571073"] = true,
+    ["101698569375359"] = true,
+    ["110372418055226"] = true,
+    ["115026634746636"] = true,
+    ["86494585504534"] = true,
+    ["101553872555606"] = true,
+    ["136323728355613"] = true,
+    ["101199185291628"] = true,
+    ["125213046326879"] = true,
+    ["116581754553533"] = true,
+    ["113037804008732"] = true,
+    ["140242176732868"] = true,
+    ["117231507259853"] = true,
+    ["107444859834748"] = true,
+    ["80516583309685"] = true,
+    ["112395455254818"] = true,
+    ["109431876587852"] = true,
+    ["108610718831698"] = true,
+    ["104910828105172"] = true,
+    ["110126546193799"] = true,
+    ["85544168523099"] = true,
+    ["140194172008986"] = true,
+    ["140412278320643"] = true,
+    ["121369993837377"] = true,
+    ["70845653728841"] = true,
+}
+
+-- State (existing)
+local autoBlockOn = false
+local infiniteStamina = true
+local detectionRange = 13
+local apRange = 7 -- punch range in studs
+local generatorCooldown = 2.5
+local facingCheckEnabled = false
+
+local blockAnimIds = {
+"72722244508749",
+"96959123077498",
+"95802026624883"
+}
+
+local cachedPlayerGui = PlayerGui
+local cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
+local detectionRangeSq = detectionRange * detectionRange
+
+local function refreshUIRefs()
+    -- ensure we have the most up-to-date references for MainUI and ability buttons
+    cachedPlayerGui = lp:FindFirstChild("PlayerGui") or PlayerGui
+    local main = cachedPlayerGui and cachedPlayerGui:FindFirstChild("MainUI")
+    if main then
+        local ability = main:FindFirstChild("AbilityContainer")
+        cachedPunchBtn = ability and ability:FindFirstChild("Punch")
+        cachedBlockBtn = ability and ability:FindFirstChild("Block")
+        cachedCharges = cachedPunchBtn and cachedPunchBtn:FindFirstChild("Charges")
+        cachedCooldown = cachedBlockBtn and cachedBlockBtn:FindFirstChild("CooldownTime")
+    else
+        cachedPunchBtn, cachedBlockBtn, cachedCharges, cachedCooldown = nil, nil, nil, nil
+    end
+end
+
+local KillersFolder = workspace:WaitForChild("Players"):WaitForChild("Killers")
+local function getNearestKillerModel()
+    local myChar = lp.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+ 
+    local closest, closestDist = nil, math.huge
+    for _, k in ipairs(KillersFolder:GetChildren()) do
+        if k and k:IsA("Model") then
+            local hrp = k:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local d = (hrp.Position - myRoot.Position).Magnitude
+                if d < closestDist then
+                    closest, closestDist = k, d
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- call once at startup
+refreshUIRefs()
+
+-- refresh on GUI or character changes (keeps caches fresh)
+if cachedPlayerGui then
+    cachedPlayerGui.ChildAdded:Connect(function(child)
+        if child.Name == "MainUI" then
+            task.delay(0.02, refreshUIRefs)
+        end
+    end)
+end
+
+lp.CharacterAdded:Connect(function()
+    task.delay(0.5, refreshUIRefs)
+end)
+
+-- near top with other locals
+local _LP = Players.LocalPlayer
+local _isFacing = isFacing
+local _fireRemoteBlock = fireRemoteBlock
+local _fireRemotePunch = fireRemotePunch
+local _cachedBlockBtn = cachedBlockBtn
+local _cachedCooldown = cachedCooldown            -- these may be updated by refreshUIRefs
+local _cachedCharges = cachedCharges
+local LOCAL_BLOCK_COOLDOWN = 0.7   -- optimistic local cooldown (tune as needed)
+local lastLocalBlockTime = 0
+
+local function getNearestKillerRoot(maxDist)
+    local killersFolder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+    if not killersFolder then return nil end
+
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+
+    local closest, closestDist = nil, maxDist or math.huge
+    for _, killer in ipairs(killersFolder:GetChildren()) do
+        local hrp = killer:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local dist = (hrp.Position - myRoot.Position).Magnitude
+            if dist < closestDist then
+                closest, closestDist = hrp, dist
+            end
+        end
+    end
+    return closest
+end
+
+-- Robust GUI-based activation (NO remotes)
+local function tryActivateButton(btn)
+    if not btn then return false end
+    -- safe pcall for :Activate()
+    pcall(function() btn:Activate() end)
+
+    -- Try exploit getconnections if available (many executors provide this)
+    local ok, conns = pcall(function()
+        if type(getconnections) == "function" then
+            return getconnections(btn.MouseButton1Click)
+        end
+        return nil
+    end)
+
+    if ok and conns then
+        for _, conn in ipairs(conns) do
+            pcall(function()
+                -- common field names in exploit connection wrappers
+                if conn.Function then
+                    conn.Function()
+                elseif conn.func then
+                    conn.func()
+                elseif conn.Fire then
+                    conn.Fire()
+                end
+            end)
+        end
+    end
+
+-- As a last resort try firing Activated manually (some games use .Activated)
+    pcall(function()
+        if btn.Activated then
+            btn.Activated:Fire()
+        end
+    end)
+
+    return true
+end
+
+-- Replace previous fireRemoteBlock / fireRemotePunch with these:
+getgenv().fireGuiBlock = function()
+    local args = {
+        "UseActorAbility",
+        { buffer.fromstring("\"Block\"") }
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
+end
+
+getgenv().fireRemotePunch = function()
+    local args = {
+        "UseActorAbility",
+        { buffer.fromstring("\"Punch\"") }
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
+end
+
+local function startChargeAimUntilChargeEnds(fallbackSec)
+    -- ensure only one thread at a time
+    stopChargeAim()
+    chargeAimActive = true
+
+    chargeAimThread = task.spawn(function()
+        local startWatch = tick()
+        local fallback = tonumber(fallbackSec) or 1.2
+
+        -- try to get humanoid/root/animator
+        local function getCharObjects()
+            local char = lp.Character
+            if not char then return nil, nil, nil end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local animator = char:FindFirstChildOfClass("Animator")
+            return hum, hrp, animator
+        end
+
+        local humanoid, myRoot, animator = getCharObjects()
+        if humanoid then
+            pcall(function() humanoid.AutoRotate = false end)
+        end
+
+        local seenChargeAnim = false
+        local watchStart = tick()
+
+        while chargeAimActive do
+            -- refresh references each loop in case character reloaded
+            humanoid, myRoot, animator = getCharObjects()
+            if not myRoot then break end
+
+            -- find nearest killer model and its hrp
+            local killerModel = getNearestKillerModel()
+            local targetHRP = (killerModel and killerModel:FindFirstChild("HumanoidRootPart")) or nil
+
+            if targetHRP then
+                -- predictionValue exists in your script (used by aimPunch). use it for nicer aiming.
+                local pred = (type(predictionValue) == "number") and predictionValue or 0
+                local predictedPos = targetHRP.Position + (targetHRP.CFrame.LookVector * pred)
+
+                -- set lookAt while keeping our position
+                pcall(function()
+                    myRoot.CFrame = CFrame.lookAt(myRoot.Position, predictedPos)
+                end)
+            end
+
+            -- check if charge animation is playing (if we can access animator)
+            local stillPlaying = false
+            if animator then
+                local ok, tracks = pcall(function() return animator:GetPlayingAnimationTracks() end)
+                if ok and tracks then
+                    for _, track in ipairs(tracks) do
+                        local animId = nil
+                        pcall(function() animId = tostring(track.Animation and track.Animation.AnimationId or ""):match("%d+") end)
+                        if animId and table.find(chargeAnimIds, animId) then
+                            stillPlaying = true
+                            seenChargeAnim = true
+                            break
+                        end
+                    end
+                end
+            end
+
+            -- stop conditions:
+            -- 1) we saw a charge anim and now it's gone -> stop
+            if seenChargeAnim and not stillPlaying then
+                break
+            end
+
+            -- 2) we never saw a charge anim and we've exceeded fallback -> stop
+            if not seenChargeAnim and (tick() - watchStart) > fallback then
+                break
+            end
+
+            task.wait()
+        end
+
+        -- restore AutoRotate
+        if humanoid then
+            pcall(function() humanoid.AutoRotate = true end)
+        end
+
+        chargeAimActive = false
+    end)
+end
+
+-- Infinite Stamina
+local function enableInfiniteStamina()
+    local success, StaminaModule = pcall(function()
+        return require(ReplicatedStorage.Systems.Character.Game.Sprinting)
+    end)
+    if not success or not StaminaModule then return end
+    StaminaModule.StaminaLossDisabled = true
+    task.spawn(function()
+        while infiniteStamina do
+            task.wait(0.1)
+            StaminaModule.Stamina = StaminaModule.MaxStamina
+            if StaminaModule.StaminaChanged then
+                pcall(function() StaminaModule.StaminaChanged:Fire() end)
+            end
+        end
+    end)
+end
+enableInfiniteStamina()
+
+-- UI Toggles (existing)
+local KillersFolder = workspace:WaitForChild("Players"):WaitForChild("Killers")
+local detectionCircles = {} -- store all killer circles
+local killerCirclesVisible = false
+
+-- Function to add circle to a killer
+-- create once, reuse
+local groundCastParams = RaycastParams.new()
+groundCastParams.FilterType = Enum.RaycastFilterType.Exclude
+groundCastParams.IgnoreWater = true
+
+local function setCircleAtGround(killer, circle)
+    local hrp = killer:FindFirstChild("HumanoidRootPart")
+    if not hrp or not circle then return end
+
+    -- exclude this character from the raycast
+    groundCastParams.FilterDescendantsInstances = {killer}
+
+    -- raycast straight down to find floor
+    local origin = hrp.Position
+    local result = workspace:Raycast(origin, Vector3.new(0, -1000, 0), groundCastParams)
+    local groundY = result and result.Position.Y or (origin.Y - 3)
+
+    -- local offset from HRP down to the ground (+tiny lift to avoid z-fighting)
+    local offsetY = (groundY - origin.Y) + 0.03
+
+    -- lay cylinder flat + move to ground under HRP
+    circle.CFrame = CFrame.new(0, offsetY, 0) * CFrame.Angles(math.rad(90), 0, 0)
+end
+
+local function addKillerCircle(killer)
+    if not killer:FindFirstChild("HumanoidRootPart") then return end
+    if detectionCircles[killer] then return end -- already has one
+
+    local hrp = killer.HumanoidRootPart
+
+    local circle = Instance.new("CylinderHandleAdornment")
+    circle.Name = "KillerDetectionCircle"
+    circle.Adornee = hrp
+    circle.Color3 = Color3.fromRGB(255, 0, 0)
+    circle.AlwaysOnTop = true
+    circle.ZIndex = 0
+    circle.Transparency = 0.7
+    circle.Radius = DetectionRange
+    circle.Height = 0.1
+    circle.Parent = hrp
+
+    detectionCircles[killer] = circle
+
+    -- position once immediately
+    setCircleAtGround(killer, circle)
+end
+
+
+
+-- Function to remove circle from a killer
+local function removeKillerCircle(killer)
+    if detectionCircles[killer] then
+        detectionCircles[killer]:Destroy()
+        detectionCircles[killer] = nil
+    end
+end
+
+-- Refresh all circles
+local function refreshKillerCircles()
+    for _, killer in ipairs(KillersFolder:GetChildren()) do
+        if killerCirclesVisible then
+            addKillerCircle(killer)
+        else
+            removeKillerCircle(killer)
+        end
+    end
+end
+
+-- Keep radius + position updated
+RunService.RenderStepped:Connect(function()
+    for killer, circle in pairs(detectionCircles) do
+        if circle and circle.Parent then
+            circle.Radius = DetectionRange
+            setCircleAtGround(killer, circle) -- <-- keep pinned to ground
+        end
+    end
+end)
+
+
+-- Hook into killers being added/removed
+KillersFolder.ChildAdded:Connect(function(killer)
+    if killerCirclesVisible then
+        task.spawn(function()
+            -- Wait until HRP exists (max 5s timeout)
+            local hrp = killer:WaitForChild("HumanoidRootPart", 5)
+            if hrp then
+                addKillerCircle(killer)
+            end
+        end)
+    end
+end)
+
+KillersFolder.ChildRemoved:Connect(function(killer)
+    removeKillerCircle(killer)
+end)
+
+CombatTab:CreateLabel("Please enter your own Detection Range below or the script wont work:")
+
+-- Hitbox Dragging Tech
+local hitboxDraggingTech = false
+local _hitboxDraggingDebounce = false
+local HITBOX_DRAG_DURATION = 1.4
+local HITBOX_DETECT_RADIUS = 6
+
+HDTTab:CreateToggle({
+    Name = "Hitbox Dragging tech (HDT)",
+    CurrentValue = false,
+    Flag = "HitboxDraggingToggle",
+    Callback = function(state)
+        hitboxDraggingTech = state
+    end,
+})
+
+CombatTab:CreateToggle({
+    Name = "Auto Block",
+    CurrentValue = false,
+    Flag = "AutoBlock",
+    Callback = function(state)
+        autoBlockAudioOn = state
+    end,
+})
+
+CombatTab:CreateToggle({
+    Name = "Auto Punch",
+    CurrentValue = false,
+    Flag = "AutoPunch",
+    Callback = function(Value)
+        autoPunchOn = Value
+    end,
+})
+
+CombatTab:CreateToggle({
+    Name = "Facing check",
+    CurrentValue = facingCheckEnabled,
+    Flag = "facingCheckEnabled",
+    Callback = function(Value)
+        facingCheckEnabled = Value
+    end,
+})
+
+CombatTab:CreateToggle({Name="Range Visual", CurrentValue=false, Callback=function(state) killerCirclesVisible = state refreshKillerCircles() end})
+CombatTab:CreateToggle({Name="Infinite Stamina", CurrentValue=true, Callback=function(val) infiniteStamina = val enableInfiniteStamina() end})
+
+CombatTab:CreateInput({
+Name = "Detection Range",
+PlaceholderText = "13",
+RemoveTextAfterFocusLost = false,
+Flag = "DetectionRange",
+Callback = function(Text)
+DetectionRange = tonumber(Text) or DetectionRange
+DetectionRangeSq = DetectionRange * DetectionRange
+end
+})
+
+-- Misc
+MiscTab:CreateButton({Name="Copy Discord Invite", Callback=function()
+    pcall(function() setclipboard("https://discord.gg/baXMxMz5JZ") end)
+end})
+
+local function spoofDevice(target, enabled)
+    if not enabled then
+        if getgenv()._spoofThread then task.cancel(getgenv()._spoofThread) getgenv()._spoofThread = nil end
+        if getgenv()._spoofConn then getgenv()._spoofConn:Disconnect() getgenv()._spoofConn = nil end
+        return
+    end
+
+    if getgenv()._spoofThread then task.cancel(getgenv()._spoofThread) getgenv()._spoofThread = nil end
+    if getgenv()._spoofConn then getgenv()._spoofConn:Disconnect() getgenv()._spoofConn = nil end
+
+    getgenv()._spoofThread = task.spawn(function()
+        local Network = require(game:GetService("ReplicatedStorage").Modules.Network)
+        local UserInputService = game:GetService("UserInputService")
+
+        local function ApplySpoof()
+            Network:FireServerConnection("SetDevice", "REMOTE_EVENT", target)
+        end
+
+        ApplySpoof()
+
+        getgenv()._spoofConn = UserInputService.LastInputTypeChanged:Connect(ApplySpoof)
+
+        while task.wait() do
+            ApplySpoof()
+        end
+    end)
+end
+
+MiscTab:CreateToggle({
+    Name = "Console Spoof",
+    CurrentValue = false,
+    Flag = "ConsoleSpoof",
+    Callback = function(Value)
+        spoofDevice("Console", Value)
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "PC Spoof",
+    CurrentValue = false,
+    Flag = "PCSpoof",
+    Callback = function(Value)
+        spoofDevice("PC", Value)
+    end,
+})
+
+MiscTab:CreateToggle({
+    Name = "Mobile Spoof",
+    CurrentValue = false,
+    Flag = "MobileSpoof",
+    Callback = function(Value)
+        spoofDevice("Mobile", Value)
+    end,
+})
+
+MiscTab:CreateButton({
+    Name = "Fake Block",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/RedfireFc/Content-lol/refs/heads/main/fake%20block"))()
+    end,
+})
+
+-- AUTO PUNCH
+getgenv().autoPunchOn = false
+getgenv().LOCK_ON_HEAD = false
+getgenv().MAX_DISTANCE = 50
+getgenv().HOLD_TIME = 1.3
+
+local camera = workspace.CurrentCamera
+local aiming = false
+
+local function getNearestKillerRoot()
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    local closest, closestDist = nil, MAX_DISTANCE
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= lp and plr.Character then
+            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+            local hum = plr.Character:FindFirstChild("Humanoid")
+            if hrp and hum and hum.Health > 0 then
+                local dist = (hrp.Position - myRoot.Position).Magnitude
+                if dist < closestDist then
+                    closest = hrp
+                    closestDist = dist
+                end
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if not autoPunchOn or aiming then return end
+
+    local gui = lp:FindFirstChild("PlayerGui")
+    local chargesObj = gui and gui:FindFirstChild("MainUI")
+        and gui.MainUI:FindFirstChild("AbilityContainer")
+        and gui.MainUI.AbilityContainer:FindFirstChild("Punch")
+        and gui.MainUI.AbilityContainer.Punch:FindFirstChild("Charges")
+
+    local chargeNum = tonumber(chargesObj and chargesObj.Text:match("%d+") or "0")
+    if chargeNum ~= 1 then return end
+
+    local targetRoot = getNearestKillerRoot()
+    if not targetRoot then return end
+
+    local targetPart = LOCK_ON_HEAD and targetRoot.Parent:FindFirstChild("Head") or targetRoot
+    if not targetPart then return end
+
+    local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    aiming = true
+    fireRemotePunch()
+
+    local startTime = tick()
+    task.spawn(function()
+        while tick() - startTime < HOLD_TIME and targetPart and targetPart.Parent do
+            -- Flatten target position to same Y-level as player
+            local lookAtPosition = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
+
+            -- Rotate camera horizontally only
+            camera.CFrame = CFrame.new(camera.CFrame.Position, lookAtPosition)
+
+            -- Rotate character horizontally only
+            myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPosition)
+
+            task.wait()
+        end
+        aiming = false
+    end)
+end)
+
+local Dspeed = 12 -- you can tweak these numbers
+local Ddelay = 0
+
+-- auto block (integrated and skidded from my own script @scripted.skibidi WAS HERE)
+local cachedAnimator = nil
+local function refreshAnimator()
+    local char = lp.Character
+    if not char then
+        cachedAnimator = nil
+        return
+    end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        local anim = hum:FindFirstChildOfClass("Animator")
+        cachedAnimator = anim or nil
+    else
+        cachedAnimator = nil
+    end
+end
+
+lp.CharacterAdded:Connect(function(char)
+    task.wait(0.5) -- allow Humanoid/Animator to be created
+    refreshAnimator()
+end)
+
+-- ===== Robust Sound Auto Block (replace your current Sound Auto Block) ====
+local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
+local soundBlockedUntil = {} -- removed usage (timer removed)
+
+local CONE_RADIUS = 4 -- width of cone in studs
+
+-- facing check logic: cone in front of attacker
+local function isAttackerFacingPlayer(playerRoot, attackerRoot)
+    if not attackerRoot or not playerRoot then return false end
+
+    local forward = attackerRoot.CFrame.LookVector
+    local toPlayer = playerRoot.Position - attackerRoot.Position
+
+    local forwardDist = forward:Dot(toPlayer)
+    if forwardDist < 0 or forwardDist > DetectionRange then
+        return false
+    end
+
+    local perp = (toPlayer - forward * forwardDist).Magnitude
+    if perp > CONE_RADIUS then
+        return false
+    end
+
+    return true
+end
+
+local function extractNumericSoundId(sound)
+    if not sound or not sound.SoundId then return nil end
+    local sid = tostring(sound.SoundId)
+    local num = sid:match("%d+")
+    return num
+end
+
+local function getSoundWorldPosition(sound)
+    if not sound then return nil end
+
+    if sound.Parent and sound.Parent:IsA("BasePart") then
+        return sound.Parent.Position, sound.Parent
+    end
+
+    if sound.Parent and sound.Parent:IsA("Attachment")
+    and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
+        return sound.Parent.Parent.Position, sound.Parent.Parent
+    end
+
+    local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
+    if found then
+        return found.Position, found
+    end
+
+    return nil, nil
+end
+
+local function getCharacterFromDescendant(inst)
+    if not inst then return nil end
+    local model = inst:FindFirstAncestorOfClass("Model")
+    if model and model:FindFirstChildOfClass("Humanoid") then
+        return model
+    end
+    return nil
+end
+
+local function attemptBlockForSound(sound, idParam)
+    if not autoBlockAudioOn then return end
+    if not sound or not sound:IsA("Sound") then return end
+    if not sound.IsPlaying then return end
+
+    local id = idParam or extractNumericSoundId(sound)
+    if not id or not autoBlockTriggerSounds[id] then return end
+
+    local lp = _LP or Players.LocalPlayer
+    local myChar = lp and lp.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    local soundPos, soundPart = getSoundWorldPosition(sound)
+    if not soundPos or not soundPart then return end
+
+    local char = getCharacterFromDescendant(soundPart)
+    local plr = char and Players:GetPlayerFromCharacter(char)
+    if not plr or plr == lp then return end
+
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local dvec = hrp.Position - myRoot.Position
+    local distSq = dvec.X*dvec.X + dvec.Y*dvec.Y + dvec.Z*dvec.Z
+    if DetectionRangeSq and distSq > DetectionRangeSq then
+        return
+    end
+
+    if facingCheckEnabled then
+        if not isAttackerFacingPlayer(myRoot, hrp) then
+            return
+        end
+    end
+
+    -- KEEP: blocking
+    fireGuiBlock()
+
+soundBlockedUntil[sound] = t + 1.2
+end
+
+local function hookSound(sound)
+    if not sound or not sound:IsA("Sound") then return end
+    if soundHooks[sound] then return end
+
+    local preId = extractNumericSoundId(sound)
+
+    local playedConn = sound.Played:Connect(function()
+        if not autoBlockAudioOn then return end
+        task.spawn(attemptBlockForSound, sound, preId)
+    end)
+
+    local propConn = sound:GetPropertyChangedSignal("IsPlaying"):Connect(function()
+        if sound.IsPlaying and autoBlockAudioOn then
+            task.spawn(attemptBlockForSound, sound, preId)
+        end
+    end)
+
+    local destroyConn
+    destroyConn = sound.Destroying:Connect(function()
+        if playedConn and playedConn.Connected then playedConn:Disconnect() end
+        if propConn and propConn.Connected then propConn:Disconnect() end
+        if destroyConn and destroyConn.Connected then destroyConn:Disconnect() end
+        soundHooks[sound] = nil
+        soundBlockedUntil[sound] = nil
+    end)
+
+    soundHooks[sound] = {playedConn, propConn, destroyConn, id = preId}
+
+    if sound.IsPlaying then
+        task.spawn(function()
+            task.spawn(attemptBlockForSound, sound, preId)
+        end)
+    end
+end
+
+for _, desc in ipairs(KillersFolder:GetDescendants()) do
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end
+
+KillersFolder.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end)
+-- ===== End Robust Sound Auto Block =====
+
+-- Utility to safely get a killer HRP
+local function getKillerHRP(killerModel)
+    if not killerModel then return nil end
+    if killerModel:FindFirstChild("HumanoidRootPart") then
+        return killerModel:FindFirstChild("HumanoidRootPart")
+    end
+    if killerModel.PrimaryPart then
+        return killerModel.PrimaryPart
+    end
+    -- try finding any basepart descendant
+    return killerModel:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function beginDragIntoKiller(killerModel)
+    -- Basic guards
+    if _hitboxDraggingDebounce then return end
+    if not killerModel or not killerModel.Parent then return end
+    local char = lp and lp.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not humanoid then return end
+
+    local targetHRP = getKillerHRP(killerModel)
+    if not targetHRP then
+        warn("beginDragIntoKiller: killer has no HRP/PrimaryPart")
+        return
+    end
+
+    _hitboxDraggingDebounce = true
+
+    -- save old locomotion state so we can restore it
+    local oldWalk = humanoid.WalkSpeed
+    local oldJump = humanoid.JumpPower
+    local oldPlatformStand = humanoid.PlatformStand
+
+    -- block normal movement by zeroing walk/jump (works for mobile joystick too)
+    humanoid.WalkSpeed = 0
+    humanoid.JumpPower = 0
+    humanoid.PlatformStand = false  -- keep physics normal so BodyVelocity works
+
+    -- create BodyVelocity to push the HRP toward the killer smoothly
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e5, 0, 1e5)     -- allow horizontal movement, keep y free
+    bv.Velocity = Vector3.new(0,0,0)
+    bv.Parent = hrp
+
+    -- optional: lightly damp vertical to avoid sudden pops (leave Y alone to respect gravity)
+    local conn
+    conn = RunService.Heartbeat:Connect(function(dt)
+        if not _hitboxDraggingDebounce then
+            conn:Disconnect()
+            if bv and bv.Parent then pcall(function() bv:Destroy() end) end
+            humanoid.WalkSpeed = oldWalk
+            humanoid.JumpPower = oldJump
+            humanoid.PlatformStand = oldPlatformStand
+            return
+        end
+
+        -- abort if character/killer removed
+        if not (char and char.Parent) or not (killerModel and killerModel.Parent) then
+            _hitboxDraggingDebounce = false
+            return
+        end
+
+        -- refresh target HRP (killer may respawn)
+        targetHRP = getKillerHRP(killerModel)
+        if not targetHRP then
+            _hitboxDraggingDebounce = false
+            return
+        end
+
+        -- compute desired horizontal velocity toward the target
+        local toTarget = (targetHRP.Position - hrp.Position)
+        local dist = toTarget.Magnitude
+        -- desired speed: based on distance but clamped so it feels natural
+        
+        local horiz = Vector3.new(toTarget.X, 0, toTarget.Z)
+        if horiz.Magnitude > 0.01 then
+            local dir = horiz.Unit
+            bv.Velocity = Vector3.new(dir.X * Dspeed, bv.Velocity.Y, dir.Z * Dspeed)
+        else
+            bv.Velocity = Vector3.new(0, bv.Velocity.Y, 0)
+        end
+
+        -- stop condition: when very close to killer (adjust threshold as needed)
+        local stopDist = 2.0
+        if dist <= stopDist then
+            _hitboxDraggingDebounce = false
+            -- cleanup will happen in next loop tick
+        end
+    end)
+
+    -- final cleanup safety (timeout)
+    task.delay(0.4, function()
+        if _hitboxDraggingDebounce then
+            _hitboxDraggingDebounce = false
+        end
+    end)
+end
+
+-- Example call:
+-- beginDragIntoKiller(someKillerModel)
+
+-- Watch for local block animations starting and trigger drag
+RunService.RenderStepped:Connect(function()
+    if not hitboxDraggingTech then return end
+    if not cachedAnimator then refreshAnimator() end
+    local animator = cachedAnimator
+    if not animator then return end
+
+    for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+        local ok, animId = pcall(function()
+            local a = track.Animation
+            return a and tostring(a.AnimationId):match("%d+")
+        end)
+        if ok and animId and table.find(blockAnimIds, animId) then
+            -- only trigger once when it starts (timepos ~ 0)
+            local timePos = 0
+            pcall(function() timePos = track.TimePosition or 0 end)
+            if timePos <= 0.12 then
+                local nearest = getNearestKillerModel()
+                if nearest then
+                    -- spawn so we don't block the RenderStepped loop
+                    task.wait(Ddelay)
+                    task.spawn(function() beginDragIntoKiller(nearest) end)
+                    startChargeAimUntilChargeEnds(0.4)
+                end
+            end
+        end
+    end
+end)
+
+--================= GENERATORS ================= Credits to skibidi i guess
+local function GeneratorOnce()
+    local IngameMapFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame")
+    local SubMapFolder = IngameMapFolder and IngameMapFolder:FindFirstChild("Map")
+    if SubMapFolder then
+        for _, g in ipairs(SubMapFolder:GetChildren()) do
+            if g.Name == "Generator" and g.Progress.Value < 100 then
+                wait(0.5)
+                g.Remotes.RE:FireServer()
+            end
+        end
+    end
+end
+
+-- Auto Generator Toggle
+GeneratorTab:CreateToggle({
+    Name = "Auto Generator",
+    CurrentValue = false,
+    Callback = function(enabled)
+        if GeneratorTab._loop then GeneratorTab._loop:Disconnect() GeneratorTab._loop = nil end
+        if enabled then
+            GeneratorTab._timer = 0
+            GeneratorTab._loop = RunService.Heartbeat:Connect(function(dt)
+                GeneratorTab._timer = GeneratorTab._timer + dt
+                if GeneratorTab._timer >= generatorCooldown then
+    for _, desc in ipairs(game:GetDescendants()) do
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end
+game.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        pcall(hookSound, desc)
+    end
+end)                GeneratorTab._timer = 0
+                    GeneratorOnce()
+                end
+            end)
+        end
+    end
+})
+
+-- Auto Generator Slider
+GeneratorTab:CreateSlider({
+    Name = "Auto Generator Delay",
+    Range = {2.5, 5},
+    Increment = 0.1,
+    Suffix = "s",
+    CurrentValue = generatorCooldown,
+    Callback = function(val)
+        generatorCooldown = val
+    end
+})
+
+-- === ESP Toggles ===
+local killersESPToggle = false
+local survivorsESPToggle = false
+local itemESPEnabled = false
+
+ESPTab:CreateToggle({
+   Name = "Killers ESP",
+   CurrentValue = false,
+   Flag = "KillersESP",
+   Callback = function(Value)
+      killersESPToggle = Value
+   end,
+})
+
+ESPTab:CreateToggle({
+   Name = "Survivors ESP",
+   CurrentValue = false,
+   Flag = "SurvivorsESP",
+   Callback = function(Value)
+      survivorsESPToggle = Value
+   end,
+})
+
+-- === ESP Logic ===
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+local killersFolder = workspace:WaitForChild("Players"):WaitForChild("Killers")
+local survivorsFolder = workspace:WaitForChild("Players"):WaitForChild("Survivors")
+
+-- Highlight ESP for killers/survivors
+local function setupModel(model, isKiller)
+	if not model:IsA("Model") or not model:FindFirstChildOfClass("Humanoid") then return end
+	local color = isKiller and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 0)
+
+	if not model:FindFirstChild("ESP_Highlight") then
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "ESP_Highlight"
+		highlight.FillTransparency = 1
+		highlight.OutlineTransparency = 0
+		highlight.OutlineColor = color
+		highlight.Adornee = model
+		highlight.Parent = model
+	end
+
+	model.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+			local hl = model:FindFirstChild("ESP_Highlight")
+			if hl then hl:Destroy() end
+		end
+	end)
+end
+
+local function scanFolder(folder, isKiller)
+	for _, model in ipairs(folder:GetChildren()) do
+		setupModel(model, isKiller)
+	end
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, model in ipairs(killersFolder:GetChildren()) do
+        local hl = model:FindFirstChild("ESP_Highlight")
+        if hl then hl.Enabled = killersESPToggle end
+    end
+    for _, model in ipairs(survivorsFolder:GetChildren()) do
+        local hl = model:FindFirstChild("ESP_Highlight")
+        if hl then hl.Enabled = survivorsESPToggle end
+    end
+end)
+
+task.spawn(function()
+	while true do
+		scanFolder(killersFolder, true)
+		scanFolder(survivorsFolder, false)
+		task.wait(5)
+	end
+end)
+
+local function handleChildAdded(folder, isKiller)
+	folder.ChildAdded:Connect(function(child)
+		task.spawn(function()
+			repeat task.wait() until child:IsDescendantOf(folder)
+			local timeout = 3
+			local timer = 0
+			while not child:FindFirstChildOfClass("Humanoid") do
+				task.wait(0.1)
+				timer += 0.1
+				if timer > timeout then return end
+			end
+			task.wait(0.2)
+			setupModel(child, isKiller)
+		end)
+	end)
+end
+
+handleChildAdded(killersFolder, true)
+handleChildAdded(survivorsFolder, false)
+
+-- == Generator ESP Variables ==
+local generatorESPEnabled = false
+local trackedGenerators = {}
+local partEspTrigger = nil
+local espConnection = nil
+ 
+-- == Highlight Generator ==
+local function highlightGenerator(generator)
+    if not generator or not generator:IsA("Model") then return end
+    if generator:FindFirstChild("GeneratorHighlight") then return end
+ 
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "GeneratorHighlight"
+    highlight.FillColor = Color3.fromRGB(220, 150, 255)
+    highlight.FillTransparency = 0.7
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = generator
+    highlight.Parent = generator
+end
+ 
+-- == Remove Highlight ==
+local function removeHighlightFromGenerator(generator)
+    if generator then
+        local highlight = generator:FindFirstChild("GeneratorHighlight")
+        if highlight then 
+            highlight:Destroy()
+        end
+    end
+    trackedGenerators[generator] = nil
+end
+ 
+-- == Update Generators ==
+local function updateGenerators()
+    local rootMap = workspace:FindFirstChild("Map")
+    if not rootMap then return end
+    local ingame = rootMap:FindFirstChild("Ingame")
+    if not ingame then return end
+    local gameMap = ingame:FindFirstChild("Map")
+    if not gameMap then return end
+ 
+    -- Clean up finished or removed generators
+    for generator in pairs(trackedGenerators) do
+        if not generator:IsDescendantOf(gameMap) then
+            removeHighlightFromGenerator(generator)
+        else
+            local progress = generator:FindFirstChild("Progress")
+            if not progress or progress.Value >= 100 then
+                removeHighlightFromGenerator(generator)
+            end
+        end
+    end
+ 
+    -- Find new active generators
+    for _, obj in ipairs(gameMap:GetDescendants()) do
+        if obj.Name == "Generator" and not trackedGenerators[obj] then
+            local progress = obj:FindFirstChild("Progress")
+            if progress and progress:IsA("ValueBase") and progress.Value < 100 then
+                highlightGenerator(obj)
+                trackedGenerators[obj] = progress.Value
+            end
+        end
+    end
+end
+ 
+-- == Start Generator ESP ==
+local function startGeneratorESP()
+    updateGenerators()
+ 
+    if not partEspTrigger then
+        partEspTrigger = workspace.DescendantAdded:Connect(function(descendant)
+            if descendant.Name == "Generator" and descendant:IsA("Model") then
+                local progress = descendant:FindFirstChild("Progress")
+                if progress and progress.Value < 100 then
+                    highlightGenerator(descendant)
+                    trackedGenerators[descendant] = progress.Value
+                end
+            end
+        end)
+    end
+ 
+    if not espConnection then
+        espConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if generatorESPEnabled then
+                updateGenerators()
+            end
+        end)
+    end
+end
+ 
+-- == Stop Generator ESP ==
+local function stopGeneratorESP()
+    if partEspTrigger then
+        partEspTrigger:Disconnect()
+        partEspTrigger = nil
+    end
+    if espConnection then
+        espConnection:Disconnect()
+        espConnection = nil
+    end
+ 
+    -- Remove all highlights
+    for generator in pairs(trackedGenerators) do
+        removeHighlightFromGenerator(generator)
+    end
+    trackedGenerators = {}
+end
+
+-- === Item ESP ===
+local colorByName = {
+	BloxyCola = Color3.fromRGB(255, 140, 0),
+	Medkit = Color3.fromRGB(255, 100, 255),
+}
+
+local espParts = {}
+local partEspTrigger = nil
+
+local function createBoxESP(part)
+	if not part or not part:IsA("BasePart") then return end
+	if part.Name ~= "ItemRoot" or not part.Parent then return end
+
+	local tagName = part.Parent.Name
+	local color = colorByName[tagName] or Color3.fromRGB(255, 255, 255)
+
+	if part:FindFirstChild(tagName.."_PESP") then return end
+
+	local box = Instance.new("BoxHandleAdornment")
+	box.Name = tagName.."_PESP"
+	box.Adornee = part
+	box.Size = part.Size
+	box.Transparency = 0.5
+	box.Color3 = color
+	box.ZIndex = 0
+	box.AlwaysOnTop = true
+	box.Parent = part
+
+	table.insert(espParts, tagName)
+end
+
+function enableItemESP()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v.Name == "ItemRoot" then
+			createBoxESP(v)
+		end
+	end
+
+	if not partEspTrigger then
+		partEspTrigger = workspace.DescendantAdded:Connect(function(part)
+			if part:IsA("BasePart") and part.Name == "ItemRoot" then
+				createBoxESP(part)
+			end
+		end)
+	end
+end
+
+function disableItemESP()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v.Name == "ItemRoot" then
+			local tagName = v.Parent and v.Parent.Name
+			if tagName and v:FindFirstChild(tagName.."_PESP") then
+				v:FindFirstChild(tagName.."_PESP"):Destroy()
+			end
+		end
+	end
+
+	espParts = {}
+	if partEspTrigger then
+		partEspTrigger:Disconnect()
+		partEspTrigger = nil
+	end
+end
+
+-- === Toggles ===
+ESPTab:CreateToggle({
+	Name = "Items ESP",
+	CurrentValue = false,
+	Flag = "ItemESP_Toggle",
+	Callback = function(Value)
+		itemESPEnabled = Value
+		if itemESPEnabled then
+			enableItemESP()
+		else
+			disableItemESP()
+		end
+	end,
+})
+
+ESPTab:CreateToggle({
+   Name = "Generators ESP",
+   CurrentValue = false,
+   Flag = "GeneratorsESP",
+   Callback = function(Value)
+      generatorESPEnabled = Value
+      if Value then
+         startGeneratorESP()
+      else
+         stopGeneratorESP()
+      end
+   end,
+})
+
+local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
+
+--================= CONFIG =================
+Rayfield:LoadConfiguration()
+
+
