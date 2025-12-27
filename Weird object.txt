@@ -677,46 +677,22 @@ end)
 local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- removed usage (timer removed)
 
--- Box settings
-local BOX_WIDTH  = 6    -- left/right size (studs)
-local BOX_HEIGHT = 6    -- up/down size (studs)
-local BOX_DEPTH  = DetectionRange -- forward distance
+local CONE_RADIUS = 4 -- width of cone in studs
 
--- facing check logic: rectangular box in front of attacker + visualizer
+-- facing check logic: cone in front of attacker
 local function isAttackerFacingPlayer(playerRoot, attackerRoot)
     if not attackerRoot or not playerRoot then return false end
 
-    -- Convert player position into attacker's local space
-    local relative = attackerRoot.CFrame:PointToObjectSpace(playerRoot.Position)
+    local forward = attackerRoot.CFrame.LookVector
+    local toPlayer = playerRoot.Position - attackerRoot.Position
 
-    -- Draw visualizer box
-    local oldBox = attackerRoot:FindFirstChild("FacingDebugBox")
-    if oldBox then oldBox:Destroy() end
-
-    local box = Instance.new("Part")
-    box.Name = "FacingDebugBox"
-    box.Anchored = true
-    box.CanCollide = false
-    box.Transparency = 0.7
-    box.Color = Color3.fromRGB(255, 0, 0)
-    box.Size = Vector3.new(BOX_WIDTH, BOX_HEIGHT, BOX_DEPTH)
-    box.Parent = attackerRoot
-
-    -- Position the box in front of the attacker
-    box.CFrame = attackerRoot.CFrame * CFrame.new(0, 0, -BOX_DEPTH/2)
-
-    -- Forward check (Roblox forward is -Z)
-    if relative.Z > 0 or math.abs(relative.Z) > BOX_DEPTH then
+    local forwardDist = forward:Dot(toPlayer)
+    if forwardDist < 0 or forwardDist > DetectionRange then
         return false
     end
 
-    -- Left / Right bounds
-    if math.abs(relative.X) > BOX_WIDTH / 2 then
-        return false
-    end
-
-    -- Up / Down bounds
-    if math.abs(relative.Y) > BOX_HEIGHT / 2 then
+    local perp = (toPlayer - forward * forwardDist).Magnitude
+    if perp > CONE_RADIUS then
         return false
     end
 
@@ -1411,6 +1387,7 @@ local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
 --================= CONFIG =================
 Rayfield:LoadConfiguration()
+
 
 
 
