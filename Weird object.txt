@@ -677,22 +677,46 @@ end)
 local soundHooks = {}     -- [Sound] = {playedConn, propConn, destroyConn}
 local soundBlockedUntil = {} -- removed usage (timer removed)
 
-local CONE_RADIUS = 4 -- width of cone in studs
+-- Box settings
+local BOX_WIDTH  = 6    -- left/right size (studs)
+local BOX_HEIGHT = 6    -- up/down size (studs)
+local BOX_DEPTH  = DetectionRange -- forward distance
 
--- facing check logic: cone in front of attacker
+-- facing check logic: rectangular box in front of attacker + visualizer
 local function isAttackerFacingPlayer(playerRoot, attackerRoot)
     if not attackerRoot or not playerRoot then return false end
 
-    local forward = attackerRoot.CFrame.LookVector
-    local toPlayer = playerRoot.Position - attackerRoot.Position
+    -- Convert player position into attacker's local space
+    local relative = attackerRoot.CFrame:PointToObjectSpace(playerRoot.Position)
 
-    local forwardDist = forward:Dot(toPlayer)
-    if forwardDist < 0 or forwardDist > DetectionRange then
+    -- Draw visualizer box
+    local oldBox = attackerRoot:FindFirstChild("FacingDebugBox")
+    if oldBox then oldBox:Destroy() end
+
+    local box = Instance.new("Part")
+    box.Name = "FacingDebugBox"
+    box.Anchored = true
+    box.CanCollide = false
+    box.Transparency = 0.7
+    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Size = Vector3.new(BOX_WIDTH, BOX_HEIGHT, BOX_DEPTH)
+    box.Parent = attackerRoot
+
+    -- Position the box in front of the attacker
+    box.CFrame = attackerRoot.CFrame * CFrame.new(0, 0, -BOX_DEPTH/2)
+
+    -- Forward check (Roblox forward is -Z)
+    if relative.Z > 0 or math.abs(relative.Z) > BOX_DEPTH then
         return false
     end
 
-    local perp = (toPlayer - forward * forwardDist).Magnitude
-    if perp > CONE_RADIUS then
+    -- Left / Right bounds
+    if math.abs(relative.X) > BOX_WIDTH / 2 then
+        return false
+    end
+
+    -- Up / Down bounds
+    if math.abs(relative.Y) > BOX_HEIGHT / 2 then
         return false
     end
 
@@ -700,6 +724,42 @@ local function isAttackerFacingPlayer(playerRoot, attackerRoot)
 end
 
 local function extractNumericSoundId(sound)
+    if not sound or not sound.SoundId then return nil end
+    local sid = tostring(sound.SoundId)
+    local num = sid:match("%d+")
+    return num
+end
+
+local function getSoundWorldPosition(sound)
+    if not sound then return nil end
+
+    if sound.Parent and sound.Parent:IsA("BasePart") then
+        return sound.Parent.Position, sound.Parent
+    end
+
+    if sound.Parent and sound.Parent:IsA("Attachment")
+    and sound.Parent.Parent and sound.Parent.Parent:IsA("BasePart") then
+        return sound.Parent.Parent.Position, sound.Parent.Parent
+    end
+
+    local found = sound.Parent and sound.Parent:FindFirstChildWhichIsA("BasePart", true)
+    if found then
+        return found.Position, found
+    end
+
+    return nil, nil
+end
+
+local function getCharacterFromDescendant(inst)
+    if not inst then return nil end
+    local model = inst:FindFirstAncestorOfClass("Model")
+    if model and model:FindFirstChildOfClass("Humanoid") then
+        return model
+    end
+    return nil
+end
+
+extractNumericSoundId(sound)
     if not sound or not sound.SoundId then return nil end
     local sid = tostring(sound.SoundId)
     local num = sid:match("%d+")
@@ -1315,5 +1375,6 @@ local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
 --================= CONFIG =================
 Rayfield:LoadConfiguration()
+
 
 
