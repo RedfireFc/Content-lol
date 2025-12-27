@@ -83,6 +83,7 @@ local autoBlockTriggerSounds = {
     ["140412278320643"] = true,
     ["121369993837377"] = true,
     ["70845653728841"] = true,
+   ["131123355704017"] = true,
 }
 
 -- State (existing)
@@ -1315,5 +1316,6 @@ local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
 --================= CONFIG =================
 Rayfield:LoadConfiguration()
+
 
 
