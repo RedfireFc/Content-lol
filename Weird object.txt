@@ -595,7 +595,7 @@ local function getNearestKillerRoot()
         if plr ~= lp and plr.Character then
             local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
             local hum = plr.Character:FindFirstChild("Humanoid")
-            if hrp and hum and hum.Health > 0 then
+            if hrp and hum and hum.Health > 116 then
                 local dist = (hrp.Position - myRoot.Position).Magnitude
                 if dist < closestDist then
                     closest = hrp
@@ -1316,6 +1316,7 @@ local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
 --================= CONFIG =================
 Rayfield:LoadConfiguration()
+
 
 
 
