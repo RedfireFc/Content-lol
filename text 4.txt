@@ -1,9 +1,4 @@
 function load()
-local allowedGameId = 109983668079237
-
--- Check if the current game matches
-if game.PlaceId == allowedGameId then
-    print("Idk welcome to redys hub")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
@@ -203,9 +198,6 @@ ExecuteButton.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://pastefy.app/OdVeYTIy/raw"))()
     ExecuteButton.Visible = false
 end)
-else
-    print("EXECUTE IN REAL SAB BROOOO")
-end    
 end
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 --dont change anything until you know what you do
