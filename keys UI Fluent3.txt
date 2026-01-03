@@ -1,0 +1,96 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local FILENAME = "mykeysystem.txt" --// for saving key
+local yesisvalid = false
+local savedkey = isfile(FILENAME) and readfile(FILENAME) or nil
+local keyinput = ""
+
+local function notify(t)
+    Fluent:Notify({
+        Title = "Key System",
+        Content = t,
+        SubContent = "",
+        Duration = 5
+    })
+end
+
+local Window = Fluent:CreateWindow({
+    Title = "Key System",
+    SubTitle = "",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Main = Window:AddTab({ Title = "Main", Icon = "" })
+
+Main:AddInput("Input", {
+    Title = "Key:",
+    Default = savedkey or "",
+    Placeholder = "input key here",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        keyinput = Value
+    end
+})
+
+Main:AddButton({
+    Title = "Check Key",
+    Description = "click to check your key",
+    Callback = function()
+        if keyinput == "" or not keyinput then
+            notify("please input your key!")
+            return
+        end
+
+        local result = AuthGuard.ValidateKey({
+            Service = __SERVICE_ID__,
+            Key = keyinput
+        })
+
+        if result == "invalid" then
+            notify("your key is invalid, please input a valid key!")
+            return
+        end
+
+        -- key valid
+        writefile(FILENAME, keyinput)
+        yesisvalid = true
+        notify("your key is valid!")
+    end
+})
+
+Main:AddButton({
+    Title = "Get Key",
+    Description = "click to get your key link",
+    Callback = function()
+        (setclipboard or toclipboard)(AuthGuard.GetKeyLink({Service = __SERVICE_ID__}))
+        notify("success copied getkey link to clipboard")
+    end
+})
+
+-- auto-check saved key
+if savedkey then
+    notify("checking saved key...")
+    local result = AuthGuard.ValidateKey({
+        Service = __SERVICE_ID__,
+        Key = savedkey
+    })
+    if result == "invalid" then
+        notify("saved key is invalid")
+        delfile(FILENAME)
+    else
+        yesisvalid = true
+        notify("saved key is valid!")
+    end
+end
+
+repeat task.wait() until yesisvalid
+
+-- Run script
+print("Key valid. Running script...")
+
+-- your script here
