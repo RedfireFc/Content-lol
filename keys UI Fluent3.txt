@@ -47,7 +47,7 @@ Main:AddButton({
         end
 
         local result = AuthGuard.ValidateKey({
-            Service = __SERVICE_ID__,
+            Service = pron tp script,
             Key = keyinput
         })
 
@@ -76,7 +76,7 @@ Main:AddButton({
 if savedkey then
     notify("checking saved key...")
     local result = AuthGuard.ValidateKey({
-        Service = __SERVICE_ID__,
+        Service = pron tp script,
         Key = savedkey
     })
     if result == "invalid" then
@@ -93,4 +93,4 @@ repeat task.wait() until yesisvalid
 -- Run script
 print("Key valid. Running script...")
 
--- your script here
+loadstring(game:HttpGet("https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"))()
