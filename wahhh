@@ -1,0 +1,168 @@
+local allowedGameId = 109983668079237
+if game.PlaceId ~= allowedGameId then return end
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+local player = Players.LocalPlayer
+
+local old = CoreGui:FindFirstChild("RedysHubUI")
+if old then old:Destroy() end
+
+local RedysHubUI = Instance.new("ScreenGui", CoreGui)
+RedysHubUI.Name = "RedysHubUI"
+RedysHubUI.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", RedysHubUI)
+Frame.Size = UDim2.new(0, 340, 0, 250)
+Frame.Position = UDim2.new(0.5, -170, 0.5, -125)
+Frame.BackgroundColor3 = Color3.fromRGB(50,0,0)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,8)
+
+local Stroke = Instance.new("UIStroke", Frame)
+Stroke.Color = Color3.fromRGB(255,50,50)
+Stroke.Thickness = 2
+Stroke.Transparency = 0.1
+
+local TextLabel = Instance.new("TextLabel", Frame)
+TextLabel.Size = UDim2.new(1, -20, 0, 60)
+TextLabel.Position = UDim2.new(0, 10, 0, 10)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "REDYS HUB\nNo Base Set"
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.TextSize = 18
+TextLabel.TextColor3 = Color3.fromRGB(255,50,50)
+TextLabel.TextWrapped = true
+
+local CopyButton = Instance.new("TextButton", Frame)
+CopyButton.Size = UDim2.new(0, 80, 0, 20)
+CopyButton.Position = UDim2.new(1, -90, 0, 15)
+CopyButton.Text = "Copy Discord"
+CopyButton.Font = Enum.Font.GothamBold
+CopyButton.TextSize = 12
+CopyButton.BackgroundColor3 = Color3.fromRGB(50, 100, 255)
+CopyButton.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", CopyButton).CornerRadius = UDim.new(0, 8)
+
+CopyButton.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard("https://discord.gg/sdqXHvcCCB")
+        TextLabel.Text = "REDYS HUB\nDiscord copied ✔"
+    end
+end)
+
+local SavedPosition = nil
+
+local SetButton = Instance.new("TextButton", Frame)
+SetButton.Size = UDim2.new(1, -40, 0, 40)
+SetButton.Position = UDim2.new(0, 20, 0, 90)
+SetButton.Text = "SET BASE LOCATION"
+SetButton.Font = Enum.Font.GothamBold
+SetButton.TextSize = 14
+SetButton.BackgroundColor3 = Color3.fromRGB(100,0,0)
+SetButton.TextColor3 = Color3.fromRGB(255,50,50)
+Instance.new("UICorner", SetButton).CornerRadius = UDim.new(0,12)
+
+SetButton.MouseButton1Click:Connect(function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        SavedPosition = player.Character.HumanoidRootPart.Position
+        TextLabel.Text = "REDYS HUB\nBase Set ✔"
+    end
+end)
+
+local ExecuteButton = Instance.new("TextButton", Frame)
+ExecuteButton.Size = UDim2.new(1, -40, 0, 40)
+ExecuteButton.Position = UDim2.new(0, 20, 0, 145)
+ExecuteButton.Text = "EXECUTE UNWALK"
+ExecuteButton.Font = Enum.Font.GothamBold
+ExecuteButton.TextSize = 14
+ExecuteButton.BackgroundColor3 = Color3.fromRGB(50,50,100)
+ExecuteButton.TextColor3 = Color3.fromRGB(200,200,255)
+Instance.new("UICorner", ExecuteButton).CornerRadius = UDim.new(0,12)
+
+local InstantButton = Instance.new("TextButton", Frame)
+InstantButton.Size = UDim2.new(1, -40, 0, 40)
+InstantButton.Position = UDim2.new(0, 20, 0, 200)
+InstantButton.Text = "INSTANT STEAL: OFF"
+InstantButton.Font = Enum.Font.GothamBold
+InstantButton.TextSize = 14
+InstantButton.BackgroundColor3 = Color3.fromRGB(80,0,0)
+InstantButton.TextColor3 = Color3.fromRGB(255,180,100)
+Instance.new("UICorner", InstantButton).CornerRadius = UDim.new(0,12)
+
+local InstantStealEnabled = false
+local holding = false
+local used = false
+
+local function equipCarpet()
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    for _,v in ipairs(player.Backpack:GetChildren()) do
+        if v:IsA("Tool") and string.find(string.lower(v.Name),"carpet") then
+            hum:EquipTool(v)
+            break
+        end
+    end
+end
+
+ProximityPromptService.PromptButtonHoldBegan:Connect(function(prompt, who)
+    if who ~= player then return end
+    if not InstantStealEnabled then return end
+    if prompt.ActionText ~= "Steal" then return end
+    if not SavedPosition then return end
+
+    holding = true
+    used = false
+    local startTime = tick()
+    local equipDone = false
+
+    task.spawn(function()
+        while holding do
+            task.wait()
+            local elapsed = tick() - startTime
+            if elapsed >= 1.3 and not used then
+                used = true
+            end
+            if elapsed >= 1.49 and not equipDone then
+                equipCarpet()
+                equipDone = true
+            end
+            if elapsed >= 1.5 then
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    char.HumanoidRootPart.CFrame = CFrame.new(SavedPosition + Vector3.new(0,5,0))
+                end
+                break
+            end
+        end
+    end)
+end)
+
+ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt, who)
+    if who ~= player then return end
+    if prompt.ActionText ~= "Steal" then return end
+    holding = false
+end)
+
+InstantButton.MouseButton1Click:Connect(function()
+    InstantStealEnabled = not InstantStealEnabled
+    if InstantStealEnabled then
+        InstantButton.Text = "INSTANT STEAL: ON"
+        InstantButton.BackgroundColor3 = Color3.fromRGB(0,100,0)
+        TextLabel.Text = "REDYS HUB\nInstant Steal Enabled ✔"
+    else
+        InstantButton.Text = "INSTANT STEAL: OFF"
+        InstantButton.BackgroundColor3 = Color3.fromRGB(100,0,0)
+        TextLabel.Text = "REDYS HUB\nInstant Steal Disabled ✖"
+    end
+end)
+
+ExecuteButton.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/pcz7qsw5z5-ops/FREEZE/refs/heads/main/Anim"))()
+end)
