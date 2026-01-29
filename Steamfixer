@@ -1,0 +1,39 @@
+$Host.UI.RawUI.WindowTitle = "Steamtools fixer | by clem.la"
+
+$steam = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam").InstallPath
+
+function Remove-ItemIfExists($path) {
+    if (Test-Path $path) {
+        Remove-Item -Path $path -Force
+    }
+}
+
+
+Get-Process steam -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Intalling steamtools
+Remove-ItemIfExists (Join-Path $steam "hid.dll")
+Remove-ItemIfExists (Join-Path $steam "xinput1_4.dll")
+$script = Invoke-RestMethod "https://steam.run"
+$keptLines = @()
+
+foreach ($line in $script -split "`n") {
+    $conditions = @( # Removes lines containing one of those
+        ($line -imatch "Start-Process" -and $line -imatch "steam"),
+        ($line -imatch "steam\.exe"),
+        ($line -imatch "Start-Sleep" -or $line -imatch "Write-Host"),
+        ($line -imatch "cls" -or $line -imatch "exit"),
+        ($line -imatch "Stop-Process" -and -not ($line -imatch "Get-Process"))
+    )
+    
+    if (-not($conditions -contains $true)) {
+        $keptLines += $line
+    }
+}
+
+Invoke-Expression ($keptLines -join "`n") *> $null
+
+# Clearing beta
+
+$exe = Join-Path $steam "steam.exe"
+Start-Process $exe -ArgumentList "-clearbeta"
