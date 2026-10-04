@@ -1,5 +1,10 @@
 -- References & State Variables
-local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
 local modelId = 104515922403348
 local heightOffset = 3
 local idleAnimationId = 101907348895136
@@ -23,7 +28,7 @@ local runTrack, idleTrack, landingTrack, lastMoveState = nil, nil, nil, nil
 local lastLandingTime = 0
 
 -- Connections & Objects
-local enforceLoop, movementLoop, inputConnection = nil, nil, nil
+local enforceLoop, movementLoop, inputConnection, scannerLoop = nil, nil, nil, nil
 local morph = nil
 local rootWeld, headWeld = nil, nil
 local originalCharacter, originalRootPart, originalHumanoid, originalHeadPart = nil, nil, nil, nil
@@ -35,52 +40,15 @@ local landingSound, impactSound = nil, nil
 local ambienceSounds = {}
 local footstepsSound = nil
 
--- Cleanup Handler
-local function cleanupMorph()
-    if inputConnection then inputConnection:Disconnect() inputConnection = nil end
-    if enforceLoop then enforceLoop:Disconnect() enforceLoop = nil end
-    if movementLoop then movementLoop:Disconnect() movementLoop = nil end
-    if currentAmbience then currentAmbience:Stop() currentAmbience = nil end
-    if landingTrack then landingTrack:Stop() landingTrack = nil end
-    if runTrack then runTrack:Stop() runTrack = nil end
-    if idleTrack then idleTrack:Stop() idleTrack = nil end
-    if footstepsSound then footstepsSound:Stop() end
-
-    local camera = workspace.CurrentCamera
-    if camera then
-        camera.CameraType = Enum.CameraType.Custom
-    end
-
-    if originalCharacter then
-        for _, part in ipairs(originalCharacter:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0
-                part.CanCollide = true
-            end
-        end
-    end
-
-    if originalHumanoid then
-        originalHumanoid.WalkSpeed = originalWalkSpeed
-        originalHumanoid.JumpPower = originalJumpPower
-        if originalJumpHeight then
-            originalHumanoid.JumpHeight = originalJumpHeight
-        end
-    end
-
-    if morph then
-        morph:Destroy()
-        morph = nil
-    end
-
-    morphActive = false
-    animator = nil
-end
-
--- Helper Utilities
+-- Utility Functions
 local function loadModel()
-    local objects = game:GetObjects("rbxassetid://" .. modelId)
-    return objects[1]
+    local success, result = pcall(function()
+        return game:GetObjects("rbxassetid://" .. modelId)
+    end)
+    if success and result and #result > 0 then
+        return result[1]
+    end
+    return nil
 end
 
 local function createAnimation(animationId)
@@ -101,18 +69,107 @@ local function playSound(soundObject)
     soundObject:Play()
 end
 
+-- Render Morph on Other Players
+local function applyMorphToOtherPlayer(targetPlayer)
+    if targetPlayer == player then return end
+    local char = targetPlayer.Character
+    if not char or char:FindFirstChild("HonchoMorph") then return end
+
+    local targetRoot = char:FindFirstChild("HumanoidRootPart")
+    if not targetRoot then return end
+
+    local otherMorph = loadModel()
+    if not otherMorph then return end
+
+    local otherRootPart = otherMorph:FindFirstChild("HumanoidRootPart", true) or otherMorph:FindFirstChild("RootPart", true) or otherMorph.PrimaryPart
+    if not otherRootPart then
+        otherRootPart = Instance.new("Part")
+        otherRootPart.Name = "HumanoidRootPart"
+        otherRootPart.Size = Vector3.new(2, 1, 1)
+        otherRootPart.Parent = otherMorph
+    end
+    otherMorph.PrimaryPart = otherRootPart
+
+    for _, part in ipairs(otherMorph:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = false
+            part.CanCollide = false
+        end
+    end
+
+    otherMorph.Name = "HonchoMorph"
+    otherMorph.Parent = char
+
+    -- Hide base character body for other player
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") and not part:IsDescendantOf(otherMorph) then
+            part.Transparency = 1
+            part.CanCollide = false
+        end
+    end
+
+    local oWeld = Instance.new("Weld")
+    oWeld.Name = "MorphRootWeld"
+    oWeld.Part0 = targetRoot
+    oWeld.Part1 = otherRootPart
+    oWeld.C0 = CFrame.new(0, heightOffset, 0)
+    oWeld.Parent = targetRoot
+end
+
+-- Cleanup Handler
+local function cleanupMorph()
+    if inputConnection then inputConnection:Disconnect() inputConnection = nil end
+    if enforceLoop then enforceLoop:Disconnect() enforceLoop = nil end
+    if movementLoop then movementLoop:Disconnect() movementLoop = nil end
+    if scannerLoop then scannerLoop:Disconnect() scannerLoop = nil end
+    if currentAmbience then currentAmbience:Stop() currentAmbience = nil end
+    if landingTrack then landingTrack:Stop() landingTrack = nil end
+    if runTrack then runTrack:Stop() runTrack = nil end
+    if idleTrack then idleTrack:Stop() idleTrack = nil end
+    if footstepsSound then footstepsSound:Stop() end
+
+    local camera = workspace.CurrentCamera
+    if camera then
+        camera.CameraType = Enum.CameraType.Custom
+    end
+
+    if originalCharacter then
+        for _, part in ipairs(originalCharacter:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+                part.CanCollide = true
+            end
+        end
+        local flag = originalCharacter:FindFirstChild("HasHonchoTag")
+        if flag then flag:Destroy() end
+    end
+
+    if originalHumanoid then
+        originalHumanoid.WalkSpeed = originalWalkSpeed
+        originalHumanoid.JumpPower = originalJumpPower
+        if originalJumpHeight then
+            originalHumanoid.JumpHeight = originalJumpHeight
+        end
+    end
+
+    if morph then
+        morph:Destroy()
+        morph = nil
+    end
+
+    morphActive = false
+    animator = nil
+end
+
 -- Core Morph Engine
 local function applyMorph()
     if morphActive then cleanupMorph() end
 
-    game:GetService("StarterGui"):SetCore("SendNotification", {
+    StarterGui:SetCore("SendNotification", {
         Title = "Credits",
         Text = "Made by MorthenHubber. Credit if you use it",
         Duration = 5
     })
-
-    morph = loadModel()
-    if not morph then return end
 
     originalCharacter = player.Character
     if not originalCharacter or not originalCharacter:FindFirstChild("HumanoidRootPart") then
@@ -124,11 +181,18 @@ local function applyMorph()
     originalHeadPart = originalCharacter:FindFirstChild("Head")
     if not originalRootPart or not originalHumanoid then return end
 
+    morph = loadModel()
+    if not morph then return end
+
+    -- Mark character so other players' scripts render us
+    local tag = Instance.new("BoolValue")
+    tag.Name = "HasHonchoTag"
+    tag.Parent = originalCharacter
+
     originalWalkSpeed = originalHumanoid.WalkSpeed
     originalJumpPower = originalHumanoid.JumpPower
     originalJumpHeight = originalHumanoid.JumpHeight
 
-    -- Set initial custom values
     originalHumanoid.WalkSpeed = customWalkSpeed
     originalHumanoid.JumpPower = customJumpPower
 
@@ -163,7 +227,6 @@ local function applyMorph()
         morphHeadPart.Parent = morph
     end
 
-    -- Parent directly inside player character so other script users can detect and render it
     morph.Name = "HonchoMorph"
     morph.Parent = originalCharacter
 
@@ -192,9 +255,7 @@ local function applyMorph()
         camera.CameraType = Enum.CameraType.Scriptable
     end
 
-    local runService = game:GetService("RunService")
-
-    enforceLoop = runService.RenderStepped:Connect(function()
+    enforceLoop = RunService.RenderStepped:Connect(function()
         if rootWeld and rootWeld.Parent then
             rootWeld.C0 = CFrame.new(0, heightOffset, 0)
         end
@@ -251,6 +312,15 @@ local function applyMorph()
                         end
                     end
                 end
+            end
+        end
+    end)
+
+    -- Scanner Loop: Detects and morphs other players who also activated the script
+    scannerLoop = RunService.Heartbeat:Connect(function()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HasHonchoTag") then
+                applyMorphToOtherPlayer(p)
             end
         end
     end)
@@ -329,7 +399,6 @@ local function applyMorph()
         end
     end
 
-    local userInputService = game:GetService("UserInputService")
     local keySoundMap = {}
     local ambienceKeys = {Enum.KeyCode.Z, Enum.KeyCode.X, Enum.KeyCode.V}
     for i, key in ipairs(ambienceKeys) do
@@ -338,7 +407,7 @@ local function applyMorph()
         end
     end
 
-    inputConnection = userInputService.InputBegan:Connect(function(input, gameProcessed)
+    inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         if input.UserInputType == Enum.UserInputType.Keyboard then
             local key = input.KeyCode
@@ -364,7 +433,7 @@ local function applyMorph()
 
     replayLanding()
 
-    movementLoop = runService.RenderStepped:Connect(function()
+    movementLoop = RunService.RenderStepped:Connect(function()
         if not movementEnabled then return end
         local moveDirection = originalHumanoid.MoveDirection
         if not moveDirection then return end
@@ -395,7 +464,6 @@ local function applyMorph()
 end
 
 -- Keybind Trigger: Alt + =
-local UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.UserInputType == Enum.UserInputType.Keyboard then
