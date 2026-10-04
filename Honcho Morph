@@ -163,10 +163,12 @@ local function applyMorph()
         morphHeadPart.Parent = morph
     end
 
-    morph.Parent = workspace
+    -- Parent directly inside player character so other script users can detect and render it
+    morph.Name = "HonchoMorph"
+    morph.Parent = originalCharacter
 
     for _, part in ipairs(originalCharacter:GetDescendants()) do
-        if part:IsA("BasePart") then
+        if part:IsA("BasePart") and not part:IsDescendantOf(morph) then
             part.Transparency = 1
             part.CanCollide = false
         end
