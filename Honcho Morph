@@ -17,30 +17,58 @@ local landingCooldown = 10
 local toolGripOffset = CFrame.new(0, -0.4, 0) * CFrame.Angles(math.rad(180), math.rad(0), math.rad(90))
 local isThirdPerson = true
 
--- Custom Movement Settings
+-- Custom Speed/Jump
 local customWalkSpeed = 45
 local customJumpPower = 50
 
 local morphActive = false
 local currentAmbience = nil
-local movementEnabled = false
+local movementEnabled = true
 local runTrack, idleTrack, landingTrack, lastMoveState = nil, nil, nil, nil
 local lastLandingTime = 0
 
--- Connections & Objects
+-- Connections & Instances
 local enforceLoop, movementLoop, inputConnection = nil, nil, nil
 local morph = nil
 local rootWeld, headWeld = nil, nil
 local originalCharacter, originalRootPart, originalHumanoid, originalHeadPart = nil, nil, nil, nil
 local originalWalkSpeed, originalJumpPower, originalJumpHeight = 16, 50, 7.2
 local morphRootPart, morphHeadPart = nil, nil
-local idleAnimation, runAnimation, landingAnimation = nil, nil, nil
 local animator = nil
 local landingSound, impactSound = nil, nil
 local ambienceSounds = {}
 local footstepsSound = nil
 
--- Cleanup Handler
+-- Helper Utilities
+local function loadModel()
+    local success, result = pcall(function()
+        return game:GetObjects("rbxassetid://" .. modelId)
+    end)
+    if success and result and #result > 0 then
+        return result[1]
+    end
+    return nil
+end
+
+local function createAnimation(animationId)
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://" .. animationId
+    return animation
+end
+
+local function createSound(soundId)
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. soundId
+    return sound
+end
+
+local function playSound(soundObject)
+    if not soundObject then return end
+    soundObject.Parent = morph or workspace
+    soundObject:Play()
+end
+
+-- Cleanup Function
 local function cleanupMorph()
     if inputConnection then inputConnection:Disconnect() inputConnection = nil end
     if enforceLoop then enforceLoop:Disconnect() enforceLoop = nil end
@@ -84,43 +112,12 @@ local function cleanupMorph()
     animator = nil
 end
 
--- Helper Utilities
-local function loadModel()
-    local success, result = pcall(function()
-        return game:GetObjects("rbxassetid://" .. modelId)
-    end)
-    if success and result and #result > 0 then
-        return result[1]
-    end
-    return nil
-end
-
-local function createAnimation(animationId)
-    local animation = Instance.new("Animation")
-    animation.AnimationId = "rbxassetid://" .. animationId
-    return animation
-end
-
-local function createSound(soundId)
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://" .. soundId
-    return sound
-end
-
-local function playSound(soundObject)
-    if not soundObject then return end
-    soundObject.Parent = morph or workspace
-    soundObject:Play()
-end
-
--- Core Morph Engine
+-- Apply Morph
 local function applyMorph()
     if morphActive then cleanupMorph() end
 
     originalCharacter = player.Character
-    if not originalCharacter or not originalCharacter:FindFirstChild("HumanoidRootPart") then
-        return
-    end
+    if not originalCharacter or not originalCharacter:FindFirstChild("HumanoidRootPart") then return end
 
     originalRootPart = originalCharacter:FindFirstChild("HumanoidRootPart")
     originalHumanoid = originalCharacter:FindFirstChildWhichIsA("Humanoid")
@@ -143,6 +140,7 @@ local function applyMorph()
         Duration = 5
     })
 
+    -- Store original stats
     originalWalkSpeed = originalHumanoid.WalkSpeed
     originalJumpPower = originalHumanoid.JumpPower
     originalJumpHeight = originalHumanoid.JumpHeight
@@ -150,13 +148,12 @@ local function applyMorph()
     originalHumanoid.WalkSpeed = customWalkSpeed
     originalHumanoid.JumpPower = customJumpPower
 
-    local morphHumanoid = morph:FindFirstChildWhichIsA("Humanoid")
-    if morphHumanoid then morphHumanoid:Destroy() end
-
+    -- Un-anchor parts & remove conflicts
     for _, part in ipairs(morph:GetDescendants()) do
         if part:IsA("BasePart") then
             part.Anchored = false
             part.CanCollide = false
+            part.Transparency = 0
         end
     end
 
@@ -164,22 +161,15 @@ local function applyMorph()
     if not morphRootPart then
         morphRootPart = Instance.new("Part")
         morphRootPart.Name = "HumanoidRootPart"
-        morphRootPart.Size = Vector3.new(2, 1, 1)
+        morphRootPart.Size = Vector3.new(2, 2, 1)
         morphRootPart.Anchored = false
         morphRootPart.CanCollide = false
+        morphRootPart.Transparency = 1
         morphRootPart.Parent = morph
     end
     morph.PrimaryPart = morphRootPart
 
-    morphHeadPart = morph:FindFirstChild("Head", true)
-    if not morphHeadPart then
-        morphHeadPart = Instance.new("Part")
-        morphHeadPart.Name = "Head"
-        morphHeadPart.Size = Vector3.new(1, 1, 1)
-        morphHeadPart.Anchored = false
-        morphHeadPart.CanCollide = false
-        morphHeadPart.Parent = morph
-    end
+    morphHeadPart = morph:FindFirstChild("Head", true) or morphRootPart
 
     morph.Name = "HonchoMorph"
     morph.Parent = originalCharacter
@@ -194,6 +184,7 @@ local function applyMorph()
         end
     end
 
+    -- Create Root Weld
     rootWeld = Instance.new("Weld")
     rootWeld.Name = "MorphRootWeld"
     rootWeld.Part0 = originalRootPart
@@ -201,91 +192,22 @@ local function applyMorph()
     rootWeld.C0 = CFrame.new(0, heightOffset, 0)
     rootWeld.Parent = originalRootPart
 
-    headWeld = Instance.new("Weld")
-    headWeld.Name = "MorphHeadWeld"
-    headWeld.Part0 = originalHeadPart or originalRootPart
-    headWeld.Part1 = morphHeadPart
-    local headWeldOffset = morphHeadPart.Position - (originalHeadPart and originalHeadPart.Position or originalRootPart.Position)
-    headWeld.C0 = CFrame.new(headWeldOffset)
-    headWeld.Parent = headWeld.Part0
-
-    local camera = workspace.CurrentCamera
-    if camera then
-        camera.CameraType = Enum.CameraType.Scriptable
+    -- Setup Animation Controller / Animator
+    local animController = morph:FindFirstChildWhichIsA("AnimationController")
+    if not animController then
+        animController = Instance.new("AnimationController")
+        animController.Parent = morph
     end
 
-    enforceLoop = RunService.RenderStepped:Connect(function()
-        if rootWeld and rootWeld.Parent then
-            rootWeld.C0 = CFrame.new(0, heightOffset, 0)
-        end
-
-        if morphHeadPart and morphHeadPart:IsDescendantOf(workspace) and camera then
-            local lookVector = camera.CFrame.LookVector
-            local upVector = camera.CFrame.UpVector
-            local headPos = morphHeadPart.Position
-            
-            if isThirdPerson then
-                local camPos = headPos - (lookVector * 12) + Vector3.new(0, 2, 0)
-                camera.CFrame = CFrame.lookAt(camPos, headPos, upVector)
-            else
-                local offset = Vector3.new(0, 0.2, -0.5)
-                local targetPosition = morphHeadPart.CFrame:PointToWorldSpace(offset)
-                camera.CFrame = CFrame.lookAt(targetPosition, targetPosition + lookVector, upVector)
-            end
-        end
-
-        local morphRightHand = morph:FindFirstChild("RightHand", true)
-
-        if originalCharacter and morphRightHand then
-            for _, tool in ipairs(originalCharacter:GetChildren()) do
-                if tool:IsA("Tool") then
-                    local handle = tool:FindFirstChild("Handle")
-                    if handle then
-                        local defaultGrip = handle:FindFirstChild("RightGrip")
-                        if defaultGrip then
-                            if defaultGrip:IsA("Motor6D") then
-                                defaultGrip.Enabled = false
-                            else
-                                defaultGrip:Destroy()
-                            end
-                        end
-                        local defaultLeftGrip = handle:FindFirstChild("LeftGrip")
-                        if defaultLeftGrip then
-                            if defaultLeftGrip:IsA("Motor6D") then
-                                defaultLeftGrip.Enabled = false
-                            else
-                                defaultLeftGrip:Destroy()
-                            end
-                        end
-
-                        local morphWeld = handle:FindFirstChild("MorphWeld")
-                        if not morphWeld then
-                            morphWeld = Instance.new("Weld")
-                            morphWeld.Name = "MorphWeld"
-                            morphWeld.Part0 = morphRightHand
-                            morphWeld.Part1 = handle
-                            morphWeld.C0 = toolGripOffset
-                            morphWeld.Parent = handle
-                        elseif morphWeld.Part0 ~= morphRightHand then
-                            morphWeld.Part0 = morphRightHand
-                        end
-                    end
-                end
-            end
-        end
-    end)
-
-    local animationController = morph:FindFirstChildWhichIsA("AnimationController") or morph:FindFirstChild("AnimationController", true)
-    if not animationController then
-        animationController = Instance.new("AnimationController", morph)
-    end
-    animator = morph:FindFirstChildWhichIsA("Animator") or (animationController and animationController:FindFirstChildWhichIsA("Animator"))
+    animator = animController:FindFirstChildWhichIsA("Animator")
     if not animator then
-        animator = Instance.new("Animator", animationController)
+        animator = Instance.new("Animator")
+        animator.Parent = animController
     end
 
-    local function playAnimation(animationObject, looped)
-        local track = animator:LoadAnimation(animationObject)
+    local function playAnimation(animObj, looped)
+        if not animator or not animObj then return nil end
+        local track = animator:LoadAnimation(animObj)
         if track then
             track.Looped = looped or false
             track:Play()
@@ -293,9 +215,9 @@ local function applyMorph()
         return track
     end
 
-    idleAnimation = createAnimation(idleAnimationId)
-    runAnimation = createAnimation(runAnimationId)
-    landingAnimation = createAnimation(landingAnimationId)
+    local idleAnimation = createAnimation(idleAnimationId)
+    local runAnimation = createAnimation(runAnimationId)
+    local landingAnimation = createAnimation(landingAnimationId)
 
     landingSound = createSound(landingSoundId)
     impactSound = createSound(impactSoundId)
@@ -315,10 +237,55 @@ local function applyMorph()
         end
     end
 
-    local function replayLanding()
-        if tick() - lastLandingTime < landingCooldown then
-            return
+    local camera = workspace.CurrentCamera
+    if camera then
+        camera.CameraType = Enum.CameraType.Scriptable
+    end
+
+    -- Camera & Tool Positioning Loop
+    enforceLoop = RunService.RenderStepped:Connect(function()
+        if rootWeld and rootWeld.Parent then
+            rootWeld.C0 = CFrame.new(0, heightOffset, 0)
         end
+
+        if morphHeadPart and morphHeadPart:IsDescendantOf(workspace) and camera then
+            local lookVector = camera.CFrame.LookVector
+            local upVector = camera.CFrame.UpVector
+            local headPos = morphHeadPart.Position
+
+            if isThirdPerson then
+                local camPos = headPos - (lookVector * 12) + Vector3.new(0, 2, 0)
+                camera.CFrame = CFrame.lookAt(camPos, headPos, upVector)
+            else
+                local offset = Vector3.new(0, 0.2, -0.5)
+                local targetPosition = morphHeadPart.CFrame:PointToWorldSpace(offset)
+                camera.CFrame = CFrame.lookAt(targetPosition, targetPosition + lookVector, upVector)
+            end
+        end
+
+        local morphRightHand = morph:FindFirstChild("RightHand", true) or morph:FindFirstChild("Right Arm", true)
+        if originalCharacter and morphRightHand then
+            for _, tool in ipairs(originalCharacter:GetChildren()) do
+                if tool:IsA("Tool") then
+                    local handle = tool:FindFirstChild("Handle")
+                    if handle then
+                        local morphWeld = handle:FindFirstChild("MorphWeld")
+                        if not morphWeld then
+                            morphWeld = Instance.new("Weld")
+                            morphWeld.Name = "MorphWeld"
+                            morphWeld.Part0 = morphRightHand
+                            morphWeld.Part1 = handle
+                            morphWeld.C0 = toolGripOffset
+                            morphWeld.Parent = handle
+                        end
+                    end
+                end
+            end
+        end
+    end)
+
+    local function replayLanding()
+        if tick() - lastLandingTime < landingCooldown then return end
         lastLandingTime = tick()
 
         if landingTrack then landingTrack:Stop() end
@@ -329,9 +296,7 @@ local function applyMorph()
 
         originalHumanoid.WalkSpeed = 0
         originalHumanoid.JumpPower = 0
-        if originalHumanoid.JumpHeight then
-            originalHumanoid.JumpHeight = 0
-        end
+        if originalHumanoid.JumpHeight then originalHumanoid.JumpHeight = 0 end
 
         if landingTrack then
             landingTrack.Stopped:Connect(function()
@@ -379,15 +344,16 @@ local function applyMorph()
         end
     end)
 
-    replayLanding()
+    -- Play initial idle track
+    idleTrack = playAnimation(idleAnimation, true)
 
+    -- Movement Animation Logic
     movementLoop = RunService.RenderStepped:Connect(function()
         if not movementEnabled then return end
-        local moveDirection = originalHumanoid.MoveDirection
-        if not moveDirection then return end
-        local moving = moveDirection.Magnitude > 0.1
+        local moveDir = originalHumanoid.MoveDirection
+        local isMoving = moveDir and moveDir.Magnitude > 0.1
 
-        if moving then
+        if isMoving then
             if lastMoveState ~= "run" then
                 if idleTrack then idleTrack:Stop() end
                 runTrack = playAnimation(runAnimation, true)
